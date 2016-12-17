@@ -1,8 +1,8 @@
 {
     "name": "odatatools",
     "displayName": "odataTools",
-    "description": "Tools for odata services in typescript",
-    "version": "0.0.1",
+    "description": "Tools for communicating with odata services in typescript",
+    "version": "0.1.0",
     "publisher": "apazureck",
     "engines": {
         "vscode": "^1.5.0"
@@ -41,5 +41,21 @@
     },
     "dependencies": {
         "node-rest-client": "2.0.1"
-    }
+    },
+    "author": {
+        "email": "info@pazureck.de",
+        "name": "Andreas Pazureck"
+    },
+    "keywords": [
+        "oData"
+    ],
+    "preview": true,
+    "galleryBanner": {
+        "color": "white",
+        "theme": "light"
+    },
+    "license": "MIT",
+    "bugs": "https://github.com/apazureck/odatatools/issues",
+    "repository": "https://github.com/apazureck/odatatools",
+    "icon": "images/odata.png"
 }
