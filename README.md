@@ -1,65 +1,43 @@
 # odatatools README
 
-This extension extracts interfaces from metadata of oData V4.0 services to be used with typescript 
+This extension targets to speed up access to your oData service to use it within *typescript*.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+> Supported oData standards: **V4.0**
 
-For example if there is an image subfolder under your extension project workspace:
+> Supported Languages: **Typescript**
 
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+- Create *typescript* Interface declarations from oData service
+- Update *typescript* Interface declaration for oData Service
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+- None (except you are using typescript).
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+- None
 
-For example:
+## Usage
 
-This extension contributes the following settings:
+### Get and update Interfaces from oData service
 
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+Just press `CTRL+SHIFT+P` (Linux and Windows) `CMD+SHIFT+P` and type *odata*. The commands will show up.
+
+![alt text][images/demo1.gif]
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+- None
 
-## Release Notes
+## Contribution
 
-Users appreciate release notes as you update your extension.
+I created this extensions to fill my need using this with our oData services (ASP.NET oData V4.0). I tested it against the northwind service. I will extend this in the future, if I have any need to get things done. So please file an issue on github, I will have a look at it, how much work it will be to extend this. Or fork it and extend it on your own. Contribution is always welcome.
 
-### 1.0.0
+Bugreports
 
-Initial release of ...
+## Planned extensions
 
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on OSX or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on OSX or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (OSX) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+- Proxy generator (not scheduled)
+- Include oData Actions (not scheduled)
