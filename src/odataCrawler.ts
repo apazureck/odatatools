@@ -1,5 +1,6 @@
 import { Client } from 'node-rest-client';
-import { window, TextEdit, Range, commands } from 'vscode';
+import { window, TextEdit, Range, commands} from 'vscode';
+import { log } from './extension';
 
 interface EdmxBase {
     
@@ -79,34 +80,69 @@ export async function getInterfaces() {
 
     lastval = input;
 
-    let client = new Client();
-    client.get(input, (data, response) => {
-        try {
-            if(!data["edmx:Edmx"]) {
-                console.error("Received invalid data:\n", data);
-                return window.showErrorMessage("Response is not valid oData metadata. See console for more information");
+    let interfacesstring = await receiveInterfaces(input);
+
+    log.appendLine("Putting generated code to the current Editor window.");
+    if(!window.activeTextEditor)
+        return window.showErrorMessage("No active window selected.");
+
+    window.activeTextEditor.edit((editBuilder) => {
+        editBuilder.replace(window.activeTextEditor.selection, interfacesstring);
+    }).then((value) => {
+        commands.executeCommand("editor.action.formatDocument");
+    });
+}
+
+async function receiveInterfaces(input): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+        let client = new Client();
+        client.get(input, (data, response) => {
+            try {
+                if(!data["edmx:Edmx"]) {
+                    log.appendLine("Received invalid data:\n");
+                    log.append(data.toString());
+                    return reject(window.showErrorMessage("Response is not valid oData metadata. See output for more information"));
+                }
+                let edmx: Edmx = data["edmx:Edmx"];
+                let version = edmx.$.Version;
+                log.appendLine("oData version: " + version);
+                if(version!="4.0")
+                    window.showWarningMessage("WARNING! Current oDate Service Version is '"+version+"'. Trying to get interfaces, but service only supports Version 4.0! Outcome might be unexpected.");
+
+                log.appendLine("Creating Interfaces");
+                let interfacesstring = getInterfacesString(edmx["edmx:DataServices"][0].Schema);
+
+                log.appendLine("Creating Edm Types");
+                interfacesstring += edmTypes();
+
+                log.appendLine("Creating source line");
+                interfacesstring += "\n/// Do not modify this line to being able to update your interfaces again:"
+                interfacesstring += "\n/// #odata.source = '"+input+"'";
+                resolve(interfacesstring)
+            } catch (error) {
+                console.error("Unknown error:\n", error.toString())
+                window.showErrorMessage("Unknown error occurred, see console output for more information.");
+                reject(error);
             }
-            let edmx: Edmx = data["edmx:Edmx"];
-            let version = edmx.$.Version;
-            if(version!="4.0")
-                return window.showErrorMessage("Metadata is not valid Odata Version. Only 4.0 supported.");
-            let interfacesstring = getInterfacesString(edmx["edmx:DataServices"][0].Schema);
+        });
+    });
+}
 
-            interfacesstring += edmTypes();
+export async function updateInterfaces() {
+    log.appendLine("Looking for #odata.source hook");
+    let m = window.activeTextEditor.document.getText().match("/// #odata.source = '(.*?)'");
+    if(!m)
+        return window.showErrorMessage("Did not find odata source in document: '" + window.activeTextEditor.document.fileName + "'");
 
-            if(!window.activeTextEditor)
-                return window.showErrorMessage("No active window selected.");
-            window.activeTextEditor.edit((editBuilder) => {
-                editBuilder.replace(window.activeTextEditor.selection, interfacesstring);
-            }).then((value) => {
-                commands.executeCommand("editor.action.formatDocument");
-            });
-            
-        } catch (error) {
-            console.error("Unknown error:\n", error.toString())
-            window.showErrorMessage("Unknown error occurred, see console output for more information.");
-        }
-    })
+    let interfacesstring = await receiveInterfaces(m[1]);
+
+    log.appendLine("Updating current file.");
+    window.activeTextEditor.edit((editbuilder) => {
+        editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount-1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount-1).text.length), interfacesstring)
+    }).then((value) => {
+        log.appendLine("Successfully pasted data. Formatting Document.")
+        commands.executeCommand("editor.action.formatDocument").then(()=>log.appendLine("Finished"));
+    });
 }
 
 var typedefs = {
@@ -175,7 +211,7 @@ function getInterfacesString(schemas: Schema[]): string {
 }
 
 function getType(typestring: string): string {
-    let m = typestring.match(/Collection\(.*\)/);
+    let m = typestring.match(/Collection\((.*)\)/);
     if(m) {
         checkEdmType(m[1]);
         return m[1] + "[]";

@@ -11,13 +11,20 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:odatatools.GetInterfaces"
+        "onCommand:odatatools.GetInterfaces",
+        "onCommand:odatatools.UpdateInterfaces"
     ],
     "main": "./out/src/extension",
     "contributes": {
         "commands": [{
             "command": "odatatools.GetInterfaces",
-            "title": "oData: Get Interfaces from oData Service"
+            "category": "oData",
+            "title": "Get Entity Interfaces from oData V4.0 Service"
+        },
+        {
+            "command": "odatatools.UpdateInterfaces",
+            "category": "oData",
+            "title": "Update Entity Interfaces from oData V4 Service"
         }]
     },
     "scripts": {
@@ -31,5 +38,8 @@
         "mocha": "^2.3.3",
         "@types/node": "^6.0.40",
         "@types/mocha": "^2.2.32"
+    },
+    "dependencies": {
+        "node-rest-client": "2.0.1"
     }
 }

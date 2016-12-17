@@ -1,6 +1,6 @@
 # odatatools README
 
-This is the README for your extension "odatatools". After writing up a brief description, we recommend including the following sections.
+This extension extracts interfaces from metadata of oData V4.0 services to be used with typescript 
 
 ## Features
 
