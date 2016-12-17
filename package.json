@@ -2,7 +2,7 @@
     "name": "odatatools",
     "displayName": "odataTools",
     "description": "Tools for communicating with odata services in typescript",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "publisher": "apazureck",
     "engines": {
         "vscode": "^1.5.0"
@@ -16,16 +16,18 @@
     ],
     "main": "./out/src/extension",
     "contributes": {
-        "commands": [{
-            "command": "odatatools.GetInterfaces",
-            "category": "oData",
-            "title": "Get Entity Interfaces from oData V4.0 Service"
-        },
-        {
-            "command": "odatatools.UpdateInterfaces",
-            "category": "oData",
-            "title": "Update Entity Interfaces from oData V4 Service"
-        }]
+        "commands": [
+            {
+                "command": "odatatools.GetInterfaces",
+                "category": "oData",
+                "title": "Get Entity Interfaces from oData V4.0 Service"
+            },
+            {
+                "command": "odatatools.UpdateInterfaces",
+                "category": "oData",
+                "title": "Update Entity Interfaces from oData V4 Service"
+            }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "tsc -p ./",
