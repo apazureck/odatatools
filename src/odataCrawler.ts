@@ -80,7 +80,7 @@ export async function getInterfaces() {
 
     lastval = input;
 
-    let interfacesstring = await receiveInterfaces(input);
+    let interfacesstring = await receiveInterfaces(input, window.activeTextEditor.document.uri.fsPath.endsWith("d.ts"));
 
     log.appendLine("Putting generated code to the current Editor window.");
     if(!window.activeTextEditor)
@@ -93,7 +93,8 @@ export async function getInterfaces() {
     });
 }
 
-async function receiveInterfaces(input): Promise<string> {
+async function receiveInterfaces(input: string, ambient?: boolean): Promise<string> {
+    if(!ambient) ambient = false;
     return new Promise<string>((resolve, reject) => {
         let client = new Client();
         client.get(input, (data, response) => {
@@ -110,7 +111,7 @@ async function receiveInterfaces(input): Promise<string> {
                     window.showWarningMessage("WARNING! Current oDate Service Version is '"+version+"'. Trying to get interfaces, but service only supports Version 4.0! Outcome might be unexpected.");
 
                 log.appendLine("Creating Interfaces");
-                let interfacesstring = getInterfacesString(edmx["edmx:DataServices"][0].Schema);
+                let interfacesstring = getInterfacesString(edmx["edmx:DataServices"][0].Schema, ambient);
 
                 log.appendLine("Creating Edm Types");
                 interfacesstring += edmTypes();
@@ -134,7 +135,7 @@ export async function updateInterfaces() {
     if(!m)
         return window.showErrorMessage("Did not find odata source in document: '" + window.activeTextEditor.document.fileName + "'");
 
-    let interfacesstring = await receiveInterfaces(m[1]);
+    let interfacesstring = await receiveInterfaces(m[1], window.activeTextEditor.document.uri.fsPath.endsWith("d.ts"));
 
     log.appendLine("Updating current file.");
     window.activeTextEditor.edit((editbuilder) => {
@@ -173,10 +174,10 @@ function edmTypes(): string {
     return input;
 }
 
-function getInterfacesString(schemas: Schema[]): string {
+function getInterfacesString(schemas: Schema[], ambient: boolean): string {
     let ret = "";
     for(let schema of schemas) {
-        ret += "namespace " + schema.$.Namespace + " {\n";
+        ret += (ambient ? "declare " : "") + "namespace " + schema.$.Namespace + " {\n";
         if(schema.EntityType)
             for(let type of schema.EntityType) {
                 ret += "export interface " + type.$.Name + " {\n";

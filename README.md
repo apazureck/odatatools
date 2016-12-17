@@ -23,7 +23,7 @@ This extension targets to speed up access to your oData service to use it within
 
 ### Get and update Interfaces from oData service
 
-Just press `CTRL+SHIFT+P` (Linux and Windows) `CMD+SHIFT+P` on Mac OS and type *odata*. The commands will show up. The example animation below shows the generation of interfaces for the [northwind service](http://services.odata.org/V4/Northwind/Northwind.svc/) (V4.0).
+Open up a new file and name it with ending '.ts'. Just press `CTRL+SHIFT+P` (Linux and Windows) `CMD+SHIFT+P` on Mac OS and type "*odata*". The commands will show up. The example animation below shows the generation of interfaces for the [northwind service](http://services.odata.org/V4/Northwind/Northwind.svc/) (V4.0). When generating the interfaces for the first time you have to specify the service URL with or without `$metadata` at the end.
 
 ![Demo](https://cdn.rawgit.com/apazureck/odatatools/master/images/demo1.gif)
 
