@@ -114,7 +114,7 @@ async function receiveInterfaces(input: string, ambient?: boolean): Promise<stri
                 let interfacesstring = getInterfacesString(edmx["edmx:DataServices"][0].Schema, ambient);
 
                 log.appendLine("Creating Edm Types");
-                interfacesstring += edmTypes();
+                interfacesstring += edmTypes(ambient);
 
                 log.appendLine("Creating source line");
                 interfacesstring += "\n/// Do not modify this line to being able to update your interfaces again:"
@@ -165,9 +165,9 @@ var typedefs = {
     TimeOfDay: "string"
 }
 
-function edmTypes(): string {
+function edmTypes(ambient: boolean): string {
     let input = "\n";
-    input += "namespace Edm {\n";
+    input += (ambient ? "declare " : "") + "namespace Edm {\n";
     for(let key in typedefs)
         input += "export type "+key+" = "+typedefs[key]+";\n";
     input += "}";
