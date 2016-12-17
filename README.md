@@ -25,7 +25,7 @@ This extension targets to speed up access to your oData service to use it within
 
 Just press `CTRL+SHIFT+P` (Linux and Windows) `CMD+SHIFT+P` and type *odata*. The commands will show up.
 
-![Demo][https://cdn.rawgit.com/apazureck/odatatools/master/images/demo1.gif]
+![Demo](https://cdn.rawgit.com/apazureck/odatatools/master/images/demo1.gif)
 
 ## Known Issues
 
