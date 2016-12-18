@@ -1,71 +1,11 @@
 import { Client } from 'node-rest-client';
 import { window, TextEdit, Range, commands} from 'vscode';
-import { log } from './extension';
-
-interface EdmxBase {
-    
-}
-
-interface Edmx extends EdmxBase {
-    $: {
-        Version: string;
-        "xmlns:edmx": string;
-    }
-    "edmx:DataServices": { Schema: Schema[] };
-}
-
-interface Schema extends EdmxBase {
-    $: { Namespace: string; }
-    ComplexType: ComplexType[];
-    EntityType: EntityType[];
-    EnumType: EnumType[];
-}
-
-interface EnumType {
-    $: { Name: string; }
-    Member: {
-        $: {
-            Name: string;
-            Value: number;
-        }
-    }[]
-}
-
-interface NavigationProperty {
-    ReferentialConstraint?: {
-        $: {
-            Name: string;
-            Type: string;
-            Property: string;
-            ReferencedProperty: string;
-        }
-    }
-}
-
-interface ComplexType extends EdmxBase {
-    $: { Name: string; }
-    Property: Property[];
-}
-
-interface Property extends EdmxBase {
-    $: {
-        Name: string;
-        Type: string;
-        Nullable?: boolean;
-    }
-}
-
-interface EntityType extends ComplexType {
-    Key?: { PropertyRef: { $: { Name: string } } }[];
-    NavigationProperty: NavigationProperty[];
-}
-
-var lastval: string = null;
+import { log, Global } from './extension';
 
 export async function getInterfaces() {
     let input = await window.showInputBox({
         placeHolder: "http://my.odata.service/service.svc",
-        value: lastval,
+        value: Global.lastval,
         prompt: "Please enter uri of your oData service."
     });
 
@@ -78,7 +18,7 @@ export async function getInterfaces() {
 
     input = input + "/$metadata";
 
-    lastval = input;
+    Global.lastval = input;
 
     let interfacesstring = await receiveInterfaces(input, window.activeTextEditor.document.uri.fsPath.endsWith("d.ts"));
 

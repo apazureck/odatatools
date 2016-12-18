@@ -7,7 +7,11 @@ interface Edmx extends EdmxBase {
         Version: string;
         "xmlns:edmx": string;
     }
-    "edmx:DataServices": { Schema: Schema[] };
+    "edmx:DataServices": DataService[];
+}
+
+interface DataService {
+    Schema: Schema[]
 }
 
 interface Schema extends EdmxBase {
@@ -15,6 +19,29 @@ interface Schema extends EdmxBase {
     ComplexType: ComplexType[];
     EntityType: EntityType[];
     EnumType: EnumType[];
+    EntityContainer: EntityContainer[];
+}
+
+interface EntityContainer {
+    $: {
+        Name: string;
+    },
+    EntitySet: EntitySet[]
+}
+
+interface EntitySet {
+    $: {
+        Name: string,
+        EntityType: string
+    }
+    NavigationPropertyBinding: NavigationPropertyBinding[]
+}
+
+interface NavigationPropertyBinding {
+    $: {
+        Path: string
+        Target: string
+    }
 }
 
 interface EnumType {

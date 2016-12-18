@@ -1,262 +1,135 @@
-namespace NorthwindModel {
-    export interface Category {
-        CategoryID: Edm.Int32;
-        CategoryName: Edm.String;
+namespace Ifmdatalink.Linerecorder.Backend.PlugIn.dto {
+    export interface HostDto {
+        Ident: Edm.Int32;
+        LayoutObjectDto_Ident?: Edm.Int32;
+        LayoutObject?: Ifmdatalink.Linerecorder.Backend.PlugIn.dto.LayoutObjectDto;
+        HostName?: Edm.String;
+        Address?: Edm.String;
+        OS?: Edm.String;
+        AMSVersion?: Edm.String;
         Description?: Edm.String;
-        Picture?: Edm.Binary;
-        Products?: NorthwindModel.Product[];
+        Created?: Edm.DateTimeOffset;
+        Updated?: Edm.DateTimeOffset;
+        IsActive?: Edm.Boolean;
+        Closed?: Edm.DateTimeOffset;
     }
-    export interface CustomerDemographic {
-        CustomerTypeID: Edm.String;
-        CustomerDesc?: Edm.String;
-        Customers?: NorthwindModel.Customer[];
+    export interface AgentDto {
+        Ident: Edm.Int32;
+        Name?: Edm.String;
+        Description?: Edm.String;
+        Status: Edm.Int32;
+        OperatingMode: Edm.Int32;
+        StartMode: Edm.Int32;
+        RuntimeVersion?: Edm.String;
+        ServiceType?: Edm.String;
+        ServiceName?: Edm.String;
+        ServiceStatus?: Edm.String;
+        WatchdogFrequency?: Edm.String;
+        Deleted: Edm.Boolean;
+        Guarantor?: Edm.String;
+        Deputy?: Edm.String;
+        LayoutObjectIdent: Edm.Int32;
+        HostIdent?: Edm.Int32;
+        RecipeIdent?: Edm.Int32;
+        ProgramInstanceIdent?: Edm.Int32;
+        AgentMetaInfoIdent: Edm.Int32;
+        GuarantorUser?: Ifmdatalink.Linerecorder.Backend.PlugIn.dto.UserUserDto;
+        DeputyUser?: Ifmdatalink.Linerecorder.Backend.PlugIn.dto.UserUserDto;
+        Host?: Ifmdatalink.Linerecorder.Backend.PlugIn.dto.HostDto;
+        Recipe?: Ifmdatalink.Linerecorder.Backend.PlugIn.dto.RecipeVersionDto;
     }
-    export interface Customer {
-        CustomerID: Edm.String;
-        CompanyName: Edm.String;
-        ContactName?: Edm.String;
-        ContactTitle?: Edm.String;
-        Address?: Edm.String;
-        City?: Edm.String;
-        Region?: Edm.String;
-        PostalCode?: Edm.String;
-        Country?: Edm.String;
-        Phone?: Edm.String;
-        Fax?: Edm.String;
-        Orders?: NorthwindModel.Order[];
-        CustomerDemographics?: NorthwindModel.CustomerDemographic[];
+    export interface RecipeTemplateDto {
+        Ident: Edm.Int32;
+        Description?: Edm.String;
+        Name?: Edm.String;
+        Versions?: Ifmdatalink.Linerecorder.Backend.PlugIn.dto.RecipeTemplateVersionDto[];
     }
-    export interface Employee {
-        EmployeeID: Edm.Int32;
-        LastName: Edm.String;
-        FirstName: Edm.String;
-        Title?: Edm.String;
-        TitleOfCourtesy?: Edm.String;
-        BirthDate?: Edm.DateTimeOffset;
-        HireDate?: Edm.DateTimeOffset;
-        Address?: Edm.String;
-        City?: Edm.String;
-        Region?: Edm.String;
-        PostalCode?: Edm.String;
-        Country?: Edm.String;
-        HomePhone?: Edm.String;
-        Extension?: Edm.String;
-        Photo?: Edm.Binary;
-        Notes?: Edm.String;
-        ReportsTo?: Edm.Int32;
-        PhotoPath?: Edm.String;
-        Employees1?: NorthwindModel.Employee[];
-        Employee1?: NorthwindModel.Employee;
-        Orders?: NorthwindModel.Order[];
-        Territories?: NorthwindModel.Territory[];
+    export interface RecipeTemplateVersionDto {
+        Ident: Edm.Int32;
+        Build?: Edm.Int32;
+        Comment?: Edm.String;
+        CreationDate?: Edm.DateTimeOffset;
+        GuarantorIdent?: Edm.Int32;
+        Major?: Edm.Int32;
+        Minor?: Edm.Int32;
+        SourceCodeUriString?: Edm.String;
+        Tag?: Edm.String;
+        TemplateId?: Edm.Int32;
+        Guarantor?: Ifmdatalink.Linerecorder.Backend.PlugIn.dto.UserUserDto;
+        Template?: Ifmdatalink.Linerecorder.Backend.PlugIn.dto.RecipeDto;
     }
-    export interface Order_Detail {
-        OrderID: Edm.Int32;
-        ProductID: Edm.Int32;
-        UnitPrice: Edm.Decimal;
-        Quantity: Edm.Int16;
-        Discount: Edm.Single;
-        Order: NorthwindModel.Order;
-        Product: NorthwindModel.Product;
+    export interface RecipeDto {
+        Ident: Edm.Int32;
+        Description?: Edm.String;
+        Name?: Edm.String;
+        Versions?: Ifmdatalink.Linerecorder.Backend.PlugIn.dto.RecipeVersionDto[];
     }
-    export interface Order {
-        OrderID: Edm.Int32;
-        CustomerID?: Edm.String;
-        EmployeeID?: Edm.Int32;
-        OrderDate?: Edm.DateTimeOffset;
-        RequiredDate?: Edm.DateTimeOffset;
-        ShippedDate?: Edm.DateTimeOffset;
-        ShipVia?: Edm.Int32;
-        Freight?: Edm.Decimal;
-        ShipName?: Edm.String;
-        ShipAddress?: Edm.String;
-        ShipCity?: Edm.String;
-        ShipRegion?: Edm.String;
-        ShipPostalCode?: Edm.String;
-        ShipCountry?: Edm.String;
-        Customer?: NorthwindModel.Customer;
-        Employee?: NorthwindModel.Employee;
-        Order_Details?: NorthwindModel.Order_Detail[];
-        Shipper?: NorthwindModel.Shipper;
+    export interface RecipeVersionDto {
+        Ident: Edm.Int32;
+        Build?: Edm.Int32;
+        Comment?: Edm.String;
+        CreationDate?: Edm.DateTimeOffset;
+        GuarantorIdent?: Edm.Int32;
+        IsBlocked?: Edm.Boolean;
+        Major?: Edm.Int32;
+        Minor?: Edm.Int32;
+        Tag?: Edm.String;
+        TemplateIdent?: Edm.Int32;
+        RecipeIdent?: Edm.Int32;
+        Description?: Edm.String;
+        Guarantor?: Ifmdatalink.Linerecorder.Backend.PlugIn.dto.UserUserDto;
+        Template?: Ifmdatalink.Linerecorder.Backend.PlugIn.dto.RecipeTemplateVersionDto;
+        Recipe?: Ifmdatalink.Linerecorder.Backend.PlugIn.dto.RecipeDto;
     }
-    export interface Product {
-        ProductID: Edm.Int32;
-        ProductName: Edm.String;
-        SupplierID?: Edm.Int32;
-        CategoryID?: Edm.Int32;
-        QuantityPerUnit?: Edm.String;
-        UnitPrice?: Edm.Decimal;
-        UnitsInStock?: Edm.Int16;
-        UnitsOnOrder?: Edm.Int16;
-        ReorderLevel?: Edm.Int16;
-        Discontinued: Edm.Boolean;
-        Category?: NorthwindModel.Category;
-        Order_Details?: NorthwindModel.Order_Detail[];
-        Supplier?: NorthwindModel.Supplier;
+    export interface UserUserDto {
+        ident: Edm.Int32;
+        username?: Edm.String;
+        pwHash?: Edm.String;
+        description?: Edm.String;
+        mailAddress?: Edm.String;
+        mobilePhoneNumber?: Edm.String;
+        pnumber?: Edm.String;
+        uSource?: Edm.Int32;
+        userDN?: Edm.String;
+        ldapServerIdent: Edm.Int32;
+        UserUserRole: Edm.Int32[];
+        Enabled: Edm.Boolean;
+        ReadOnly: Edm.Boolean;
+        entryTopology?: Edm.Int32;
+        Language?: Edm.String;
     }
-    export interface Region {
-        RegionID: Edm.Int32;
-        RegionDescription: Edm.String;
-        Territories?: NorthwindModel.Territory[];
-    }
-    export interface Shipper {
-        ShipperID: Edm.Int32;
-        CompanyName: Edm.String;
-        Phone?: Edm.String;
-        Orders?: NorthwindModel.Order[];
-    }
-    export interface Supplier {
-        SupplierID: Edm.Int32;
-        CompanyName: Edm.String;
-        ContactName?: Edm.String;
-        ContactTitle?: Edm.String;
-        Address?: Edm.String;
-        City?: Edm.String;
-        Region?: Edm.String;
-        PostalCode?: Edm.String;
-        Country?: Edm.String;
-        Phone?: Edm.String;
-        Fax?: Edm.String;
-        HomePage?: Edm.String;
-        Products?: NorthwindModel.Product[];
-    }
-    export interface Territory {
-        TerritoryID: Edm.String;
-        TerritoryDescription: Edm.String;
-        RegionID: Edm.Int32;
-        Region: NorthwindModel.Region;
-        Employees?: NorthwindModel.Employee[];
-    }
-    export interface Alphabetical_list_of_product {
-        ProductID: Edm.Int32;
-        ProductName: Edm.String;
-        SupplierID?: Edm.Int32;
-        CategoryID?: Edm.Int32;
-        QuantityPerUnit?: Edm.String;
-        UnitPrice?: Edm.Decimal;
-        UnitsInStock?: Edm.Int16;
-        UnitsOnOrder?: Edm.Int16;
-        ReorderLevel?: Edm.Int16;
-        Discontinued: Edm.Boolean;
-        CategoryName: Edm.String;
-    }
-    export interface Category_Sales_for_1997 {
-        CategoryName: Edm.String;
-        CategorySales?: Edm.Decimal;
-    }
-    export interface Current_Product_List {
-        ProductID: Edm.Int32;
-        ProductName: Edm.String;
-    }
-    export interface Customer_and_Suppliers_by_City {
-        City?: Edm.String;
-        CompanyName: Edm.String;
-        ContactName?: Edm.String;
-        Relationship: Edm.String;
-    }
-    export interface Invoice {
-        ShipName?: Edm.String;
-        ShipAddress?: Edm.String;
-        ShipCity?: Edm.String;
-        ShipRegion?: Edm.String;
-        ShipPostalCode?: Edm.String;
-        ShipCountry?: Edm.String;
-        CustomerID?: Edm.String;
-        CustomerName: Edm.String;
-        Address?: Edm.String;
-        City?: Edm.String;
-        Region?: Edm.String;
-        PostalCode?: Edm.String;
-        Country?: Edm.String;
-        Salesperson: Edm.String;
-        OrderID: Edm.Int32;
-        OrderDate?: Edm.DateTimeOffset;
-        RequiredDate?: Edm.DateTimeOffset;
-        ShippedDate?: Edm.DateTimeOffset;
-        ShipperName: Edm.String;
-        ProductID: Edm.Int32;
-        ProductName: Edm.String;
-        UnitPrice: Edm.Decimal;
-        Quantity: Edm.Int16;
-        Discount: Edm.Single;
-        ExtendedPrice?: Edm.Decimal;
-        Freight?: Edm.Decimal;
-    }
-    export interface Order_Details_Extended {
-        OrderID: Edm.Int32;
-        ProductID: Edm.Int32;
-        ProductName: Edm.String;
-        UnitPrice: Edm.Decimal;
-        Quantity: Edm.Int16;
-        Discount: Edm.Single;
-        ExtendedPrice?: Edm.Decimal;
-    }
-    export interface Order_Subtotal {
-        OrderID: Edm.Int32;
-        Subtotal?: Edm.Decimal;
-    }
-    export interface Orders_Qry {
-        OrderID: Edm.Int32;
-        CustomerID?: Edm.String;
-        EmployeeID?: Edm.Int32;
-        OrderDate?: Edm.DateTimeOffset;
-        RequiredDate?: Edm.DateTimeOffset;
-        ShippedDate?: Edm.DateTimeOffset;
-        ShipVia?: Edm.Int32;
-        Freight?: Edm.Decimal;
-        ShipName?: Edm.String;
-        ShipAddress?: Edm.String;
-        ShipCity?: Edm.String;
-        ShipRegion?: Edm.String;
-        ShipPostalCode?: Edm.String;
-        ShipCountry?: Edm.String;
-        CompanyName: Edm.String;
-        Address?: Edm.String;
-        City?: Edm.String;
-        Region?: Edm.String;
-        PostalCode?: Edm.String;
-        Country?: Edm.String;
-    }
-    export interface Product_Sales_for_1997 {
-        CategoryName: Edm.String;
-        ProductName: Edm.String;
-        ProductSales?: Edm.Decimal;
-    }
-    export interface Products_Above_Average_Price {
-        ProductName: Edm.String;
-        UnitPrice?: Edm.Decimal;
-    }
-    export interface Products_by_Category {
-        CategoryName: Edm.String;
-        ProductName: Edm.String;
-        QuantityPerUnit?: Edm.String;
-        UnitsInStock?: Edm.Int16;
-        Discontinued: Edm.Boolean;
-    }
-    export interface Sales_by_Category {
-        CategoryID: Edm.Int32;
-        CategoryName: Edm.String;
-        ProductName: Edm.String;
-        ProductSales?: Edm.Decimal;
-    }
-    export interface Sales_Totals_by_Amount {
-        SaleAmount?: Edm.Decimal;
-        OrderID: Edm.Int32;
-        CompanyName: Edm.String;
-        ShippedDate?: Edm.DateTimeOffset;
-    }
-    export interface Summary_of_Sales_by_Quarter {
-        ShippedDate?: Edm.DateTimeOffset;
-        OrderID: Edm.Int32;
-        Subtotal?: Edm.Decimal;
-    }
-    export interface Summary_of_Sales_by_Year {
-        ShippedDate?: Edm.DateTimeOffset;
-        OrderID: Edm.Int32;
-        Subtotal?: Edm.Decimal;
+    export interface LayoutObjectDto {
+        ident: Edm.Int32;
+        layoutObjectTypeIdent: Edm.Int32;
+        parentIdent?: Edm.Int32;
+        name?: Edm.String;
+        description?: Edm.String;
+        createTs: Edm.DateTimeOffset;
+        lastUpdatedTs: Edm.DateTimeOffset;
+        createUser?: Edm.String;
+        latitude?: Edm.Double;
+        longitude?: Edm.Double;
+        centerLatitude?: Edm.Double;
+        centerLongitude?: Edm.Double;
+        zoomFactor?: Edm.Int32;
+        imageIdent?: Edm.Int32;
+        showImage: Edm.Boolean;
+        imageMode: Edm.Int32;
+        ord: Edm.Int32;
+        unit?: Edm.String;
+        displayMode: Ifmdatalink.Linerecorder.Backend.PlugIn.Enum.LayoutObjectDisplayMode;
+        state: Ifmdatalink.Linerecorder.Backend.PlugIn.Enum.LayoutObjectState;
     }
 }
-namespace ODataWebExperimental.Northwind.Model {
+namespace Ifmdatalink.Linerecorder.Backend.PlugIn.Enum {
+    export enum LayoutObjectDisplayMode {
+        Show = 0, Hide = 1
+    }
+    export enum LayoutObjectState {
+        Active = 0, Disabled = 1, TimedOut = 2
+    }
+}
+namespace Default {
 }
 
 namespace Edm {
@@ -278,4 +151,4 @@ namespace Edm {
     export type TimeOfDay = string;
 }
 /// Do not modify this line to being able to update your interfaces again:
-/// #odata.source = 'http://services.odata.org/V4/Northwind/Northwind.svc/$metadata'
+/// #odata.source = 'http://localhost:13917/ams.svc/$metadata'
