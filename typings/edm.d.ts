@@ -79,6 +79,6 @@ interface Property extends EdmxBase {
 }
 
 interface EntityType extends ComplexType {
-    Key?: { PropertyRef: { $: { Name: string } } }[];
+    Key?: { PropertyRef: { $: { Name: string } }[] }[];
     NavigationProperty: NavigationProperty[];
 }

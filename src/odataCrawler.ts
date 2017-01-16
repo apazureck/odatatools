@@ -91,8 +91,8 @@ var typedefs = {
     Binary: "string",
     Boolean: "boolean",
     Byte: "number",
-    Date: "string",
-    DateTimeOffset: "string",
+    Date: "JSDate",
+    DateTimeOffset: "JSDate",
     Decimal: "number",
     Double: "number",
     Guid: "string",
@@ -107,6 +107,7 @@ var typedefs = {
 
 function edmTypes(ambient: boolean): string {
     let input = "\n";
+    input += "type JSDate = Date;\n\n"
     input += (ambient ? "declare " : "") + "namespace Edm {\n";
     for(let key in typedefs)
         input += "export type "+key+" = "+typedefs[key]+";\n";
@@ -128,6 +129,15 @@ function getInterfacesString(schemas: Schema[], ambient: boolean): string {
                     for(let prop of type.NavigationProperty)
                         ret += getProperty(prop);
                 ret += "}\n";
+                
+                ret += "export interface Delta" + type.$.Name + " {\n";
+                if(type.Property)
+                    for(let prop of type.Property)
+                        ret += getProperty(prop, true);
+                if(type.NavigationProperty)
+                    for(let prop of type.NavigationProperty)
+                        ret += getProperty(prop, true);
+                ret += "}\n";
             }
         if(schema.ComplexType)
             for(let type of schema.ComplexType) {
@@ -139,12 +149,12 @@ function getInterfacesString(schemas: Schema[], ambient: boolean): string {
             }
         if(schema.EnumType)
             for(let enumtype of schema.EnumType) {
-                ret += "export enum " + enumtype.$.Name + " {\n";
+                ret += "type " + enumtype.$.Name + " = ";
                 let i = 0;
                 if(enumtype.$.Name)
                     for(let member of enumtype.Member)
-                        ret += member.$.Name + " = " + member.$.Value + (++i < enumtype.Member.length ? "," : "")
-                ret += "}\n";
+                        ret += "\"" + member.$.Name + "\"" + (++i < enumtype.Member.length ? " | " : "")
+                ret += "";
             }
         ret += "}\n";
     }
@@ -171,9 +181,9 @@ function checkEdmType(typestring: string) {
         typedefs[typename] = "any";
 }
 
-function getProperty(inprop: Property | NavigationProperty) {
+function getProperty(inprop: Property | NavigationProperty, forceoptional?: boolean) {
     let prop = inprop as Property;
     if(typeof inprop === 'NavigationProperty')
         prop.$.Nullable = true;
-    return prop.$.Name + (typeof prop.$.Nullable !== 'undefined' ? (prop.$.Nullable ? "" : "?") : "?") + ": " + getType(prop.$.Type) + ";\n"
+    return prop.$.Name + (typeof prop.$.Nullable !== 'undefined' ? (forceoptional ? "?" : (prop.$.Nullable ? "" : "?")) : "?") + ": " + getType(prop.$.Type) + ";\n"
 }
