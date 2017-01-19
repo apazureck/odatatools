@@ -91,6 +91,7 @@ namespace odatatools {
                         callback.resolve(data);
                     }
                 }, (error) => {
+                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":\n" + (error.response | error.response.body));
                     if(callback.catch) {
                         callback.reject(error);
                     }
@@ -103,6 +104,7 @@ namespace odatatools {
                         callback.resolve(data);
                     }
                 }, (error) => {
+                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":\n" + (error.response | error.response.body));
                     if(callback.catch) {
                         callback.reject(error);
                     }
@@ -132,7 +134,7 @@ namespace odatatools {
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve();
             }, (error) => {
-                console.error(error.message + " | " + error.response.statusText + ":\n" + error.response.body);
+                console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":\n" + (error.response | error.response.body));
                 callback.reject(error);
             });
             return callback;
@@ -158,7 +160,7 @@ namespace odatatools {
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve(data as T);
             }, (error) => {
-                console.error(error.message + " | " + error.response.statusText + ":\n" + error.response.body);
+                console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":\n" + (error.response | error.response.body));
                 callback.reject(error);
             });
             return callback;
@@ -180,7 +182,7 @@ namespace odatatools {
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve();
             }, (error) => {
-                console.error(error.message + " | " + error.response.statusText + ":\n" + error.response.body);
+                console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":\n" + (error.response | error.response.body));
                 callback.reject(error);
             });
             return callback;
@@ -212,6 +214,7 @@ namespace odatatools {
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve();
             }, (error) => {
+                console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":\n" + (error.response | error.response.body));
                 callback.reject(error);
             });
             return callback;
