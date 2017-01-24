@@ -10,6 +10,7 @@ This extension targets to speed up access to your oData service to use it within
 
 - Create *typescript* Interface declarations from oData service
 - Update *typescript* Interface declaration for oData Service
+- Create *typescript* OData V4 client (**Experimental**)
 
 ## Requirements
 
@@ -26,6 +27,102 @@ This extension targets to speed up access to your oData service to use it within
 Open up a new file and name it with ending '.ts'. Just press `CTRL+SHIFT+P` (Linux and Windows) `CMD+SHIFT+P` on Mac OS and type "*odata*". The commands will show up. The example animation below shows the generation of interfaces for the [northwind service](http://services.odata.org/V4/Northwind/Northwind.svc/) (V4.0). When generating the interfaces for the first time you have to specify the service URL with or without `$metadata` at the end.
 
 ![Demo](https://cdn.rawgit.com/apazureck/odatatools/master/images/demo1.gif)
+
+### Create OData V4 client (EXPERIMENTAL)
+
+To create an Odata V4  just press `CTRL+SHIFT+P` (Linux and Windows) `CMD+SHIFT+P` on Mac OS and type "*odata*". Select "*OData: Create Proxy*".
+1. Give the url of the odata service. Make sure to start with "**http://**"
+2. Give the name for your OData class.
+3. Put in "a" for creating an ambient variation or anything else for a modular version. When using ambient version make sure to load "odatajs-4.0.0.js" and "odataproxbyse.js" before using the service
+
+### Usage of OData V4 client (EXPERIMENTAL)
+
+The client will create a proxy class with the entity sets of the selected OData service, as shown in this example:
+
+```typescript
+import ProxyBase = odatatools.ProxyBase; import EntitySet = odatatools.EntitySet;
+
+class MyProxy extends ProxyBase {
+    constructor(name: string, address: string) {
+        super(name, address);
+        this.Movies = new EntitySet<ODataTestService.Models.Movie, ODataTestService.Models.DeltaMovie>("Movies", address, "Id");
+        this.Customers = new EntitySet<ODataTestService.Models.Customer, ODataTestService.Models.DeltaCustomer>("Customers", address, "Id");
+        this.Addresses = new EntitySet<ODataTestService.Models.Address, ODataTestService.Models.DeltaAddress>("Addresses", address, "Id");
+    }
+    Movies: EntitySet<ODataTestService.Models.Movie, ODataTestService.Models.DeltaMovie>;
+    Customers: EntitySet<ODataTestService.Models.Customer, ODataTestService.Models.DeltaCustomer>;
+    Addresses: EntitySet<ODataTestService.Models.Address, ODataTestService.Models.DeltaAddress>;
+}
+```
+
+#### Get
+
+Gets the entity set, or one entry by giving the ID:
+```typescript
+import Movie = ODataTestService.Models.Movie;
+
+let client = new MyProxy("MyProxy", "localhost:8800/odata");
+// Get whole set
+client.Movies.Get().then((value) => {
+    ...
+}).catch((error) => {
+    ... Error Handling ...
+});
+// Get single entry
+client.Movies.Get(1).then((value) => {
+    ...
+});
+// Get whole set with additional expand syntax (any odata query option allowed)
+client.Movies.Get("$expand=Owner"). then((value) => {
+    ...
+});
+```
+
+#### Post
+
+Adds a new entry to the entity set:
+```typescript
+...
+let tmp = { Name: "Alien", Director: "Ridley Scott", Cast: "Tom Skerritt, Sigourney Weaver", ... }
+client.Movies.Post(tmp).then((newValue) => {
+    ...
+});
+```
+
+#### Put
+
+Replaces an entry in the entity set.
+```typescript
+...
+client.Movies.Get(1).then((movie) => {
+    movie.Cast += ", Veronica Cartwright";
+    client.Movies.Put(movie); // No return value: Thenable<void>
+});
+```
+
+#### Patch
+Patches an element in the entity set. You can give a delta (interface is automatically generated when querying the interfaces) or get the delta by giving an old value and new value. Here is an example for using delta:
+```typescipt
+import MovieDelta = ODataTestService.Models.MovieDelta;
+...
+let delta: MovieDelta = {
+    Id: 1,
+    Screenplay: "Dan O'Bannon"
+}
+client.Movies.Patch(MovieDelta); // No return value: Thenable<void>
+```
+
+#### Error Handling
+Each function can also return an error callback.
+
+#### Delete
+Deletes an entry from the entity set.
+```typescript
+...
+let movie = client.Movies.Get(1);
+movie.Cast += ", Veronica Cartwright";
+client.Movies.Put(movie);
+```
 
 ## Known Issues
 
