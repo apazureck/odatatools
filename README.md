@@ -113,7 +113,12 @@ client.Movies.Patch(MovieDelta); // No return value: Thenable<void>
 ```
 
 #### Error Handling
-Each function can also return an error callback.
+Each function can also return an error callback, which can be caught with the function
+```typescript
+(error) => {
+    ... Error Handling ...
+}
+```
 
 #### Delete
 Deletes an entry from the entity set.

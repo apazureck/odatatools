@@ -1,76 +1,76 @@
 {
-  "name": "odatatools",
-  "displayName": "odataTools",
-  "description": "Tools for communicating with odata services in typescript",
-  "version": "0.2.1",
-  "publisher": "apazureck",
-  "engines": {
-    "vscode": "^1.5.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "onCommand:odatatools.GetInterfaces",
-    "onCommand:odatatools.UpdateInterfaces",
-    "onCommand:odatatools.GetProxy"
-  ],
-  "main": "./out/src/extension",
-  "contributes": {
-    "commands": [
-      {
-        "command": "odatatools.GetInterfaces",
-        "category": "oData",
-        "title": "Get Entity Interfaces from oData V4.0 Service",
-        "icon": "images/odata.png"
-      },
-      {
-        "command": "odatatools.UpdateInterfaces",
-        "category": "oData",
-        "title": "Update Entity Interfaces from oData V4.0 Service",
-        "icon": "images/odata.png"
-      },
-      {
-        "command": "odatatools.GetProxy",
-        "category": "oData",
-        "title": "Create Proxy",
-        "icon": "images/odata.png"
-      }
-    ]
-  },
-  "scripts": {
-    "vscode:prepublish": "tsc -p ./",
-    "compile": "tsc -watch -p ./",
-    "postinstall": "node ./node_modules/vscode/bin/install"
-  },
-  "devDependencies": {
-    "@types/mocha": "^2.2.32",
-    "@types/node": "^6.0.40",
-    "assert": "^1.4.1",
-    "jasmine-core": "^2.5.2",
-    "mocha": "^2.3.3",
-    "qunitjs": "^2.1.1",
-    "typescript": "^2.0.3",
-    "vscode": "^1.0.0"
-  },
-  "dependencies": {
-    "linq-es2015": "^2.4.13",
-    "node-rest-client": "2.0.1"
-  },
-  "author": {
-    "email": "info@pazureck.de",
-    "name": "Andreas Pazureck"
-  },
-  "keywords": [
-    "oData"
-  ],
-  "preview": true,
-  "galleryBanner": {
-    "color": "white",
-    "theme": "light"
-  },
-  "license": "MIT",
-  "bugs": "https://github.com/apazureck/odatatools/issues",
-  "repository": "https://github.com/apazureck/odatatools",
-  "icon": "images/odata.png"
+    "name": "odatatools",
+    "displayName": "odataTools",
+    "description": "Tools for communicating with odata services in typescript",
+    "version": "0.3.0",
+    "publisher": "apazureck",
+    "engines": {
+        "vscode": "^1.5.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:odatatools.GetInterfaces",
+        "onCommand:odatatools.UpdateInterfaces",
+        "onCommand:odatatools.GetProxy"
+    ],
+    "main": "./out/src/extension",
+    "contributes": {
+        "commands": [
+            {
+                "command": "odatatools.GetInterfaces",
+                "category": "oData",
+                "title": "Get Entity Interfaces from oData V4.0 Service",
+                "icon": "images/odata.png"
+            },
+            {
+                "command": "odatatools.UpdateInterfaces",
+                "category": "oData",
+                "title": "Update Entity Interfaces from oData V4.0 Service",
+                "icon": "images/odata.png"
+            },
+            {
+                "command": "odatatools.GetProxy",
+                "category": "oData",
+                "title": "Create Proxy (EXPERIMENTAL)",
+                "icon": "images/odata.png"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "tsc -p ./",
+        "compile": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "devDependencies": {
+        "@types/mocha": "^2.2.32",
+        "@types/node": "^6.0.40",
+        "assert": "^1.4.1",
+        "jasmine-core": "^2.5.2",
+        "mocha": "^2.3.3",
+        "qunitjs": "^2.1.1",
+        "typescript": "^2.0.3",
+        "vscode": "^1.0.0"
+    },
+    "dependencies": {
+        "linq-es2015": "^2.4.13",
+        "node-rest-client": "2.0.1"
+    },
+    "author": {
+        "email": "info@pazureck.de",
+        "name": "Andreas Pazureck"
+    },
+    "keywords": [
+        "oData"
+    ],
+    "preview": true,
+    "galleryBanner": {
+        "color": "white",
+        "theme": "light"
+    },
+    "license": "MIT",
+    "bugs": "https://github.com/apazureck/odatatools/issues",
+    "repository": "https://github.com/apazureck/odatatools",
+    "icon": "images/odata.png"
 }
