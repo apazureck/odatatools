@@ -101,8 +101,8 @@ async function getProxyString(uri: string, metadata: DataService, proxyname: str
         if (!ec)
             return reject("Could not find any EntityContainer");
         ret += "class " + proxyname + " extends ProxyBase {\n";
-        ret += "constructor(name: string, address: string) {\n"
-        ret += "super(name, address);\n";
+        ret += "constructor(address: string, name?: string) {\n"
+        ret += "super(address, name);\n";
         for (let set of ec.EntitySet) {
             ret += "this." + set.$.Name + " = new EntitySet<" + set.$.EntityType + ", " + getDeltaName(set.$.EntityType) + ">(\"" + set.$.Name + "\", address, \"" + keys.get(set.$.EntityType) + "\");\n"
         }
