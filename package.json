@@ -2,7 +2,7 @@
     "name": "odatatools",
     "displayName": "odataTools",
     "description": "Tools for communicating with odata services in typescript",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "publisher": "apazureck",
     "engines": {
         "vscode": "^1.5.0"
@@ -45,17 +45,17 @@
     },
     "devDependencies": {
         "@types/mocha": "^2.2.32",
-        "@types/node": "^6.0.40",
+        "@types/node": "^7.0.5",
         "assert": "^1.4.1",
         "jasmine-core": "^2.5.2",
-        "mocha": "^2.3.3",
+        "mocha": "^3.2.0",
         "qunitjs": "^2.1.1",
         "typescript": "^2.0.3",
         "vscode": "^1.0.0"
     },
     "dependencies": {
         "linq-es2015": "^2.4.13",
-        "node-rest-client": "2.0.1"
+        "node-rest-client": "2.5.0"
     },
     "author": {
         "email": "info@pazureck.de",

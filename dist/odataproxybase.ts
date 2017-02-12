@@ -238,7 +238,7 @@ namespace odatatools {
      * @implements {Thenable<T>}
      * @template T
      */
-    class ThenableCaller<T> implements Thenable<T> {
+    export class ThenableCaller<T> implements Thenable<T> {
         private _then?: ((value: T) => void)[] = [];
         private _catch?: ((error: any) => void)[] = [];
         public then(then?: (value: T) => void): Thenable<T> {
@@ -267,7 +267,7 @@ namespace odatatools {
      * @interface Thenable
      * @template T
      */
-    interface Thenable<T> {
+    export interface Thenable<T> {
         
         /**
          * Gets called if async function returns successfully

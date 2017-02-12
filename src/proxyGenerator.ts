@@ -6,6 +6,8 @@ import { Enumerable } from "linq-es2015";
 import * as fs from 'fs';
 import * as path from 'path';
 
+type ftype = "Action" | "Function"
+
 export async function createProxy() {
     try {
         let maddr = await window.showInputBox({
@@ -28,17 +30,14 @@ export async function createProxy() {
         log.appendLine("Getting Metadata from '" + maddr + "'");
         let metadata = await getMetadata(maddr);
 
-        let proxyname = await window.showInputBox({
-            placeHolder: "MyProxy",
-            prompt: "Please enter the name of your proxy service class."
-        });
-
         let ambientorImport = await window.showInputBox({
             placeHolder: "import",
             prompt: "Type (a)mbient to generate ambient namespace instead of import module. Otherwise leave empty"
         })
 
-        let proxystring = await getProxyString(maddr.replace("$metadata", ""), metadata["edmx:DataServices"][0], proxyname, ambientorImport);
+        let proxystring = await getProxyString(maddr.replace("$metadata", ""), metadata["edmx:DataServices"][0], ambientorImport);
+        proxystring = await replaceWithBoundActions(proxystring, metadata["edmx:DataServices"][0])
+        proxystring = surroundWithNamespace(proxystring, metadata["edmx:DataServices"][0]);
 
         log.appendLine("Updating current file.");
         window.activeTextEditor.edit((editbuilder) => {
@@ -54,7 +53,212 @@ export async function createProxy() {
     } catch (error) {
         window.showErrorMessage("Could not create proxy. See output window for detail.");
         log.appendLine("Creating proxy returned following error:");
-        log.appendLine(JSON.stringify(error));
+        log.appendLine(error.toString());
+    }
+}
+
+function surroundWithNamespace(proxystring: string, metadata: DataService): string {
+    let ecschema = enumerable.asEnumerable(metadata.Schema).FirstOrDefault(x => x.EntityContainer != undefined);
+    if (!ecschema)
+        throw new Error("No entity container found on odata service.");
+
+    let ret = "namespace " + ecschema.$.Namespace + " {\n";
+    ret += proxystring + "\n"
+    ret += "}";
+    return ret;
+}
+
+class EntitySet {
+    constructor(public Type: string) {
+        this.Actions = [];
+        this.Functions = [];
+    }
+
+    Actions: Method[];
+    Functions: Method[];
+
+    getImplementedClass(metadata: DataService): string {
+        let typedef = (enumerable.asEnumerable(metadata.Schema)
+            .SelectMany(x => {
+                if (!x.EntityType)
+                    return [];
+                return x.EntityType ? x.EntityType : [];
+            }) as Enumerable<EntityType>)
+            .FirstOrDefault(x => x.$.Name == this.Type);
+        let key = typedef.Key[0].PropertyRef[0].$.Name;
+        let keytype = enumerable.asEnumerable<Property>(typedef.Property).FirstOrDefault(x => x.$.Name === key).$.Type;
+
+        let ret = "export class " + this.getTypeName() + " extends " + this.getSubstitutedType() + " {\n";
+        ret += "constructor(name: string, address: string, key: string) {";
+        ret += "super(name, address, key);\n";
+        ret += "}\n"
+        for (let a of this.Actions)
+            ret += this.createMethod(a, "POST", keytype) + "\n";
+        for (let f of this.Functions)
+            ret += this.createMethod(f, "GET", keytype) + "\n";
+        ret += "}\n"
+        return ret;
+    }
+
+    getSubstitutedType(): string {
+        return "EntitySet<" + this.Type + ", " + this._getDeltaType() + ">";
+    }
+
+    private _getDeltaType(): string {
+        let tcomponents = this.Type.split(".");
+        let name = tcomponents.pop();
+        return enumerable.asEnumerable(tcomponents).Aggregate<string>((a, b) => a + b + ".") + "Delta" + name;
+    }
+
+    getTypeName(): string {
+        return this.Type.split(".").pop() + "EntitySet";
+    }
+
+    private _getParameters(parameters: Parameter[]): string {
+        let ret = "";
+        for(let param of parameters) {
+            ret += param.$.Name + (param.$.Nullable ? "?" : "") + ": " + param.$.Type + ", "
+        }
+        // return list without last ", "
+        return ret.substr(0, ret.length-2);
+    }
+
+    private _getReturnType(returntype: ReturnType[]): string {
+        if(!returntype)
+            return "void"
+        return returntype[0].Type;
+    }
+
+    private _getParameterJSON(parameters: Parameter[]): string {
+        let ret = "{\n"
+        for(let param of parameters) {
+            ret += param.$.Name + ": " + param.$.Name + ",\n";
+        }
+        ret = ret.substr(0, ret.length-2) + "\n";
+        return ret + "}";
+    }
+
+    private createMethod(method: Method, requesttype: GetOrPost, key: string): string {
+        // TODO: get key type
+        let ret = method.$.Name + "(" + (method.IsBoundToCollection ? "" : "key: " + key + (method.Parameter.length>0?", ":"")) + this._getParameters(method.Parameter) + "): Thenable<"+this._getReturnType(method.ReturnType)+">{\n";
+        ret += "let callback = new ThenableCaller<"+this._getReturnType(method.ReturnType)+">();\n";
+        ret += "let headers = { \"Content-Type\": \"application/json\", Accept: \"application/json\" };\n";
+        ret += "let request: odatajs.Request = {\n";
+        ret += "headers: headers,\n";
+        ret += "method: \""+requesttype+"\",\n";
+        ret += "requestUri: this.Address  + \"" + (method.IsBoundToCollection ? "" : "(\"+key+\")") + "/" + method.Namespace + "." + method.$.Name + "\",\n";
+        if(method.Parameter.length>0)
+            ret += "data: " + this._getParameterJSON(method.Parameter) + "\n";
+        ret += "}\n";
+        ret += "odatajs.oData.request(request, (data, response) => {\n";
+        ret += "callback.resolve();\n"
+        ret += "}, (error) => {\n";
+        ret += "console.error(error.name + \" \" + error.message + \" | \" + (error.response | error.response.statusText) + \":\" + (error.response | error.response.body));\n";
+        ret += "callback.reject(error);\n";
+        ret += "});\n";
+        ret += "return callback;\n";
+        ret += "}\n";
+        return ret;
+    }
+}
+
+type GetOrPost = "GET" | "POST";
+
+async function replaceWithBoundActions(proxystring: string, metadata: DataService): Promise<string> {
+    log.appendLine("Looking for actions and functions")
+    return new Promise<string>((resolve, reject) => {
+        let ecschema = enumerable.asEnumerable(metadata.Schema).FirstOrDefault(x => x.EntityContainer != undefined);
+        if (!ecschema)
+            reject("No entity container found on odata service.");
+
+        let entitysets = getEntitySetsWithActionsOrFunctions(ecschema);
+
+        for (let typename in entitysets) {
+            proxystring = proxystring.replace(entitysets[typename].getSubstitutedType(), entitysets[typename].getTypeName())
+            proxystring += "\n" + entitysets[typename].getImplementedClass(metadata) + "\n";
+        }
+
+        resolve(proxystring);
+    });
+}
+
+function getEntitySetsWithActionsOrFunctions(ecschema: Schema): { [type: string]: EntitySet } {
+    let entitySets: { [type: string]: EntitySet } = {};
+
+    if (ecschema.Action) {
+        log.appendLine("Found " + ecschema.Action.length + " OData Actions");
+        for (let a of ecschema.Action) {
+            try {
+                log.appendLine("Adding" + (a.$.IsBound ? " bound " : " ") + "Action " + a.$.Name);
+                // Try and get entity set
+                let params = enumerable.AsEnumerable(a.Parameter);
+                // if parameter bindingparameter exists it is a bound action/function
+                let bindingParameter = params.FirstOrDefault(x => x.$.Name === "bindingParameter");
+
+                if (bindingParameter) {
+                    let curset = getSet(bindingParameter, entitySets);
+                    // get rest of Parameters
+                    let methodparams = params.Where(x => x.$.Name !== "bindingParameter");
+                    a.Parameter = methodparams.ToArray();
+                    a.Namespace = ecschema.$.Namespace;
+                    curset.Actions.push(a);
+                    entitySets[curset.Type] = curset;
+                } else {
+                    // Method is not a bound action or function (NOT IMPLEMENTED SO FAR)
+                    log.appendLine("Does not support unbound function or action");
+                }
+            } catch (error) {
+                log.appendLine("Error occurred when adding action " + a.$.Name + ": " + error.toString())
+            }
+        }
+    }
+
+    if (ecschema.Function) {
+        log.appendLine("Found " + ecschema.Function.length + " OData Functions");
+        for (let f of ecschema.Function) {
+            try {
+                log.appendLine("Adding" + f.$.IsBound ? " bound " : " " + "Function " + f.$.Name);
+                // Try and get entity set
+                let params = enumerable.AsEnumerable(f.Parameter);
+                // if parameter bindingparameter exists it is a bound action/function
+                let bindingParameter = params.FirstOrDefault(x => x.$.Name === "bindingParameter");
+
+                if (bindingParameter) {
+                    let curset = getSet(bindingParameter, entitySets);
+                    // get rest of Parameters
+                    let methodparams = params.Where(x => x.$.Name !== "bindingParameter");
+                    f.Parameter = methodparams.ToArray();
+                    f.IsBoundToCollection = bindingParameter.$.Type.match(/Collection\(.*\)/) != undefined;
+                    f.Namespace = ecschema.$.Namespace;
+                    curset.Functions.push(f);
+                    entitySets[curset.Type] = curset;
+                } else {
+                    // Method is not a bound action or function (NOT IMPLEMENTED SO FAR)
+                    log.appendLine("Does not support unbound function or action");
+                }
+            } catch (error) {
+                log.appendLine("Error occurred when adding function " + f.$.Name + ": " + error.toString());
+            }
+        }
+    }
+
+    return entitySets;
+}
+
+function getSet(bindingParameter: Parameter, entitySets: { [type: string]: EntitySet }): EntitySet {
+    let type: string;
+    let colmatch = bindingParameter.$.Type.match(/Collection\((.*)\)/);
+    if (colmatch) {
+        type = colmatch[1];
+    } else {
+        type = bindingParameter.$.Type;
+    }
+    // Return new entity set if not found.
+    try {
+        if (!entitySets[type]) throw new Error();
+        return entitySets[type];
+    } catch (error) {
+        return new EntitySet(type);
     }
 }
 
@@ -79,14 +283,14 @@ async function getMetadata(maddr: string): Promise<Edmx> {
     });
 }
 
-async function getProxyString(uri: string, metadata: DataService, proxyname: string, ambentorimport: string): Promise<string> {
+async function getProxyString(uri: string, metadata: DataService, ambentorimport: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
         // make the imports based on 
         let ret = "";
         if (ambentorimport.startsWith("i"))
             ret += "import { ProxyBase, EntitySet} from './odataproxybase';\n\n";
         else
-            ret += "import ProxyBase = odatatools.ProxyBase;\import EntitySet = odatatools.EntitySet;\n\n";
+            ret += "import ProxyBase = odatatools.ProxyBase;\nimport EntitySet = odatatools.EntitySet;\nimport ThenableCaller = odatatools.ThenableCaller;\nimport Thenable = odatatools.Thenable;\n\n";
         // get the entity container
         let ec = enumerable.asEnumerable(metadata.Schema).FirstOrDefault(x => x.EntityContainer != undefined).EntityContainer[0];
         // Get a dictionary with key names as value and type names as key to fill in later on in the constructor.
@@ -100,7 +304,7 @@ async function getProxyString(uri: string, metadata: DataService, proxyname: str
         }) as Enumerable<EntityType>).Select<{ name: string, key: string }>((x) => { return { name: x.$.Name, key: x.Key[0].PropertyRef[0].$.Name }; }).ToDictionary(k => k.name, v => v.key);
         if (!ec)
             return reject("Could not find any EntityContainer");
-        ret += "class " + proxyname + " extends ProxyBase {\n";
+        ret += "class " + ec.$.Name + " extends ProxyBase {\n";
         ret += "constructor(address: string, name?: string) {\n"
         ret += "super(address, name);\n";
         for (let set of ec.EntitySet) {
