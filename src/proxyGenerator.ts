@@ -174,7 +174,7 @@ async function replaceWithBoundActions(proxystring: string, metadata: DataServic
         let entitysets = getEntitySetsWithActionsOrFunctions(ecschema);
 
         for (let typename in entitysets) {
-            proxystring = proxystring.replace(entitysets[typename].getSubstitutedType(), entitysets[typename].getTypeName())
+            proxystring = proxystring.replace(new RegExp(entitysets[typename].getSubstitutedType(), 'g'), entitysets[typename].getTypeName())
             proxystring += "\n" + entitysets[typename].getImplementedClass(metadata) + "\n";
         }
 
@@ -304,7 +304,7 @@ async function getProxyString(uri: string, metadata: DataService, ambentorimport
         }) as Enumerable<EntityType>).Select<{ name: string, key: string }>((x) => { return { name: x.$.Name, key: x.Key[0].PropertyRef[0].$.Name }; }).ToDictionary(k => k.name, v => v.key);
         if (!ec)
             return reject("Could not find any EntityContainer");
-        ret += "class " + ec.$.Name + " extends ProxyBase {\n";
+        ret += "export class " + ec.$.Name + " extends ProxyBase {\n";
         ret += "constructor(address: string, name?: string) {\n"
         ret += "super(address, name);\n";
         for (let set of ec.EntitySet) {
