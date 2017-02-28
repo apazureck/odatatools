@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "firefox",
+            "request": "launch",
+            "name": "Launch odataservicetests.html",
+            "file": "${workspaceRoot}/test/odataservicetests.html"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch Chrome",
+            "file": "${workspaceRoot}/test/odataservicetests.html",
+            "sourceMaps": true
+        }
+    ]
+}

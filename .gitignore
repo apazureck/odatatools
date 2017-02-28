@@ -1,6 +1,5 @@
 out
 node_modules
-test/testproject
 /test/ODataTestService/.vs
 /test/ODataTestService/ODataExtensions/bin/Debug
 /test/ODataTestService/ODataExtensions/obj/Debug
