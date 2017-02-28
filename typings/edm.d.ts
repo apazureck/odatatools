@@ -99,7 +99,9 @@ interface Method {
 }
 
 interface ReturnType {
-    Type: string;
+    $: {
+        Type: string;
+    }
 }
 
 interface Parameter {

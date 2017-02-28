@@ -9,9 +9,15 @@ var odatatools;
         Method[Method["DELETE"] = 4] = "DELETE";
     })(Method || (Method = {}));
     class ProxyBase {
-        constructor(address, name) {
-            this.Name = name ? name : "ProxyService";
-            this.Address = address;
+        constructor(Address, Name, additonalHeaders) {
+            this.Address = Address;
+            this.Name = Name;
+            this.Name = this.Name || "ProxyService";
+            this.Headers = { "Content-Type": "application/json", Accept: "application/json" };
+            for (var attrname in additonalHeaders) {
+                this.Headers[attrname] = additonalHeaders[attrname];
+            }
+            ;
         }
     }
     odatatools.ProxyBase = ProxyBase;
@@ -30,17 +36,22 @@ var odatatools;
          * @param {string} name of the EntitySet (Will determine the address of the entityset, too -> address + "/" + name)
          * @param {string} address of the service
          * @param {string} key of the EntitySet
+         * @param {odatajs.Header} [headers] additional headers: Per default there are "Content-Type" and "Accept".
          *
          * @memberOf EntitySet
          */
-        constructor(name, address, key) {
+        constructor(name, address, key, additionalHeaders) {
             this.Name = name;
             this.Address = address.replace(/\/$/, "") + "/" + name;
             this.Key = key;
+            this.Headers = { "Content-Type": "application/json", Accept: "application/json" };
+            for (var attrname in additionalHeaders) {
+                this.Headers[attrname] = additionalHeaders[attrname];
+            }
+            ;
         }
         Get(idOrParams, parameters) {
             let requri;
-            let headers = { "Content-Type": "application/json", Accept: "application/json" };
             let paramsonly = idOrParams && idOrParams.match(/^\$/);
             if (!idOrParams) {
                 requri = this.Address;
@@ -55,7 +66,7 @@ var odatatools;
                 requri = this.Address + "(" + idOrParams + ")";
             }
             let request = {
-                headers: headers,
+                headers: this.Headers,
                 method: Method[Method.GET],
                 requestUri: requri
             };
@@ -99,9 +110,8 @@ var odatatools;
          */
         Put(value) {
             let callback = new ThenableCaller();
-            let headers = { "Content-Type": "application/json", Accept: "application/json" };
             let request = {
-                headers: headers,
+                headers: this.Headers,
                 method: Method[Method.PUT],
                 requestUri: this.Address + "(" + value[this.Key] + ")",
                 data: value
@@ -124,9 +134,8 @@ var odatatools;
          */
         Post(value) {
             let callback = new ThenableCaller();
-            let headers = { "Content-Type": "application/json", Accept: "application/json" };
             let request = {
-                headers: headers,
+                headers: this.Headers,
                 method: Method[Method.POST],
                 requestUri: this.Address,
                 data: value
@@ -143,9 +152,8 @@ var odatatools;
             if (newval)
                 oldvalordelta = this.getDelta(oldvalordelta, newval);
             let callback = new ThenableCaller();
-            let headers = { "Content-Type": "application/json", Accept: "application/json" };
             let request = {
-                headers: headers,
+                headers: this.Headers,
                 method: Method[Method.PATCH],
                 requestUri: this.Address,
                 data: oldvalordelta
@@ -175,9 +183,8 @@ var odatatools;
          */
         Delete(value) {
             let callback = new ThenableCaller();
-            let headers = { "Content-Type": "application/json", Accept: "application/json" };
             let request = {
-                headers: headers,
+                headers: this.Headers,
                 method: Method[Method.DELETE],
                 requestUri: this.Address + "(" + value[this.Key] + ")"
             };
@@ -228,6 +235,7 @@ var odatatools;
                     c(error);
         }
     }
+    odatatools.ThenableCaller = ThenableCaller;
 })(odatatools || (odatatools = {}));
 console.log("Loaded odataproxybase");
 //# sourceMappingURL=odataproxybase.js.map

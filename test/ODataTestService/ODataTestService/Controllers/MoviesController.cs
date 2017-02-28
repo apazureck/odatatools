@@ -65,5 +65,19 @@ namespace ODataTestService.Controllers
                 return Ok();
             });
         }
+
+        [HttpPost]
+        public async Task<IHttpActionResult> Rate([FromODataUri] int key, ODataActionParameters parameters)
+        {
+            string ret = await Task.Run(() =>
+            {
+                var entry = datasource[key];
+                entry.Rating = (float)parameters["rating"];
+                entry.Reason = (string)parameters["reason"];
+                datasource[key] = entry;
+                return "Rated  successfully";
+            });
+            return Ok(ret);
+        }
     }
 }

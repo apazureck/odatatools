@@ -127,7 +127,7 @@ class EntitySet {
     private _getReturnType(returntype: ReturnType[]): string {
         if(!returntype)
             return "void"
-        return returntype[0].Type;
+        return returntype[0].$.Type;
     }
 
     private _getParameterJSON(parameters: Parameter[]): string {
@@ -151,7 +151,7 @@ class EntitySet {
             ret += "data: " + this._getParameterJSON(method.Parameter) + "\n";
         ret += "}\n";
         ret += "odatajs.oData.request(request, (data, response) => {\n";
-        ret += "callback.resolve();\n"
+        ret += "callback.resolve("+(method.ReturnType ? "data.value" : "")+");\n"
         ret += "}, (error) => {\n";
         ret += "console.error(error.name + \" \" + error.message + \" | \" + (error.response | error.response.statusText) + \":\" + (error.response | error.response.body));\n";
         ret += "callback.reject(error);\n";

@@ -18,6 +18,7 @@ namespace ODataTestService.Models
         public float Rating { get; set; }
 
         public string Genre { get; set; }
+        public string Reason { get; set; }
 
         internal static void Map(ODataModelBuilder builder, EntitySetConfiguration<Movie> entitySetConfiguration)
         {
@@ -27,6 +28,7 @@ namespace ODataTestService.Models
             var a = builder.EntityType<Movie>().Action("Rate");
             a.Parameter<float>("rating");
             a.Parameter<string>("reason");
+            a.Returns<string>();
             builder.EntityType<Movie>().Action("ResetRating");
             var f = builder.EntityType<Movie>().Collection.Function("GetBestMovie");
             f.Parameter<string>("Genre");

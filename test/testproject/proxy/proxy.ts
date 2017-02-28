@@ -19,10 +19,10 @@ namespace MovieService {
         constructor(name: string, address: string, key: string, additionalHeaders?: odatajs.Header) {
             super(name, address, key, additionalHeaders);
         }
-        Rate(key: Edm.Int32, rating: Edm.Single, reason: Edm.String): Thenable<void> {
-            let callback = new ThenableCaller<void>();
+        Rate(key: Edm.Int32, rating: Edm.Single, reason: Edm.String): Thenable<Edm.String> {
+            let callback = new ThenableCaller<Edm.String>();
             let request: odatajs.Request = {
-                headers: this.headers,
+                headers: this.Headers,
                 method: "POST",
                 requestUri: this.Address + "(" + key + ")/MovieService.Rate",
                 data: {
@@ -31,7 +31,7 @@ namespace MovieService {
                 }
             }
             odatajs.oData.request(request, (data, response) => {
-                callback.resolve();
+                callback.resolve(data.value);
             }, (error) => {
                 console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
                 callback.reject(error);
@@ -42,7 +42,7 @@ namespace MovieService {
         ResetRating(key: Edm.Int32): Thenable<void> {
             let callback = new ThenableCaller<void>();
             let request: odatajs.Request = {
-                headers: this.headers,
+                headers: this.Headers,
                 method: "POST",
                 requestUri: this.Address + "(" + key + ")/MovieService.ResetRating",
             }
@@ -55,10 +55,10 @@ namespace MovieService {
             return callback;
         }
 
-        GetBestMovie(Genre: Edm.String): Thenable<undefined> {
-            let callback = new ThenableCaller<undefined>();
+        GetBestMovie(Genre: Edm.String): Thenable<ODataTestService.Models.Movie> {
+            let callback = new ThenableCaller<ODataTestService.Models.Movie>();
             let request: odatajs.Request = {
-                headers: this.headers,
+                headers: this.Headers,
                 method: "GET",
                 requestUri: this.Address + "/MovieService.GetBestMovie",
                 data: {
@@ -66,7 +66,7 @@ namespace MovieService {
                 }
             }
             odatajs.oData.request(request, (data, response) => {
-                callback.resolve();
+                callback.resolve(data.value);
             }, (error) => {
                 console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
                 callback.reject(error);
