@@ -13,7 +13,8 @@ export async function createProxy() {
         let maddr = await window.showInputBox({
             placeHolder: "http://my.odata.service/service.svc",
             value: Global.lastval,
-            prompt: "Please enter uri of your oData service."
+            prompt: "Please enter uri of your oData service.",
+            ignoreFocusOut: true
         });
 
         if (!maddr)
@@ -142,9 +143,8 @@ class EntitySet {
         // TODO: get key type
         let ret = method.$.Name + "(" + (method.IsBoundToCollection ? "" : "key: " + key + (method.Parameter.length>0?", ":"")) + this._getParameters(method.Parameter) + "): Thenable<"+this._getReturnType(method.ReturnType)+">{\n";
         ret += "let callback = new ThenableCaller<"+this._getReturnType(method.ReturnType)+">();\n";
-        ret += "let headers = { \"Content-Type\": \"application/json\", Accept: \"application/json\" };\n";
         ret += "let request: odatajs.Request = {\n";
-        ret += "headers: headers,\n";
+        ret += "headers: this.headers,\n";
         ret += "method: \""+requesttype+"\",\n";
         ret += "requestUri: this.Address  + \"" + (method.IsBoundToCollection ? "" : "(\"+key+\")") + "/" + method.Namespace + "." + method.$.Name + "\",\n";
         if(method.Parameter.length>0)

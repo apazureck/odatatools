@@ -7,7 +7,8 @@ export async function getInterfaces() {
         let input = await window.showInputBox({
             placeHolder: "http://my.odata.service/service.svc",
             value: Global.lastval,
-            prompt: "Please enter uri of your oData service."
+            prompt: "Please enter uri of your oData service.",
+            ignoreFocusOut: true
         });
 
         if (!input)
