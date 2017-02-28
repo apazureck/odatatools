@@ -4,10 +4,21 @@ namespace odatatools {
     }
 
     export class ProxyBase {
-        constructor(public readonly Address: string, public readonly Name?: string, protected additonalHeaders?: odatajs.Header) {
+        constructor(public readonly Address: string, public readonly Name?: string, additonalHeaders?: odatajs.Header) {
             this.Name = this.Name || "ProxyService";
-            this.additonalHeaders || {};
+
+            this.Headers = { "Content-Type": "application/json", Accept: "application/json" };
+
+            for (var attrname in additonalHeaders) { this.Headers[attrname] = additonalHeaders[attrname]; };
         }
+
+        /**
+         * All headers appended to each request.
+         * 
+         * @type {odatajs.Header}
+         * @memberOf EntitySet
+         */
+        readonly Headers: odatajs.Header;
     }
 
     /**
@@ -19,7 +30,7 @@ namespace odatatools {
      * @template T
      */
     export class EntitySet<T, deltaT> {
-        
+
         /**
          * Creates an instance of EntitySet.
          * 
@@ -30,14 +41,13 @@ namespace odatatools {
          * 
          * @memberOf EntitySet
          */
-        constructor(name: string, address: string, key: string, protected headers?: odatajs.Header) {
+        constructor(name: string, address: string, key: string, additionalHeaders?: odatajs.Header) {
             this.Name = name;
             this.Address = address.replace(/\/$/, "") + "/" + name;
             this.Key = key;
-            let h = { "Content-Type": "application/json", Accept: "application/json" };
-            // Merge headers
-            this.headers = this.headers || {};
-            for (var attrname in h) { headers[attrname] = h[attrname]; };
+            this.Headers = { "Content-Type": "application/json", Accept: "application/json" };
+
+            for (var attrname in additionalHeaders) { this.Headers[attrname] = additionalHeaders[attrname]; };
         }
 
         /**
@@ -50,7 +60,15 @@ namespace odatatools {
          * @memberOf EntitySet
          */
         readonly Address: string;
-        
+
+        /**
+         * All headers appended to each request.
+         * 
+         * @type {odatajs.Header}
+         * @memberOf EntitySet
+         */
+        readonly Headers: odatajs.Header;
+
         /**
          * Key of the entity
          * @memberOf EntitySet
@@ -65,37 +83,36 @@ namespace odatatools {
          * 
          * @memberOf EntitySet
          */
-        Get(parametersOrId?: string): Thenable<T|T[]>
+        Get(parametersOrId?: string): Thenable<T | T[]>
         Get(id: string, parameters: string): Thenable<T>;
-        Get(idOrParams?: string, parameters?: string): Thenable<T|T[]>
-        {
+        Get(idOrParams?: string, parameters?: string): Thenable<T | T[]> {
             let requri: string;
-            
+
             let paramsonly = idOrParams && idOrParams.match(/^\$/);
-            if(!idOrParams) {
+            if (!idOrParams) {
                 requri = this.Address;
-            } else if(paramsonly) {
+            } else if (paramsonly) {
                 requri = this.Address + (idOrParams ? "?" + idOrParams : "");
-            } else if(parameters) {
+            } else if (parameters) {
                 requri = this.Address + "(" + idOrParams + ")" + "?" + parameters;
             } else {
                 requri = this.Address + "(" + idOrParams + ")"
             }
             let request: odatajs.Request = {
-                headers: this.headers,
+                headers: this.Headers,
                 method: Method[Method.GET],
                 requestUri: requri
             }
             // if id starts with $ it is additional odata parameters
-            if(!paramsonly) {
+            if (!paramsonly) {
                 let callback = new ThenableCaller<T>();
                 odatajs.oData.request(request, (data, response) => {
-                    if(callback.then) {
+                    if (callback.then) {
                         callback.resolve(data);
                     }
                 }, (error) => {
                     console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":\n" + (error.response | error.response.body));
-                    if(callback.catch) {
+                    if (callback.catch) {
                         callback.reject(error);
                     }
                 });
@@ -103,12 +120,12 @@ namespace odatatools {
             } else {
                 let callback = new ThenableCaller<T[]>();
                 odatajs.oData.request(request, (data, response) => {
-                    if(callback.then) {
+                    if (callback.then) {
                         callback.resolve(data);
                     }
                 }, (error) => {
                     console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":\n" + (error.response | error.response.body));
-                    if(callback.catch) {
+                    if (callback.catch) {
                         callback.reject(error);
                     }
                 });
@@ -116,7 +133,7 @@ namespace odatatools {
             }
         }
 
-        
+
         /**
          * Replaces an existing value in the entity collection.
          * 
@@ -127,11 +144,11 @@ namespace odatatools {
          */
         Put(value: T): Thenable<void> {
             let callback = new ThenableCaller<void>();
-            
+
             let request: odatajs.Request = {
-                headers: this.headers,
+                headers: this.Headers,
                 method: Method[Method.PUT],
-                requestUri: this.Address  + "("+value[this.Key]+")",
+                requestUri: this.Address + "(" + value[this.Key] + ")",
                 data: value
             }
             odatajs.oData.request(request, (data, response) => {
@@ -154,7 +171,7 @@ namespace odatatools {
         Post(value: T): Thenable<T> {
             let callback = new ThenableCaller<T>();
             let request: odatajs.Request = {
-                headers: this.headers,
+                headers: this.Headers,
                 method: Method[Method.POST],
                 requestUri: this.Address,
                 data: value
@@ -168,14 +185,14 @@ namespace odatatools {
             return callback;
         }
         Patch(delta: deltaT): Thenable<void>
-        Patch(oldvalue: T, newValue: T) : Thenable<void>
-        Patch(oldvalordelta: T|deltaT, newval?: T): Thenable<void> {
-            if(newval)
+        Patch(oldvalue: T, newValue: T): Thenable<void>
+        Patch(oldvalordelta: T | deltaT, newval?: T): Thenable<void> {
+            if (newval)
                 oldvalordelta = this.getDelta(oldvalordelta as T, newval);
 
             let callback = new ThenableCaller<void>();
             let request: odatajs.Request = {
-                headers: this.headers,
+                headers: this.Headers,
                 method: Method[Method.PATCH],
                 requestUri: this.Address,
                 data: oldvalordelta
@@ -190,9 +207,9 @@ namespace odatatools {
         }
 
         private getDelta(oldval: T, newVal: T): deltaT {
-            let ret: any = { };
-            for(let prop in newVal)
-                if(oldval[prop] != newVal[prop])
+            let ret: any = {};
+            for (let prop in newVal)
+                if (oldval[prop] != newVal[prop])
                     ret[prop] = newVal[prop];
             return ret;
         }
@@ -207,9 +224,9 @@ namespace odatatools {
         Delete(value: T): Thenable<void> {
             let callback = new ThenableCaller<void>()
             let request: odatajs.Request = {
-                headers: this.headers,
+                headers: this.Headers,
                 method: Method[Method.DELETE],
-                requestUri: this.Address + "("+value[this.Key]+")"
+                requestUri: this.Address + "(" + value[this.Key] + ")"
             }
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve();
@@ -230,7 +247,7 @@ namespace odatatools {
         readonly Uri: string;
     }
 
-    
+
     /**
      * Class that implements thenable callbacks is used to call the callbacks handed by the user.
      * 
@@ -250,13 +267,13 @@ namespace odatatools {
             return this;
         }
         public resolve(value?: T) {
-            if(this._then)
-                for(let t of this._then)
+            if (this._then)
+                for (let t of this._then)
                     t(value);
         }
         public reject(error: any) {
-            if(this._catch)
-                for(let c of this._catch)
+            if (this._catch)
+                for (let c of this._catch)
                     c(error);
         }
     }
@@ -268,7 +285,7 @@ namespace odatatools {
      * @template T
      */
     export interface Thenable<T> {
-        
+
         /**
          * Gets called if async function returns successfully
          * 
@@ -278,7 +295,7 @@ namespace odatatools {
          * @memberOf Thenable
          */
         then(then: (value?: T) => void): Thenable<T>;
-        
+
         /**
          * Gets called if async function returns an error
          * 

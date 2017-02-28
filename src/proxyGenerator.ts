@@ -144,7 +144,7 @@ class EntitySet {
         let ret = method.$.Name + "(" + (method.IsBoundToCollection ? "" : "key: " + key + (method.Parameter.length>0?", ":"")) + this._getParameters(method.Parameter) + "): Thenable<"+this._getReturnType(method.ReturnType)+">{\n";
         ret += "let callback = new ThenableCaller<"+this._getReturnType(method.ReturnType)+">();\n";
         ret += "let request: odatajs.Request = {\n";
-        ret += "headers: this.headers,\n";
+        ret += "headers: this.Headers,\n";
         ret += "method: \""+requesttype+"\",\n";
         ret += "requestUri: this.Address  + \"" + (method.IsBoundToCollection ? "" : "(\"+key+\")") + "/" + method.Namespace + "." + method.$.Name + "\",\n";
         if(method.Parameter.length>0)

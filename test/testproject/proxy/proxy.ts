@@ -21,9 +21,8 @@ namespace MovieService {
         }
         Rate(key: Edm.Int32, rating: Edm.Single, reason: Edm.String): Thenable<void> {
             let callback = new ThenableCaller<void>();
-            let headers = { "Content-Type": "application/json", Accept: "application/json" };
             let request: odatajs.Request = {
-                headers: headers,
+                headers: this.headers,
                 method: "POST",
                 requestUri: this.Address + "(" + key + ")/MovieService.Rate",
                 data: {
@@ -42,9 +41,8 @@ namespace MovieService {
 
         ResetRating(key: Edm.Int32): Thenable<void> {
             let callback = new ThenableCaller<void>();
-            let headers = { "Content-Type": "application/json", Accept: "application/json" };
             let request: odatajs.Request = {
-                headers: headers,
+                headers: this.headers,
                 method: "POST",
                 requestUri: this.Address + "(" + key + ")/MovieService.ResetRating",
             }
@@ -59,9 +57,8 @@ namespace MovieService {
 
         GetBestMovie(Genre: Edm.String): Thenable<undefined> {
             let callback = new ThenableCaller<undefined>();
-            let headers = { "Content-Type": "application/json", Accept: "application/json" };
             let request: odatajs.Request = {
-                headers: headers,
+                headers: this.headers,
                 method: "GET",
                 requestUri: this.Address + "/MovieService.GetBestMovie",
                 data: {
@@ -78,6 +75,4 @@ namespace MovieService {
         }
 
     }
-
-
 }
