@@ -1,39 +1,35 @@
-namespace amsgateway {
+namespace MovieService {
     import ProxyBase = odatatools.ProxyBase;
     import EntitySet = odatatools.EntitySet;
     import ThenableCaller = odatatools.ThenableCaller;
     import Thenable = odatatools.Thenable;
 
-    class Gateway extends ProxyBase {
-        constructor(address: string, name?: string) {
-            super(address, name);
-            this.Hosts = new EntitySet<Ifmdatalink.Linerecorder.Backend.PlugIn.dto.HostDto, Ifmdatalink.Linerecorder.Backend.PlugIn.dto.DeltaHostDto>("Hosts", address, "Ident");
-            this.Agents = new AgentDtoEntitySet("Agents", address, "Ident");
-            this.AgentTemplates = new EntitySet<Ifmdatalink.Linerecorder.Backend.PlugIn.dto.AgentTemplateDto, Ifmdatalink.Linerecorder.Backend.PlugIn.dto.DeltaAgentTemplateDto>("AgentTemplates", address, "Ident");
-            this.AgentTemplateVersions = new EntitySet<Ifmdatalink.Linerecorder.Backend.PlugIn.dto.AgentTemplateVersionDto, Ifmdatalink.Linerecorder.Backend.PlugIn.dto.DeltaAgentTemplateVersionDto>("AgentTemplateVersions", address, "Ident");
-            this.Users = new EntitySet<Ifmdatalink.Linerecorder.Backend.PlugIn.dto.UserUserDto, Ifmdatalink.Linerecorder.Backend.PlugIn.dto.DeltaUserUserDto>("Users", address, "ident");
-            this.AgentVersions = new EntitySet<Ifmdatalink.Linerecorder.Backend.PlugIn.dto.AgentVersionDto, Ifmdatalink.Linerecorder.Backend.PlugIn.dto.DeltaAgentVersionDto>("AgentVersions", address, "Ident");
-            this.RuntimeInfos = new EntitySet<Ifmdatalink.Linerecorder.Backend.PlugIn.dto.RuntimeInfoDto, Ifmdatalink.Linerecorder.Backend.PlugIn.dto.DeltaRuntimeInfoDto>("RuntimeInfos", address, "Ident");
+    export class MovieContainer extends ProxyBase {
+        constructor(address: string, name?: string, additionalHeaders?: odatajs.Header) {
+            super(address, name, additionalHeaders);
+            this.Movies = new MovieEntitySet("Movies", address, "Id", additionalHeaders);
+            this.Customers = new EntitySet<ODataTestService.Models.Customer, ODataTestService.Models.DeltaCustomer>("Customers", address, "Id", additionalHeaders);
+            this.Addresses = new EntitySet<ODataTestService.Models.Address, ODataTestService.Models.DeltaAddress>("Addresses", address, "Id", additionalHeaders);
         }
-        Hosts: EntitySet<Ifmdatalink.Linerecorder.Backend.PlugIn.dto.HostDto, Ifmdatalink.Linerecorder.Backend.PlugIn.dto.DeltaHostDto>;
-        Agents: AgentDtoEntitySet;
-        AgentTemplates: EntitySet<Ifmdatalink.Linerecorder.Backend.PlugIn.dto.AgentTemplateDto, Ifmdatalink.Linerecorder.Backend.PlugIn.dto.DeltaAgentTemplateDto>;
-        AgentTemplateVersions: EntitySet<Ifmdatalink.Linerecorder.Backend.PlugIn.dto.AgentTemplateVersionDto, Ifmdatalink.Linerecorder.Backend.PlugIn.dto.DeltaAgentTemplateVersionDto>;
-        Users: EntitySet<Ifmdatalink.Linerecorder.Backend.PlugIn.dto.UserUserDto, Ifmdatalink.Linerecorder.Backend.PlugIn.dto.DeltaUserUserDto>;
-        AgentVersions: EntitySet<Ifmdatalink.Linerecorder.Backend.PlugIn.dto.AgentVersionDto, Ifmdatalink.Linerecorder.Backend.PlugIn.dto.DeltaAgentVersionDto>;
-        RuntimeInfos: EntitySet<Ifmdatalink.Linerecorder.Backend.PlugIn.dto.RuntimeInfoDto, Ifmdatalink.Linerecorder.Backend.PlugIn.dto.DeltaRuntimeInfoDto>;
+        Movies: MovieEntitySet;
+        Customers: EntitySet<ODataTestService.Models.Customer, ODataTestService.Models.DeltaCustomer>;
+        Addresses: EntitySet<ODataTestService.Models.Address, ODataTestService.Models.DeltaAddress>;
     }
-    export class AgentDtoEntitySet extends EntitySet<Ifmdatalink.Linerecorder.Backend.PlugIn.dto.AgentDto, Ifmdatalink.Linerecorder.Backend.PlugIn.dto.DeltaAgentDto> {
-        constructor(name: string, address: string, key: string) {
-            super(name, address, key);
+    export class MovieEntitySet extends EntitySet<ODataTestService.Models.Movie, ODataTestService.Models.DeltaMovie> {
+        constructor(name: string, address: string, key: string, additionalHeaders?: odatajs.Header) {
+            super(name, address, key, additionalHeaders);
         }
-        Deploy(key: Edm.Int32): Thenable<void> {
+        Rate(key: Edm.Int32, rating: Edm.Single, reason: Edm.String): Thenable<void> {
             let callback = new ThenableCaller<void>();
             let headers = { "Content-Type": "application/json", Accept: "application/json" };
             let request: odatajs.Request = {
                 headers: headers,
                 method: "POST",
-                requestUri: this.Address + "(" + key + ")/amsgateway.Deploy",
+                requestUri: this.Address + "(" + key + ")/MovieService.Rate",
+                data: {
+                    rating: rating,
+                    reason: reason
+                }
             }
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve();
@@ -44,13 +40,13 @@ namespace amsgateway {
             return callback;
         }
 
-        Undeploy(key: Edm.Int32): Thenable<void> {
+        ResetRating(key: Edm.Int32): Thenable<void> {
             let callback = new ThenableCaller<void>();
             let headers = { "Content-Type": "application/json", Accept: "application/json" };
             let request: odatajs.Request = {
                 headers: headers,
                 method: "POST",
-                requestUri: this.Address + "(" + key + ")/amsgateway.Undeploy",
+                requestUri: this.Address + "(" + key + ")/MovieService.ResetRating",
             }
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve();
@@ -61,30 +57,16 @@ namespace amsgateway {
             return callback;
         }
 
-        StartAgent(key: Edm.Int32): Thenable<void> {
-            let callback = new ThenableCaller<void>();
+        GetBestMovie(Genre: Edm.String): Thenable<undefined> {
+            let callback = new ThenableCaller<undefined>();
             let headers = { "Content-Type": "application/json", Accept: "application/json" };
             let request: odatajs.Request = {
                 headers: headers,
-                method: "POST",
-                requestUri: this.Address + "(" + key + ")/amsgateway.StartAgent",
-            }
-            odatajs.oData.request(request, (data, response) => {
-                callback.resolve();
-            }, (error) => {
-                console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                callback.reject(error);
-            });
-            return callback;
-        }
-
-        StopAgent(key: Edm.Int32): Thenable<void> {
-            let callback = new ThenableCaller<void>();
-            let headers = { "Content-Type": "application/json", Accept: "application/json" };
-            let request: odatajs.Request = {
-                headers: headers,
-                method: "POST",
-                requestUri: this.Address + "(" + key + ")/amsgateway.StopAgent",
+                method: "GET",
+                requestUri: this.Address + "/MovieService.GetBestMovie",
+                data: {
+                    Genre: Genre
+                }
             }
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve();

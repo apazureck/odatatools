@@ -89,8 +89,8 @@ class EntitySet {
         let keytype = enumerable.asEnumerable<Property>(typedef.Property).FirstOrDefault(x => x.$.Name === key).$.Type;
 
         let ret = "export class " + this.getTypeName() + " extends " + this.getSubstitutedType() + " {\n";
-        ret += "constructor(name: string, address: string, key: string) {";
-        ret += "super(name, address, key);\n";
+        ret += "constructor(name: string, address: string, key: string, additionalHeaders?: odatajs.Header) {";
+        ret += "super(name, address, key, additionalHeaders);\n";
         ret += "}\n"
         for (let a of this.Actions)
             ret += this.createMethod(a, "POST", keytype) + "\n";
@@ -117,7 +117,7 @@ class EntitySet {
     private _getParameters(parameters: Parameter[]): string {
         let ret = "";
         for(let param of parameters) {
-            ret += param.$.Name + (param.$.Nullable ? "?" : "") + ": " + param.$.Type + ", "
+            ret += param.$.Name + ": " + param.$.Type + ", "
         }
         // return list without last ", "
         return ret.substr(0, ret.length-2);
@@ -305,10 +305,10 @@ async function getProxyString(uri: string, metadata: DataService, ambentorimport
         if (!ec)
             return reject("Could not find any EntityContainer");
         ret += "export class " + ec.$.Name + " extends ProxyBase {\n";
-        ret += "constructor(address: string, name?: string) {\n"
-        ret += "super(address, name);\n";
+        ret += "constructor(address: string, name?: string, additionalHeaders?: odatajs.Header) {\n"
+        ret += "super(address, name, additionalHeaders);\n";
         for (let set of ec.EntitySet) {
-            ret += "this." + set.$.Name + " = new EntitySet<" + set.$.EntityType + ", " + getDeltaName(set.$.EntityType) + ">(\"" + set.$.Name + "\", address, \"" + keys.get(set.$.EntityType) + "\");\n"
+            ret += "this." + set.$.Name + " = new EntitySet<" + set.$.EntityType + ", " + getDeltaName(set.$.EntityType) + ">(\"" + set.$.Name + "\", address, \"" + keys.get(set.$.EntityType) + "\", additionalHeaders);\n"
         }
         ret += "}\n"
         for (let set of ec.EntitySet) {

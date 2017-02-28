@@ -4,12 +4,10 @@ namespace odatatools {
     }
 
     export class ProxyBase {
-        constructor(address: string, name?: string) {
-            this.Name = name ? name : "ProxyService";
-            this.Address = address;
+        constructor(public readonly Address: string, public readonly Name?: string, protected additonalHeaders?: odatajs.Header) {
+            this.Name = this.Name || "ProxyService";
+            this.additonalHeaders || {};
         }
-        readonly Name: string;
-        readonly Address: string;
     }
 
     /**
@@ -28,13 +26,18 @@ namespace odatatools {
          * @param {string} name of the EntitySet (Will determine the address of the entityset, too -> address + "/" + name)
          * @param {string} address of the service
          * @param {string} key of the EntitySet
+         * @param {odatajs.Header} [headers] additional headers: Per default there are "Content-Type" and "Accept".
          * 
          * @memberOf EntitySet
          */
-        constructor(name: string, address: string, key: string) {
+        constructor(name: string, address: string, key: string, protected headers?: odatajs.Header) {
             this.Name = name;
             this.Address = address.replace(/\/$/, "") + "/" + name;
             this.Key = key;
+            let h = { "Content-Type": "application/json", Accept: "application/json" };
+            // Merge headers
+            this.headers = this.headers || {};
+            for (var attrname in h) { headers[attrname] = h[attrname]; };
         }
 
         /**
@@ -67,7 +70,7 @@ namespace odatatools {
         Get(idOrParams?: string, parameters?: string): Thenable<T|T[]>
         {
             let requri: string;
-            let headers = { "Content-Type": "application/json", Accept: "application/json" };
+            
             let paramsonly = idOrParams && idOrParams.match(/^\$/);
             if(!idOrParams) {
                 requri = this.Address;
@@ -79,7 +82,7 @@ namespace odatatools {
                 requri = this.Address + "(" + idOrParams + ")"
             }
             let request: odatajs.Request = {
-                headers: headers,
+                headers: this.headers,
                 method: Method[Method.GET],
                 requestUri: requri
             }
@@ -124,9 +127,9 @@ namespace odatatools {
          */
         Put(value: T): Thenable<void> {
             let callback = new ThenableCaller<void>();
-            let headers = { "Content-Type": "application/json", Accept: "application/json" };
+            
             let request: odatajs.Request = {
-                headers: headers,
+                headers: this.headers,
                 method: Method[Method.PUT],
                 requestUri: this.Address  + "("+value[this.Key]+")",
                 data: value
@@ -150,9 +153,8 @@ namespace odatatools {
          */
         Post(value: T): Thenable<T> {
             let callback = new ThenableCaller<T>();
-            let headers = { "Content-Type": "application/json", Accept: "application/json" };
             let request: odatajs.Request = {
-                headers: headers,
+                headers: this.headers,
                 method: Method[Method.POST],
                 requestUri: this.Address,
                 data: value
@@ -172,9 +174,8 @@ namespace odatatools {
                 oldvalordelta = this.getDelta(oldvalordelta as T, newval);
 
             let callback = new ThenableCaller<void>();
-            let headers = { "Content-Type": "application/json", Accept: "application/json" };
             let request: odatajs.Request = {
-                headers: headers,
+                headers: this.headers,
                 method: Method[Method.PATCH],
                 requestUri: this.Address,
                 data: oldvalordelta
@@ -205,9 +206,8 @@ namespace odatatools {
          */
         Delete(value: T): Thenable<void> {
             let callback = new ThenableCaller<void>()
-            let headers = { "Content-Type": "application/json", Accept: "application/json" };
             let request: odatajs.Request = {
-                headers: headers,
+                headers: this.headers,
                 method: Method[Method.DELETE],
                 requestUri: this.Address + "("+value[this.Key]+")"
             }
@@ -303,6 +303,6 @@ declare namespace odatajs {
         data?: any
     }
 
-    interface Header { "Content-Type": string; Accept: string }
+    interface Header { [name: string]: string }
 }
 console.log("Loaded odataproxybase");
