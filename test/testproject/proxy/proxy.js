@@ -10,6 +10,39 @@ var MovieService;
             this.Customers = new EntitySet("Customers", address, "Id", additionalHeaders);
             this.Addresses = new EntitySet("Addresses", address, "Id", additionalHeaders);
         }
+        SetSomething(value) {
+            let callback = new ThenableCaller();
+            let request = {
+                headers: this.Headers,
+                method: "GET",
+                requestUri: this.Address + "/SetSomething",
+                data: {
+                    value: value
+                }
+            };
+            odatajs.oData.request(request, (data, response) => {
+                callback.resolve(data.value);
+            }, (error) => {
+                console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                callback.reject(error);
+            });
+            return callback;
+        }
+        CurrentTime() {
+            let callback = new ThenableCaller();
+            let request = {
+                headers: this.Headers,
+                method: "GET",
+                requestUri: this.Address + "/CurrentTime",
+            };
+            odatajs.oData.request(request, (data, response) => {
+                callback.resolve(data.value);
+            }, (error) => {
+                console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                callback.reject(error);
+            });
+            return callback;
+        }
     }
     MovieService.MovieContainer = MovieContainer;
     class MovieEntitySet extends EntitySet {

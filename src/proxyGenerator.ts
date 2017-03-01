@@ -183,6 +183,7 @@ function getBoundActionsAndFunctions(ecschema: Schema): { [type: string]: Entity
                     // get rest of Parameters
                     a.Parameter = a.Parameter.filter(x => x.$.Name !== "bindingParameter");
                     a.Namespace = ecschema.$.Namespace;
+                    a.Type = "Action";
                     curset.Actions.push(a);
                     entitySets[curset.Type] = curset;
                 } else {
@@ -212,6 +213,7 @@ function getBoundActionsAndFunctions(ecschema: Schema): { [type: string]: Entity
                     f.Parameter = f.Parameter.filter(x => x.$.Name !== "bindingParameter");
                     f.IsBoundToCollection = bindingParameter.$.Type.match(/Collection\(.*\)/) != undefined;
                     f.Namespace = ecschema.$.Namespace;
+                    f.Type = "Function";
                     curset.Functions.push(f);
                     entitySets[curset.Type] = curset;
                 } else {
@@ -345,8 +347,8 @@ function createMethod(method: Method, requesttype: GetOrPost, key?: string): str
     ret += "let request: odatajs.Request = {\n";
     ret += "headers: this.Headers,\n";
     ret += "method: \"" + requesttype + "\",\n";
-    ret += "requestUri: this.Address  + \"" + (method.$.IsBound ? (method.IsBoundToCollection ? "" : "(\"+key+\")") : "") + "/" + method.Namespace + "." + method.$.Name + "\",\n";
-    if (method.Parameter && method.Parameter.length > 0)
+    ret += _getRequestUri(method)
+    if (method.Type === "Action" && method.Parameter && method.Parameter.length > 0)
         ret += "data: " + _getParameterJSON(method.Parameter) + "\n";
     ret += "}\n";
     ret += "odatajs.oData.request(request, (data, response) => {\n";
@@ -358,4 +360,24 @@ function createMethod(method: Method, requesttype: GetOrPost, key?: string): str
     ret += "return callback;\n";
     ret += "}\n";
     return ret;
+}
+
+function _getRequestUri(method: Method): string {
+    let uri = "requestUri: this.Address  + \""
+    if(method.Type === "Function") {
+        uri += (method.$.IsBound ? (method.IsBoundToCollection ? "" : "(\"+key+\")") : "") + "/" + (method.$.IsBound ? method.Namespace + "." : "") + method.$.Name + _getRequestParameters(method.Parameter) + "\",\n";
+    } else 
+        uri += (method.$.IsBound ? (method.IsBoundToCollection ? "" : "(\"+key+\")") : "") + "/" + (method.$.IsBound ? method.Namespace + "." : "") + method.$.Name + "\",\n";
+    return uri;
+}
+
+function _getRequestParameters(parameters: Parameter[]) {
+    if(!parameters)
+        return "";
+    let ret = "("
+    for (let param of parameters) {
+        ret += param.$.Name + "=\" + " + param.$.Name + " + \", ";
+    }
+    ret = ret.substr(0, ret.length - 2);
+    return ret + ")";
 }

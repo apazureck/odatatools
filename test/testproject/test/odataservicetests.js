@@ -28,11 +28,34 @@ QUnit.test("Test Post", (assert) => {
         done();
     });
 });
-QUnit.test("Test Rate", (assert) => {
+QUnit.test("Test Rate Action", (assert) => {
     let comm = new MovieProxy(serviceuri, "Testproxy");
     let done = assert.async();
     comm.Movies.Rate(0, 2.5, "This is not a good movie.").then((value) => {
         assert.ok(value === "Rated  successfully");
+        done();
+    }).catch((err) => {
+        assert.ok(false, JSON.stringify(err));
+        done();
+    });
+});
+QUnit.test("Test Unbound Action", (assert) => {
+    let comm = new MovieProxy(serviceuri, "Testproxy");
+    let done = assert.async();
+    comm.SetSomething(25).then((value) => {
+        assert.ok(value === 25);
+        done();
+    }).catch((err) => {
+        assert.ok(false, JSON.stringify(err));
+        done();
+    });
+});
+QUnit.test("Test Unbound Function", (assert) => {
+    let comm = new MovieProxy(serviceuri, "Testproxy");
+    let done = assert.async();
+    comm.CurrentTime().then((value) => {
+        let curtime = new Date(value);
+        assert.ok(curtime != undefined);
         done();
     }).catch((err) => {
         assert.ok(false, JSON.stringify(err));

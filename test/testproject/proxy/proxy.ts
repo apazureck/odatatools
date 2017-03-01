@@ -19,10 +19,7 @@ namespace MovieService {
             let request: odatajs.Request = {
                 headers: this.Headers,
                 method: "GET",
-                requestUri: this.Address + "/undefined.SetSomething",
-                data: {
-                    value: value
-                }
+                requestUri: this.Address + "/SetSomething(value=" + value + ")",
             }
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve(data.value);
@@ -37,7 +34,22 @@ namespace MovieService {
             let request: odatajs.Request = {
                 headers: this.Headers,
                 method: "GET",
-                requestUri: this.Address + "/undefined.CurrentTime",
+                requestUri: this.Address + "/CurrentTime",
+            }
+            odatajs.oData.request(request, (data, response) => {
+                callback.resolve(data.value);
+            }, (error) => {
+                console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                callback.reject(error);
+            });
+            return callback;
+        }
+        GetSomething(value: Edm.Int32): Thenable<Edm.Int32> {
+            let callback = new ThenableCaller<Edm.Int32>();
+            let request: odatajs.Request = {
+                headers: this.Headers,
+                method: "GET",
+                requestUri: this.Address + "/GetSomething(value=" + value + ")",
             }
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve(data.value);
@@ -94,10 +106,7 @@ namespace MovieService {
             let request: odatajs.Request = {
                 headers: this.Headers,
                 method: "GET",
-                requestUri: this.Address + "/MovieService.GetBestMovie",
-                data: {
-                    Genre: Genre
-                }
+                requestUri: this.Address + "/MovieService.GetBestMovie(Genre=" + Genre + ")",
             }
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve(data.value);

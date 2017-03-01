@@ -19,7 +19,14 @@ namespace ODataTestService.Controllers
 
         [HttpPost]
         [ODataRoute("SetSomething")]
-        public IHttpActionResult SetSomething(int value)
+        public IHttpActionResult SetSomething(ODataActionParameters parameters)
+        {
+            return Ok(parameters["value"]);
+        }
+
+        [HttpGet]
+        [ODataRoute("GetSomething(value={value})")]
+        public IHttpActionResult GetSomething([FromODataUri]int value)
         {
             return Ok(value);
         }
