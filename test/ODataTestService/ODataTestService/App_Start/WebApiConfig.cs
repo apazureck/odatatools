@@ -32,8 +32,8 @@ namespace ODataTestService
             Address.Map(builder, builder.EntitySet<Address>("Addresses"));
 
             builder.Function("CurrentTime").Returns<DateTime>();
+            builder.Function("GetSomething").Returns<int>().Parameter<int>("value");
             builder.Action("SetSomething").Returns<int>().Parameter<int>("value");
-
             builder.CreateODataRoute("ODataRoute", "moviedb", config);
         }
     }

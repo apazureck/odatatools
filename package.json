@@ -2,7 +2,7 @@
     "name": "odatatools",
     "displayName": "odataTools",
     "description": "Tools for communicating with odata services in typescript",
-    "version": "0.3.1",
+    "version": "0.4.0",
     "publisher": "apazureck",
     "engines": {
         "vscode": "^1.5.0"
@@ -33,7 +33,7 @@
             {
                 "command": "odatatools.GetProxy",
                 "category": "oData",
-                "title": "Create Proxy (EXPERIMENTAL)",
+                "title": "Create Proxy (BETA)",
                 "icon": "images/odata.png"
             }
         ]
