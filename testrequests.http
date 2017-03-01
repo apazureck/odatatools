@@ -1,0 +1,7 @@
+GET http://localhost:2200/moviedb/$metadata HTTP/1.1
+content-type: application/json
+
+###
+
+GET http://localhost:2200/moviedb/Customers HTTP/1.1
+content-type: application/json

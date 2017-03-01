@@ -1,111 +1,78 @@
-namespace odatatools {
-    enum Method {
-        GET, POST, PUT, PATCH, DELETE
-    }
-
-    export class ProxyBase {
-        constructor(public readonly Address: string, public readonly Name?: string, additonalHeaders?: odatajs.Header) {
+var odatatools;
+(function (odatatools) {
+    var Method;
+    (function (Method) {
+        Method[Method["GET"] = 0] = "GET";
+        Method[Method["POST"] = 1] = "POST";
+        Method[Method["PUT"] = 2] = "PUT";
+        Method[Method["PATCH"] = 3] = "PATCH";
+        Method[Method["DELETE"] = 4] = "DELETE";
+    })(Method || (Method = {}));
+    class ProxyBase {
+        constructor(Address, Name, additonalHeaders) {
+            this.Address = Address;
+            this.Name = Name;
             this.Name = this.Name || "ProxyService";
-
             this.Headers = { "Content-Type": "application/json", Accept: "application/json" };
-
-            for (var attrname in additonalHeaders) { this.Headers[attrname] = additonalHeaders[attrname]; };
+            for (var attrname in additonalHeaders) {
+                this.Headers[attrname] = additonalHeaders[attrname];
+            }
+            ;
         }
-
-        /**
-         * All headers appended to each request.
-         * 
-         * @type {odatajs.Header}
-         * @memberOf EntitySet
-         */
-        readonly Headers: odatajs.Header;
     }
-
+    odatatools.ProxyBase = ProxyBase;
     /**
-     * 
+     *
      * A generic entity set which represents the content of the entity container.
-     * 
+     *
      * @export
      * @class EntitySet
      * @template T
      */
-    export class EntitySet<T, deltaT> {
-
+    class EntitySet {
         /**
          * Creates an instance of EntitySet.
-         * 
+         *
          * @param {string} name of the EntitySet (Will determine the address of the entityset, too -> address + "/" + name)
          * @param {string} address of the service
          * @param {string} key of the EntitySet
          * @param {odatajs.Header} [headers] additional headers: Per default there are "Content-Type" and "Accept".
-         * 
+         *
          * @memberOf EntitySet
          */
-        constructor(name: string, address: string, key: string, additionalHeaders?: odatajs.Header) {
+        constructor(name, address, key, additionalHeaders) {
             this.Name = name;
             this.Address = address.replace(/\/$/, "") + "/" + name;
             this.Key = key;
             this.Headers = { "Content-Type": "application/json", Accept: "application/json" };
-
-            for (var attrname in additionalHeaders) { this.Headers[attrname] = additionalHeaders[attrname]; };
+            for (var attrname in additionalHeaders) {
+                this.Headers[attrname] = additionalHeaders[attrname];
+            }
+            ;
         }
-
-        /**
-         * Name of the Entity Set (which is appended to the URI)
-         * @memberOf EntitySet
-         */
-        readonly Name: string;
-        /**
-         * Address of the OData Service
-         * @memberOf EntitySet
-         */
-        readonly Address: string;
-
-        /**
-         * All headers appended to each request.
-         * 
-         * @type {odatajs.Header}
-         * @memberOf EntitySet
-         */
-        readonly Headers: odatajs.Header;
-
-        /**
-         * Key of the entity
-         * @memberOf EntitySet
-         */
-        readonly Key: string;
-
-        /**
-         * Gets the entities from the oData service. Expand gets the navigation properties.
-         * 
-         * @param {string} [parameters] It is attached to the request as `http://your.uri.com/EntitySet?<parameters>`. For complex expands use the odata syntax. For example: `Prop1($expand=SubProp1,SubProp2),Prop2(...)` or `$select=Prop1,Prop2,Prop3&$expand=Prop2`
-         * @returns {Thenable<T[]>} for async Operation. Use `await` keyword to get value or `.then` callback.
-         * 
-         * @memberOf EntitySet
-         */
-        Get(parametersOrId?: string): Thenable<T | T[]>
-        Get(id: string, parameters: string): Thenable<T>;
-        Get(idOrParams?: string, parameters?: string): Thenable<T | T[]> {
-            let requri: string;
-
+        Get(idOrParams, parameters) {
+            let requri;
             let paramsonly = idOrParams && idOrParams.match(/^\$/);
             if (!idOrParams) {
                 requri = this.Address;
-            } else if (paramsonly) {
-                requri = this.Address + (idOrParams ? "?" + idOrParams : "");
-            } else if (parameters) {
-                requri = this.Address + "(" + idOrParams + ")" + "?" + parameters;
-            } else {
-                requri = this.Address + "(" + idOrParams + ")"
             }
-            let request: odatajs.Request = {
+            else if (paramsonly) {
+                requri = this.Address + (idOrParams ? "?" + idOrParams : "");
+            }
+            else if (parameters) {
+                requri = this.Address + "(" + idOrParams + ")" + "?" + parameters;
+            }
+            else {
+                requri = this.Address + "(" + idOrParams + ")";
+            }
+            let request = {
                 headers: this.Headers,
                 method: Method[Method.GET],
                 requestUri: requri
-            }
+            };
             // if id starts with $ it is additional odata parameters
             if (!paramsonly) {
-                let callback = new ThenableCaller<T>();
+                let callback = new ThenableCaller();
                 odatajs.oData.request(request, (data, response) => {
                     if (callback.then) {
                         callback.resolve(data);
@@ -117,8 +84,9 @@ namespace odatatools {
                     }
                 });
                 return callback;
-            } else {
-                let callback = new ThenableCaller<T[]>();
+            }
+            else {
+                let callback = new ThenableCaller();
                 odatajs.oData.request(request, (data, response) => {
                     if (callback.then) {
                         callback.resolve(data);
@@ -132,25 +100,22 @@ namespace odatatools {
                 return callback;
             }
         }
-
-
         /**
          * Replaces an existing value in the entity collection.
-         * 
+         *
          * @param {T} value to replace
          * @returns {Thenable<T>} for async Operation. Use `await` keyword to get value or `.then` callback.
-         * 
+         *
          * @memberOf EntitySet
          */
-        Put(value: T): Thenable<void> {
-            let callback = new ThenableCaller<void>();
-
-            let request: odatajs.Request = {
+        Put(value) {
+            let callback = new ThenableCaller();
+            let request = {
                 headers: this.Headers,
                 method: Method[Method.PUT],
                 requestUri: this.Address + "(" + value[this.Key] + ")",
                 data: value
-            }
+            };
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve();
             }, (error) => {
@@ -159,44 +124,40 @@ namespace odatatools {
             });
             return callback;
         }
-
         /**
          * Adds a new entry to an EntitySet
-         * 
+         *
          * @param {T} value to ad to the EntitySet
          * @returns {Thenable<T>} for async Operation. Use `await` keyword to get value or `.then` callback.
-         * 
+         *
          * @memberOf EntitySet
          */
-        Post(value: T): Thenable<T> {
-            let callback = new ThenableCaller<T>();
-            let request: odatajs.Request = {
+        Post(value) {
+            let callback = new ThenableCaller();
+            let request = {
                 headers: this.Headers,
                 method: Method[Method.POST],
                 requestUri: this.Address,
                 data: value
-            }
+            };
             odatajs.oData.request(request, (data, response) => {
-                callback.resolve(data as T);
+                callback.resolve(data);
             }, (error) => {
                 console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":\n" + (error.response | error.response.body));
                 callback.reject(error);
             });
             return callback;
         }
-        Patch(delta: deltaT): Thenable<void>
-        Patch(oldvalue: T, newValue: T): Thenable<void>
-        Patch(oldvalordelta: T | deltaT, newval?: T): Thenable<void> {
+        Patch(oldvalordelta, newval) {
             if (newval)
-                oldvalordelta = this.getDelta(oldvalordelta as T, newval);
-
-            let callback = new ThenableCaller<void>();
-            let request: odatajs.Request = {
+                oldvalordelta = this.getDelta(oldvalordelta, newval);
+            let callback = new ThenableCaller();
+            let request = {
                 headers: this.Headers,
                 method: Method[Method.PATCH],
                 requestUri: this.Address,
                 data: oldvalordelta
-            }
+            };
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve();
             }, (error) => {
@@ -205,9 +166,8 @@ namespace odatatools {
             });
             return callback;
         }
-
-        private getDelta(oldval: T, newVal: T): deltaT {
-            let ret: any = {};
+        getDelta(oldval, newVal) {
+            let ret = {};
             for (let prop in newVal)
                 if (oldval[prop] != newVal[prop])
                     ret[prop] = newVal[prop];
@@ -215,19 +175,19 @@ namespace odatatools {
         }
         /**
          * Deletes a value from the entity set.
-         * 
+         *
          * @param {T} value to delete
          * @returns {Promise<T>} for async Operation. Use `await` keyword to get value or `.then` callback.
-         * 
+         *
          * @memberOf EntitySet
          */
-        Delete(value: T): Thenable<void> {
-            let callback = new ThenableCaller<void>()
-            let request: odatajs.Request = {
+        Delete(value) {
+            let callback = new ThenableCaller();
+            let request = {
                 headers: this.Headers,
                 method: Method[Method.DELETE],
                 requestUri: this.Address + "(" + value[this.Key] + ")"
-            }
+            };
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve();
             }, (error) => {
@@ -237,89 +197,45 @@ namespace odatatools {
             return callback;
         }
     }
-
+    odatatools.EntitySet = EntitySet;
     class EntityContainer {
-        constructor(name: string, uri: string) {
+        constructor(name, uri) {
             this.Name = name;
             this.Uri = uri;
         }
-        readonly Name: string;
-        readonly Uri: string;
     }
-
-
     /**
      * Class that implements thenable callbacks is used to call the callbacks handed by the user.
-     * 
+     *
      * @class ThenableCaller
      * @implements {Thenable<T>}
      * @template T
      */
-    export class ThenableCaller<T> implements Thenable<T> {
-        private _then?: ((value: T) => void)[] = [];
-        private _catch?: ((error: any) => void)[] = [];
-        public then(then?: (value: T) => void): Thenable<T> {
+    class ThenableCaller {
+        constructor() {
+            this._then = [];
+            this._catch = [];
+        }
+        then(then) {
             this._then.push(then);
             return this;
         }
-        public catch(reject: (error: any) => void): Thenable<T> {
+        catch(reject) {
             this._catch.push(reject);
             return this;
         }
-        public resolve(value?: T) {
+        resolve(value) {
             if (this._then)
                 for (let t of this._then)
                     t(value);
         }
-        public reject(error: any) {
+        reject(error) {
             if (this._catch)
                 for (let c of this._catch)
                     c(error);
         }
     }
-
-    /**
-     * An interface to add callbacks as in ES6 Promiselike
-     * 
-     * @interface Thenable
-     * @template T
-     */
-    export interface Thenable<T> {
-
-        /**
-         * Gets called if async function returns successfully
-         * 
-         * @param {(value: T) => void} then
-         * @returns {Thenable<T>} for method stacking
-         * 
-         * @memberOf Thenable
-         */
-        then(then: (value?: T) => void): Thenable<T>;
-
-        /**
-         * Gets called if async function returns an error
-         * 
-         * @param {(error: any) => void} reject
-         * @returns {Thenable<T>} for method stacking
-         * 
-         * @memberOf Thenable
-         */
-        catch(reject: (error: any) => void): Thenable<T>;
-    }
-}
-
-declare namespace odatajs {
-    class oData {
-        static request(request: Request, success?: (data: any, response: any) => void, error?: (error: any) => void, handler?, httpClient?, metadata?);
-    }
-
-    interface Request {
-        requestUri: string,
-        method: string,
-        headers: Header | Header[],
-        data?: any
-    }
-
-    interface Header { [name: string]: string }
-}
+    odatatools.ThenableCaller = ThenableCaller;
+})(odatatools || (odatatools = {}));
 console.log("Loaded odataproxybase");
+//# sourceMappingURL=odataproxybase.js.map
