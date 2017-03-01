@@ -1,4 +1,5 @@
 ﻿using ODataTestService.Models;
+using System;
 using System.Web.Http;
 using System.Web.Odata.Builder;
 using System.Web.OData.Extensions;
@@ -29,6 +30,9 @@ namespace ODataTestService
             Movie.Map(builder, builder.EntitySet<Movie>("Movies"));
             Customer.Map(builder, builder.EntitySet<Customer>("Customers"));
             Address.Map(builder, builder.EntitySet<Address>("Addresses"));
+
+            builder.Function("CurrentTime").Returns<DateTime>();
+            builder.Action("SetSomething").Returns<int>().Parameter<int>("value");
 
             builder.CreateODataRoute("ODataRoute", "moviedb", config);
         }

@@ -2,6 +2,8 @@ interface EdmxBase {
     
 }
 
+type ftype = "Action" | "Function"
+
 interface Edmx extends EdmxBase {
     $: {
         Version: string;
@@ -88,7 +90,7 @@ interface EntityType extends ComplexType {
 interface Method {
     $: {
         Name: string;
-        IsBound: string;
+        IsBound: boolean;
     }
     Parameter?: Parameter[]
     ReturnType?: ReturnType[]
@@ -96,6 +98,9 @@ interface Method {
     // added by proxygenerator:
     IsBoundToCollection?: boolean;
     Namespace: string
+
+    //Added by the proxygenerator
+    Type: ftype
 }
 
 interface ReturnType {

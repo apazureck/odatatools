@@ -14,6 +14,40 @@ namespace MovieService {
         Movies: MovieEntitySet;
         Customers: EntitySet<ODataTestService.Models.Customer, ODataTestService.Models.DeltaCustomer>;
         Addresses: EntitySet<ODataTestService.Models.Address, ODataTestService.Models.DeltaAddress>;
+        SetSomething(value: Edm.Int32): Thenable<Edm.Int32> {
+            let callback = new ThenableCaller<Edm.Int32>();
+            let request: odatajs.Request = {
+                headers: this.Headers,
+                method: "GET",
+                requestUri: this.Address + "/undefined.SetSomething",
+                data: {
+                    value: value
+                }
+            }
+            odatajs.oData.request(request, (data, response) => {
+                callback.resolve(data.value);
+            }, (error) => {
+                console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                callback.reject(error);
+            });
+            return callback;
+        }
+        CurrentTime(): Thenable<Edm.DateTimeOffset> {
+            let callback = new ThenableCaller<Edm.DateTimeOffset>();
+            let request: odatajs.Request = {
+                headers: this.Headers,
+                method: "GET",
+                requestUri: this.Address + "/undefined.CurrentTime",
+            }
+            odatajs.oData.request(request, (data, response) => {
+                callback.resolve(data.value);
+            }, (error) => {
+                console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                callback.reject(error);
+            });
+            return callback;
+        }
+
     }
     export class MovieEntitySet extends EntitySet<ODataTestService.Models.Movie, ODataTestService.Models.DeltaMovie> {
         constructor(name: string, address: string, key: string, additionalHeaders?: odatajs.Header) {
@@ -75,4 +109,6 @@ namespace MovieService {
         }
 
     }
+
+
 }
