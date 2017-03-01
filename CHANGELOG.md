@@ -1,6 +1,7 @@
 ## 0.4.0 OData Actions and Functions
 
-- **NEW** OData V4 client generator can now handle bound actions and Functions
+- **NEW** OData V4 client generator can now handle bound and unbound actions and Functions
+- **NEW** OData V4 client allows custom headers in constructor (experimental - not tested)
 - **IMPROVEMENT** OData V4 Client generator takes now namespace and container name for generated proxy
 
 ## 0.3.0 OData Client

@@ -7,7 +7,9 @@ This extension targets to speed up access to an oData service to use it within *
 > Supported Languages: **Typescript** (and, thus Javascript)
 
 - Create/Update *typescript* Interface declarations from oData service
-- Create *typescript* OData V4 client (**Experimental**)
+- Create *typescript* OData V4 client (**Beta**)
+  - Entity sets GET, PUT, POST, DELETE
+  - Bound and unbound OData Actions and Functions
 
 # Table of Content
 
@@ -21,12 +23,7 @@ This extension targets to speed up access to an oData service to use it within *
     1. [Get and update Interfaces from oData service](#get-and-update-interfaces-from-odata-service)
     2. [Create OData V4 client (EXPERIMENTAL)](#create-odata-v4-client-experimental)
     3. [Usage of OData V4 client (EXPERIMENTAL)](#usage-of-odata-v4-client-experimental)
-        1. [Get](#get)
-        2. [Post](#post)
-        3. [Put](#put)
-        4. [Patch](#patch)
-        5. [Error Handling](#error-handling)
-        6. [Delete](#delete)
+    4. [Custom headers](#custom-headers)
 6. [Known Issues](#known-issues)
 7. [Contribution](#contribution)
 
@@ -148,6 +145,18 @@ let movie = client.Movies.Get(1);
 movie.Cast += ", Veronica Cartwright";
 client.Movies.Put(movie);
 ```
+
+### Actions and Functions
+
+Actions and functions *(short: methods)* will be created, if specified. All bound methods will be added to the collection. For each entity set that contains bound functions a class will be generated.
+
+Bound methods to entities will have the key as first parameter. Bound functions to the entire collection will not require such a key. Actions will have the input parameters set in the method body, functions will have the parameters set in the request uri. Unbound methods will be directly on the controller.
+
+For an example see the [test section](https://github.com/apazureck/odatatools/tree/master/test/testproject) in the repository.
+
+## Custom headers
+
+Since 1.4.0 you can add custom headers. You can also overwrite the default headers. By default two headers are added: `"Content-Type": "application/json"` and `Accept: "application/json"`.
 
 # Known Issues
 
