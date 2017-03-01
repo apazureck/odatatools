@@ -55,7 +55,7 @@ QUnit.test("Test Unbound Action", (assert) => {
   
   let done = assert.async();
   
-  comm.SetSomething(25).then((value) => {
+  comm.GetSomething(25).then((value) => {
     assert.ok(value === 25);
     done();
   }).catch((err) => {

@@ -15,10 +15,7 @@ var MovieService;
             let request = {
                 headers: this.Headers,
                 method: "GET",
-                requestUri: this.Address + "/SetSomething",
-                data: {
-                    value: value
-                }
+                requestUri: this.Address + "/SetSomething(value=" + value + ")",
             };
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve(data.value);
@@ -34,6 +31,21 @@ var MovieService;
                 headers: this.Headers,
                 method: "GET",
                 requestUri: this.Address + "/CurrentTime",
+            };
+            odatajs.oData.request(request, (data, response) => {
+                callback.resolve(data.value);
+            }, (error) => {
+                console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                callback.reject(error);
+            });
+            return callback;
+        }
+        GetSomething(value) {
+            let callback = new ThenableCaller();
+            let request = {
+                headers: this.Headers,
+                method: "GET",
+                requestUri: this.Address + "/GetSomething(value=" + value + ")",
             };
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve(data.value);
@@ -88,10 +100,7 @@ var MovieService;
             let request = {
                 headers: this.Headers,
                 method: "GET",
-                requestUri: this.Address + "/MovieService.GetBestMovie",
-                data: {
-                    Genre: Genre
-                }
+                requestUri: this.Address + "/MovieService.GetBestMovie(Genre=" + Genre + ")",
             };
             odatajs.oData.request(request, (data, response) => {
                 callback.resolve(data.value);

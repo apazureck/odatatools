@@ -42,7 +42,7 @@ QUnit.test("Test Rate Action", (assert) => {
 QUnit.test("Test Unbound Action", (assert) => {
     let comm = new MovieProxy(serviceuri, "Testproxy");
     let done = assert.async();
-    comm.SetSomething(25).then((value) => {
+    comm.GetSomething(25).then((value) => {
         assert.ok(value === 25);
         done();
     }).catch((err) => {
