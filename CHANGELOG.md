@@ -1,3 +1,5 @@
+# Release Notes
+
 ## 0.4.0 OData Actions and Functions
 
 - **NEW** OData V4 client generator can now handle bound and unbound actions and Functions
