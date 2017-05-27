@@ -5,6 +5,7 @@ declare namespace ODataTestService.Models {
         Avaiable: Edm.Boolean;
         Rating: Edm.Single;
         Genre?: Edm.String;
+        Reason?: Edm.String;
         Lender?: ODataTestService.Models.Customer;
     }
     export interface DeltaMovie {
@@ -13,6 +14,7 @@ declare namespace ODataTestService.Models {
         Avaiable?: Edm.Boolean;
         Rating?: Edm.Single;
         Genre?: Edm.String;
+        Reason?: Edm.String;
         Lender?: ODataTestService.Models.Customer;
     }
     export interface Customer {

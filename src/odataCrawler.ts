@@ -1,4 +1,6 @@
-import { Client } from 'node-rest-client';
+import * as request from 'request';
+import * as xml2js from 'xml2js';
+import { IncomingMessage } from 'http';
 import { window, TextEdit, Range, commands } from 'vscode';
 import { log, Global } from './extension';
 
@@ -40,39 +42,47 @@ export async function getInterfaces() {
     }
 }
 
-async function receiveInterfaces(input: string, ambient?: boolean): Promise<string> {
-    if (!ambient) ambient = false;
+async function receiveInterfaces(input: string, ambient?: boolean, options?: request.CoreOptions): Promise<string> {
+    ambient = ambient || false;
     return new Promise<string>((resolve, reject) => {
-        let client = new Client();
-        client.get(input, (data, response) => {
-            try {
-                if (!data["edmx:Edmx"]) {
-                    log.appendLine("Received invalid data:\n");
-                    log.append(data.toString());
-                    return reject(window.showErrorMessage("Response is not valid oData metadata. See output for more information"));
-                }
-                let edmx: Edmx = data["edmx:Edmx"];
-                let version = edmx.$.Version;
-                log.appendLine("oData version: " + version);
-                if (version != "4.0")
-                    window.showWarningMessage("WARNING! Current oDate Service Version is '" + version + "'. Trying to get interfaces, but service only supports Version 4.0! Outcome might be unexpected.");
+        let rData = '';
+        request.get(input, options)
+            .on('data', (data) => {
+                rData += data;
+            })
+            .on('complete', (resp) => {
+                xml2js.parseString(rData, (err, data) => {
+                    try {
 
-                log.appendLine("Creating Interfaces");
-                let interfacesstring = getInterfacesString(edmx["edmx:DataServices"][0].Schema, ambient);
+                        if (!data["edmx:Edmx"]) {
+                            log.appendLine("Received invalid data:\n");
+                            log.append(data.toString());
+                            return reject(window.showErrorMessage("Response is not valid oData metadata. See output for more information"));
+                        }
+                        let edmx: Edmx = data["edmx:Edmx"];
+                        let version = edmx.$.Version;
+                        log.appendLine("oData version: " + version);
+                        if (version != "4.0")
+                            window.showWarningMessage("WARNING! Current oDate Service Version is '" + version + "'. Trying to get interfaces, but service only supports Version 4.0! Outcome might be unexpected.");
 
-                log.appendLine("Creating Edm Types");
-                interfacesstring += edmTypes(ambient);
+                        log.appendLine("Creating Interfaces");
+                        let interfacesstring = getInterfacesString(edmx["edmx:DataServices"][0].Schema, ambient);
 
-                log.appendLine("Creating source line");
-                interfacesstring += "\n/// Do not modify this line to being able to update your interfaces again:"
-                interfacesstring += "\n/// #odata.source = '" + input + "'";
-                resolve(interfacesstring)
-            } catch (error) {
-                console.error("Unknown error:\n", error.toString())
-                window.showErrorMessage("Unknown error occurred, see console output for more information.");
-                reject(error);
-            }
-        });
+                        log.appendLine("Creating Edm Types");
+                        interfacesstring += edmTypes(ambient);
+
+                        log.appendLine("Creating source line");
+                        interfacesstring += "\n/// Do not modify this line to being able to update your interfaces again:"
+                        interfacesstring += "\n/// #odata.source = '" + input + "'";
+                        resolve(interfacesstring)
+                    } catch (error) {
+                        console.error("Unknown error:\n", error.toString())
+                        window.showErrorMessage("Unknown error occurred, see console output for more information.");
+                        reject(error);
+                    }
+                });
+
+            });
     });
 }
 
@@ -196,7 +206,5 @@ function checkEdmType(typestring: string) {
 
 function getProperty(inprop: Property | NavigationProperty, forceoptional?: boolean) {
     let prop = inprop as Property;
-    if (typeof inprop === 'NavigationProperty')
-        prop.$.Nullable = true;
     return prop.$.Name + (typeof prop.$.Nullable !== 'undefined' ? (forceoptional ? "?" : (prop.$.Nullable ? "" : "?")) : "?") + ": " + getType(prop.$.Type) + ";\n"
 }

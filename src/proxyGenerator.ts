@@ -1,10 +1,10 @@
-import { Client } from 'node-rest-client';
 import { window, TextEdit, Range, commands, ExtensionContext } from 'vscode';
 import { log, Global } from './extension';
 import * as enumerable from 'linq-es2015';
 import { Enumerable } from "linq-es2015";
 import * as fs from 'fs';
 import * as path from 'path';
+import * as request from 'request';
 
 const methodhook = "//${unboundMethods}"
 
@@ -246,10 +246,9 @@ function getSet(bindingParameter: Parameter, entitySets: { [type: string]: Entit
     }
 }
 
-async function getMetadata(maddr: string): Promise<Edmx> {
+async function getMetadata(maddr: string, options?: request.CoreOptions): Promise<Edmx> {
     return new Promise<Edmx>((resolve, reject) => {
-        let client = new Client();
-        client.get(maddr, (data, response) => {
+        request.get(maddr, options).on('complete', (resp, data) => {
             try {
                 if (!data["edmx:Edmx"]) {
                     log.appendLine("Received invalid data:\n");

@@ -1,4 +1,4 @@
-namespace MovieService {
+export namespace MovieService {
     import ProxyBase = odatatools.ProxyBase;
     import EntitySet = odatatools.EntitySet;
     import ThenableCaller = odatatools.ThenableCaller;
