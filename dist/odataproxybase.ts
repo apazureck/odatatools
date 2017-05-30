@@ -222,7 +222,7 @@ namespace odatatools {
          * @memberOf EntitySet
          */
         Delete(value: T): Thenable<void> {
-            let callback = new ThenableCaller<void>()
+            let callback = new ThenableCaller<void>();
             let request: odatajs.Request = {
                 headers: this.Headers,
                 method: Method[Method.DELETE],
@@ -234,6 +234,27 @@ namespace odatatools {
                 console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":\n" + (error.response | error.response.body));
                 callback.reject(error);
             });
+            return callback;
+        }
+
+        Count(parameters?: string): Thenable<number> {
+            const callback = new ThenableCaller<number>();
+
+            const requri = this.Address + "/$count/" + (parameters ? "?" + parameters : "");
+
+            let request: odatajs.Request = {
+                headers: this.Headers,
+                method: Method[Method.GET],
+                requestUri: requri
+            }
+
+            odatajs.oData.request(request, (data, response) => {
+                callback.resolve(data);
+            }, (error) => {
+                console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":\n" + (error.response | error.response.body));
+                callback.reject(error);
+            });
+
             return callback;
         }
     }

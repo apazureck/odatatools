@@ -5,6 +5,7 @@ import { Enumerable } from "linq-es2015";
 import * as fs from 'fs';
 import * as path from 'path';
 import * as request from 'request';
+import * as xml2js from 'xml2js';
 
 const methodhook = "//${unboundMethods}"
 
@@ -31,13 +32,14 @@ export async function createProxy() {
         log.appendLine("Getting Metadata from '" + maddr + "'");
         let metadata = await getMetadata(maddr);
 
-        let ambientorImport = await window.showInputBox({
-            placeHolder: "import",
-            prompt: "Type (a)mbient to generate ambient namespace instead of import module. Otherwise leave empty"
-        })
+        // window.showInformationMessage("Select import type (ambient or modular) for generation.");
+        const importSelect = await window.showQuickPick(["Modular", "Ambient"]) as ImportType;
 
-        let proxystring = await getProxyString(maddr.replace("$metadata", ""), metadata["edmx:DataServices"][0], ambientorImport);
-        proxystring = await addActionsAndFunctions(proxystring, metadata["edmx:DataServices"][0])
+        // window.showInformationMessage("Legacy?")
+        const legacy = await window.showQuickPick(["Yes", "No"]) === "Yes";
+
+        let proxystring = await getProxyString(maddr.replace("$metadata", ""), metadata["edmx:DataServices"][0], importSelect, legacy);
+        proxystring = await addActionsAndFunctions(proxystring, metadata["edmx:DataServices"][0], legacy);
         proxystring = surroundWithNamespace(proxystring, metadata["edmx:DataServices"][0]);
 
         log.appendLine("Updating current file.");
@@ -50,7 +52,7 @@ export async function createProxy() {
 
         log.appendLine("Copying Proxy Base module");
         fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odatajs-4.0.0.js")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odatajs-4.0.0.js")));
-        fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odataproxybase.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odataproxybase.ts")));
+        fs.createReadStream(path.join(Global.context.extensionPath, "dist", legacy ? "odataproxybase.ts" : "odataproxybaseAsync.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odataproxybase.ts")));
     } catch (error) {
         window.showErrorMessage("Could not create proxy. See output window for detail.");
         log.appendLine("Creating proxy returned following error:");
@@ -78,7 +80,7 @@ class EntitySet {
     Actions: Method[];
     Functions: Method[];
 
-    getImplementedClass(metadata: DataService): string {
+    getImplementedClass(metadata: DataService, legacy: boolean): string {
         let typedef = (enumerable.asEnumerable(metadata.Schema)
             .SelectMany(x => {
                 if (!x.EntityType)
@@ -89,20 +91,20 @@ class EntitySet {
         let key = typedef.Key[0].PropertyRef[0].$.Name;
         let keytype = enumerable.asEnumerable<Property>(typedef.Property).FirstOrDefault(x => x.$.Name === key).$.Type;
 
-        let ret = "export class " + this.getTypeName() + " extends " + this.getSubstitutedType() + " {\n";
+        let ret = "export class " + this.getTypeName() + " extends " + this.getSubstitutedType(legacy) + " {\n";
         ret += "constructor(name: string, address: string, key: string, additionalHeaders?: odatajs.Header) {";
         ret += "super(name, address, key, additionalHeaders);\n";
         ret += "}\n"
         for (let a of this.Actions)
-            ret += createMethod(a, "POST", keytype) + "\n";
+            ret += createMethod(a, "POST", legacy, keytype) + "\n";
         for (let f of this.Functions)
-            ret += createMethod(f, "GET", keytype) + "\n";
+            ret += createMethod(f, "GET", legacy, keytype) + "\n";
         ret += "}\n"
         return ret;
     }
 
-    getSubstitutedType(): string {
-        return "EntitySet<" + this.Type + ", " + this._getDeltaType() + ">";
+    getSubstitutedType(legacy: boolean): string {
+        return legacy ? "EntitySet<" + this.Type + ", " + this._getDeltaType() + ">" : "EntitySet<" + this.Type + ">";
     }
 
     private _getDeltaType(): string {
@@ -118,7 +120,7 @@ class EntitySet {
 
 type GetOrPost = "GET" | "POST";
 
-async function addActionsAndFunctions(proxystring: string, metadata: DataService): Promise<string> {
+async function addActionsAndFunctions(proxystring: string, metadata: DataService, legacy: boolean): Promise<string> {
     log.appendLine("Looking for actions and functions")
     return new Promise<string>((resolve, reject) => {
         let ecschema = enumerable.asEnumerable(metadata.Schema).FirstOrDefault(x => x.EntityContainer != undefined);
@@ -128,13 +130,13 @@ async function addActionsAndFunctions(proxystring: string, metadata: DataService
         let entitysets = getBoundActionsAndFunctions(ecschema);
 
         for (let typename in entitysets) {
-            proxystring = proxystring.replace(new RegExp(entitysets[typename].getSubstitutedType(), 'g'), entitysets[typename].getTypeName())
-            proxystring += "\n" + entitysets[typename].getImplementedClass(metadata) + "\n";
+            proxystring = proxystring.replace(new RegExp(entitysets[typename].getSubstitutedType(legacy), 'g'), entitysets[typename].getTypeName())
+            proxystring += "\n" + entitysets[typename].getImplementedClass(metadata, legacy) + "\n";
         }
 
         let unboundmethods: string = "";
         for (let method of getUnboundActionsAndFunctions(ecschema)) {
-            unboundmethods += createMethod(method, method.Type === "Function" ? "GET" : "POST")
+            unboundmethods += createMethod(method, method.Type === "Function" ? "GET" : "POST", legacy);
         }
         proxystring = proxystring.replace(methodhook, unboundmethods)
 
@@ -171,7 +173,7 @@ function getBoundActionsAndFunctions(ecschema: Schema): { [type: string]: Entity
         log.appendLine("Found " + ecschema.Action.length + " OData Actions");
         for (let a of ecschema.Action) {
             try {
-                if(!a.$.IsBound)
+                if (!a.$.IsBound)
                     continue;
                 log.appendLine("Adding bound Action " + a.$.Name);
 
@@ -200,7 +202,7 @@ function getBoundActionsAndFunctions(ecschema: Schema): { [type: string]: Entity
         log.appendLine("Found " + ecschema.Function.length + " OData Functions");
         for (let f of ecschema.Function) {
             try {
-                if(!f.$.IsBound)
+                if (!f.$.IsBound)
                     continue;
                 log.appendLine("Adding bound Function " + f.$.Name);
 
@@ -248,32 +250,47 @@ function getSet(bindingParameter: Parameter, entitySets: { [type: string]: Entit
 
 async function getMetadata(maddr: string, options?: request.CoreOptions): Promise<Edmx> {
     return new Promise<Edmx>((resolve, reject) => {
-        request.get(maddr, options).on('complete', (resp, data) => {
-            try {
-                if (!data["edmx:Edmx"]) {
-                    log.appendLine("Received invalid data:\n");
-                    log.append(data.toString());
-                    return reject(window.showErrorMessage("Response is not valid oData metadata. See output for more information"));
-                }
-                if (data["edmx:Edmx"])
-                    return resolve(data["edmx:Edmx"]);
-                return reject("Not valid metadata")
-            }
-            catch (error) {
-                reject(error);
-            }
-        });
+        let rData = '';
+        request.get(maddr, options)
+            .on('data', (data) => {
+                rData += data;
+            })
+            .on('complete', (resp) => {
+                xml2js.parseString(rData, (err, data) => {
+                    try {
+                        if (!data["edmx:Edmx"]) {
+                            log.appendLine("Received invalid data:\n");
+                            log.append(data.toString());
+                            return reject(window.showErrorMessage("Response is not valid oData metadata. See output for more information"));
+                        }
+                        if (data["edmx:Edmx"])
+                            return resolve(data["edmx:Edmx"]);
+                        return reject("Not valid metadata")
+                    }
+                    catch (error) {
+                        reject(error);
+                    }
+                });
+            });
     });
 }
 
-async function getProxyString(uri: string, metadata: DataService, ambentorimport: string): Promise<string> {
+type ImportType = "Ambient" | "Modular"
+
+async function getProxyString(uri: string, metadata: DataService, selectString: ImportType, legacy: boolean): Promise<string> {
     return new Promise<string>((resolve, reject) => {
         // make the imports based on 
         let ret = "";
-        if (ambentorimport.startsWith("i"))
-            ret += "import { ProxyBase, EntitySet} from './odataproxybase';\n\n";
-        else
+        if (selectString === "Modular") {
+            if (legacy)
+                ret += "import { ProxyBase, EntitySet, ThenableCaller, Thenable} from './odataproxybase';\n\n";
+            else
+                ret += "import { ProxyBase, EntitySet} from './odataproxybase';\n\n";
+        }
+        else if (legacy)
             ret += "import ProxyBase = odatatools.ProxyBase;\nimport EntitySet = odatatools.EntitySet;\nimport ThenableCaller = odatatools.ThenableCaller;\nimport Thenable = odatatools.Thenable;\n\n";
+        else
+            ret += "import ProxyBase = odatatools.ProxyBase;\nimport EntitySet = odatatools.EntitySet;\n\n";
         // get the entity container
         let ec = enumerable.asEnumerable(metadata.Schema).FirstOrDefault(x => x.EntityContainer != undefined).EntityContainer[0];
         // Get a dictionary with key names as value and type names as key to fill in later on in the constructor.
@@ -291,11 +308,17 @@ async function getProxyString(uri: string, metadata: DataService, ambentorimport
         ret += "constructor(address: string, name?: string, additionalHeaders?: odatajs.Header) {\n"
         ret += "super(address, name, additionalHeaders);\n";
         for (let set of ec.EntitySet) {
-            ret += "this." + set.$.Name + " = new EntitySet<" + set.$.EntityType + ", " + getDeltaName(set.$.EntityType) + ">(\"" + set.$.Name + "\", address, \"" + keys.get(set.$.EntityType) + "\", additionalHeaders);\n"
+            if (legacy)
+                ret += "this." + set.$.Name + " = new EntitySet<" + set.$.EntityType + ", " + getDeltaName(set.$.EntityType) + ">(\"" + set.$.Name + "\", address, \"" + keys.get(set.$.EntityType) + "\", additionalHeaders);\n";
+            else
+                ret += "this." + set.$.Name + " = new EntitySet<" + set.$.EntityType + ">(\"" + set.$.Name + "\", address, \"" + keys.get(set.$.EntityType) + "\", additionalHeaders);\n";
         }
         ret += "}\n"
         for (let set of ec.EntitySet) {
-            ret += set.$.Name + ": EntitySet<" + set.$.EntityType + ", " + getDeltaName(set.$.EntityType) + ">;\n"
+            if (legacy)
+                ret += set.$.Name + ": EntitySet<" + set.$.EntityType + ", " + getDeltaName(set.$.EntityType) + ">;\n";
+            else
+                ret += set.$.Name + ": EntitySet<" + set.$.EntityType + ">;\n";
         }
         ret += methodhook + "\n"
         ret += "}";
@@ -339,10 +362,14 @@ function _getParameterJSON(parameters: Parameter[]): string {
     return ret + "}";
 }
 
-function createMethod(method: Method, requesttype: GetOrPost, key?: string): string {
+function createMethod(method: Method, requesttype: GetOrPost, legacy: boolean, key?: string): string {
     // TODO: get key type
-    let ret = method.$.Name + "(" + (method.$.IsBound ? (method.IsBoundToCollection ? "" : "key: " + key + (method.Parameter.length > 0 ? ", " : "")) : "") + _getParameters(method.Parameter) + "): Thenable<" + _getReturnType(method.ReturnType) + ">{\n";
-    ret += "let callback = new ThenableCaller<" + _getReturnType(method.ReturnType) + ">();\n";
+    let ret = method.$.Name + "(" + (method.$.IsBound ? (method.IsBoundToCollection ? "" : "key: " + key + (method.Parameter.length > 0 ? ", " : "")) : "") + _getParameters(method.Parameter) + "): " + (legacy ? "Thenable" : "Promise") + "<" + _getReturnType(method.ReturnType) + ">{\n";
+    if (legacy)
+        ret += "let callback = new ThenableCaller<" + _getReturnType(method.ReturnType) + ">();\n";
+    else {
+        ret += "return new Promise<" + _getReturnType(method.ReturnType) + ">((reject, resolve) => {\n";
+    }
     ret += "let request: odatajs.Request = {\n";
     ret += "headers: this.Headers,\n";
     ret += "method: \"" + requesttype + "\",\n";
@@ -351,27 +378,36 @@ function createMethod(method: Method, requesttype: GetOrPost, key?: string): str
         ret += "data: " + _getParameterJSON(method.Parameter) + "\n";
     ret += "}\n";
     ret += "odatajs.oData.request(request, (data, response) => {\n";
-    ret += "callback.resolve(" + (method.ReturnType ? "data.value" : "") + ");\n"
+    if (legacy)
+        ret += "callback.resolve(" + (method.ReturnType ? "data.value" : "") + ");\n";
+    else
+        ret += "resolve(" + (method.ReturnType ? "data.value" : "") + ");\n";
     ret += "}, (error) => {\n";
     ret += "console.error(error.name + \" \" + error.message + \" | \" + (error.response | error.response.statusText) + \":\" + (error.response | error.response.body));\n";
-    ret += "callback.reject(error);\n";
+    if (legacy)
+        ret += "callback.reject(error);\n";
+    else
+        ret += "reject(error);\n";
     ret += "});\n";
-    ret += "return callback;\n";
+    if (legacy)
+        ret += "return callback;\n";
+    else
+        ret += "});\n";
     ret += "}\n";
     return ret;
 }
 
 function _getRequestUri(method: Method): string {
     let uri = "requestUri: this.Address  + \""
-    if(method.Type === "Function") {
+    if (method.Type === "Function") {
         uri += (method.$.IsBound ? (method.IsBoundToCollection ? "" : "(\"+key+\")") : "") + "/" + (method.$.IsBound ? method.Namespace + "." : "") + method.$.Name + _getRequestParameters(method.Parameter) + "\",\n";
-    } else 
+    } else
         uri += (method.$.IsBound ? (method.IsBoundToCollection ? "" : "(\"+key+\")") : "") + "/" + (method.$.IsBound ? method.Namespace + "." : "") + method.$.Name + "\",\n";
     return uri;
 }
 
 function _getRequestParameters(parameters: Parameter[]) {
-    if(!parameters)
+    if (!parameters)
         return "";
     let ret = "("
     for (let param of parameters) {

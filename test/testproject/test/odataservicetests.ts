@@ -10,7 +10,7 @@ QUnit.test( "Default test", function( assert ) {
 
 QUnit.test("Test Get", (assert) => {
   let comm = new MovieProxy(serviceuri, "Testproxy");
-  
+  comm.Addresses.Select("Id").Expand("Id").Get("3");
   let done = assert.async();
   
   comm.Addresses.Get().then((value) => {
@@ -56,7 +56,6 @@ QUnit.test("Test Unbound Action", (assert) => {
   let comm = new MovieProxy(serviceuri, "Testproxy");
   
   let done = assert.async();
-  
   comm.GetSomething(25).then((value) => {
     assert.ok(value === 25);
     done();
