@@ -1,8 +1,6 @@
-import * as request from 'request';
-import * as xml2js from 'xml2js';
-import { IncomingMessage } from 'http';
+import { Client } from 'node-rest-client';
 import { window, TextEdit, Range, commands } from 'vscode';
-import { log, Global } from './extension';
+import { log, Global } from '../extension';
 
 export async function getInterfaces() {
     try {
@@ -42,47 +40,39 @@ export async function getInterfaces() {
     }
 }
 
-async function receiveInterfaces(input: string, ambient?: boolean, options?: request.CoreOptions): Promise<string> {
-    ambient = ambient || false;
+async function receiveInterfaces(input: string, ambient?: boolean): Promise<string> {
+    if (!ambient) ambient = false;
     return new Promise<string>((resolve, reject) => {
-        let rData = '';
-        request.get(input, options)
-            .on('data', (data) => {
-                rData += data;
-            })
-            .on('complete', (resp) => {
-                xml2js.parseString(rData, (err, data) => {
-                    try {
+        let client = new Client();
+        client.get(input, (data, response) => {
+            try {
+                if (!data["edmx:Edmx"]) {
+                    log.appendLine("Received invalid data:\n");
+                    log.append(data.toString());
+                    return reject(window.showErrorMessage("Response is not valid oData metadata. See output for more information"));
+                }
+                let edmx: Edmx = data["edmx:Edmx"];
+                let version = edmx.$.Version;
+                log.appendLine("oData version: " + version);
+                if (version != "4.0")
+                    window.showWarningMessage("WARNING! Current oDate Service Version is '" + version + "'. Trying to get interfaces, but service only supports Version 4.0! Outcome might be unexpected.");
 
-                        if (!data["edmx:Edmx"]) {
-                            log.appendLine("Received invalid data:\n");
-                            log.append(data.toString());
-                            return reject(window.showErrorMessage("Response is not valid oData metadata. See output for more information"));
-                        }
-                        let edmx: Edmx = data["edmx:Edmx"];
-                        let version = edmx.$.Version;
-                        log.appendLine("oData version: " + version);
-                        if (version != "4.0")
-                            window.showWarningMessage("WARNING! Current oDate Service Version is '" + version + "'. Trying to get interfaces, but service only supports Version 4.0! Outcome might be unexpected.");
+                log.appendLine("Creating Interfaces");
+                let interfacesstring = getInterfacesString(edmx["edmx:DataServices"][0].Schema, ambient);
 
-                        log.appendLine("Creating Interfaces");
-                        let interfacesstring = getInterfacesString(edmx["edmx:DataServices"][0].Schema, ambient);
+                log.appendLine("Creating Edm Types");
+                interfacesstring += edmTypes(ambient);
 
-                        log.appendLine("Creating Edm Types");
-                        interfacesstring += edmTypes(ambient);
-
-                        log.appendLine("Creating source line");
-                        interfacesstring += "\n/// Do not modify this line to being able to update your interfaces again:"
-                        interfacesstring += "\n/// #odata.source = '" + input + "'";
-                        resolve(interfacesstring)
-                    } catch (error) {
-                        console.error("Unknown error:\n", error.toString())
-                        window.showErrorMessage("Unknown error occurred, see console output for more information.");
-                        reject(error);
-                    }
-                });
-
-            });
+                log.appendLine("Creating source line");
+                interfacesstring += "\n/// Do not modify this line to being able to update your interfaces again:"
+                interfacesstring += "\n/// #odata.source = '" + input + "'";
+                resolve(interfacesstring)
+            } catch (error) {
+                console.error("Unknown error:\n", error.toString())
+                window.showErrorMessage("Unknown error occurred, see console output for more information.");
+                reject(error);
+            }
+        });
     });
 }
 

@@ -45,11 +45,11 @@
                 },
                 "odatatools.version": {
                     "type": "string",
-                    "default": "0.5.0+",
-                    "description": "For legacy reasons. To use old behavior set to version '0.4.0-'. See extension description for more details.",
+                    "default": "1.0",
+                    "description": "For legacy reasons. To use old behavior set to version '0.4'. See extension description for more details.",
                     "enum": [
-                        "0.5.0+",
-                        "0.4.0-"
+                        "1.0",
+                        "0.4"
                     ]
                 }
             }
@@ -68,13 +68,13 @@
         "mocha": "^3.2.0",
         "qunitjs": "^2.1.1",
         "request": "^2.81.0",
-        "typescript": "^2.0.3",
-        "vscode": "^1.0.0"
+        "typescript": "2.3.4",
+        "vscode": "1.1.0"
     },
     "dependencies": {
-        "linq-es2015": "^2.4.13",
-        "node-rest-client": "2.5.0",
-        "xml2js": "^0.4.17"
+        "linq-es2015": "2.4.22",
+        "node-rest-client": "3.1.0",
+        "xml2js": "0.4.17"
     },
     "author": {
         "email": "andreas@pazureck.de",

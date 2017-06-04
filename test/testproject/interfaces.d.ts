@@ -8,15 +8,6 @@ declare namespace ODataTestService.Models {
         Reason?: Edm.String;
         Lender?: ODataTestService.Models.Customer;
     }
-    export interface DeltaMovie {
-        Id?: Edm.Int32;
-        LenderId?: Edm.Int32;
-        Avaiable?: Edm.Boolean;
-        Rating?: Edm.Single;
-        Genre?: Edm.String;
-        Reason?: Edm.String;
-        Lender?: ODataTestService.Models.Customer;
-    }
     export interface Customer {
         Id: Edm.Int32;
         Name?: Edm.String;
@@ -27,24 +18,8 @@ declare namespace ODataTestService.Models {
         Address: ODataTestService.Models.Address;
         Borrowed?: ODataTestService.Models.Movie[];
     }
-    export interface DeltaCustomer {
-        Id?: Edm.Int32;
-        Name?: Edm.String;
-        Age?: Edm.Int32;
-        Gender?: ODataTestService.Models.Gender;
-        Balance?: Edm.Double;
-        AddressId?: Edm.Int32;
-        Address?: ODataTestService.Models.Address;
-        Borrowed?: ODataTestService.Models.Movie[];
-    }
     export interface Address {
         Id: Edm.Int32;
-        Street?: Edm.String;
-        Zip?: Edm.String;
-        Inhabitants?: ODataTestService.Models.Customer[];
-    }
-    export interface DeltaAddress {
-        Id?: Edm.Int32;
         Street?: Edm.String;
         Zip?: Edm.String;
         Inhabitants?: ODataTestService.Models.Customer[];

@@ -1,5 +1,5 @@
 import { window, TextEdit, Range, commands, ExtensionContext } from 'vscode';
-import { log, Global } from './extension';
+import { log, Global } from '../extension';
 import * as enumerable from 'linq-es2015';
 import { Enumerable } from "linq-es2015";
 import * as fs from 'fs';
@@ -39,7 +39,7 @@ export async function createProxy() {
 
         let proxystring = await getProxyString(maddr.replace("$metadata", ""), metadata["edmx:DataServices"][0], importSelect);
         proxystring = await addActionsAndFunctions(proxystring, metadata["edmx:DataServices"][0]);
-        proxystring = surroundWithNamespace(proxystring, metadata["edmx:DataServices"][0]);
+        proxystring = surroundWithNamespace(proxystring, metadata["edmx:DataServices"][0], importSelect);
 
         log.appendLine("Updating current file.");
         window.activeTextEditor.edit((editbuilder) => {
@@ -51,20 +51,46 @@ export async function createProxy() {
 
         log.appendLine("Copying Proxy Base module");
         fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odatajs-4.0.0.js")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odatajs-4.0.0.js")));
-        fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odataproxybaseAsync.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odataproxybase.ts")));
+        if (importSelect === "Ambient")
+            fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odataproxybaseAsync.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odataproxybase.ts")));
+        else {
+            fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odataproxybaseAsyncModular.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odataproxybase.ts")));
+            fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odatajs.d.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odatajs.d.ts")));
+        }
     } catch (error) {
         window.showErrorMessage("Could not create proxy. See output window for detail.");
         log.appendLine("Creating proxy returned following error:");
-        log.appendLine(error.toString());
+        if (error.originalStack)
+            log.appendLine(error.originalStack);
+        else
+            log.appendLine(error.toString());
     }
 }
 
-function surroundWithNamespace(proxystring: string, metadata: DataService): string {
-    let ecschema = enumerable.asEnumerable(metadata.Schema).FirstOrDefault(x => x.EntityContainer != undefined);
+function surroundWithNamespace(proxystring: string, metadata: DataService, importSelect: ImportType): string {
+    const ecschema = enumerable.asEnumerable(metadata.Schema).FirstOrDefault(x => x.EntityContainer != undefined);
     if (!ecschema)
         throw new Error("No entity container found on odata service.");
 
-    let ret = "namespace " + ecschema.$.Namespace + " {\n";
+    // Create update information
+    let odatatools = {
+        source: Global.lastval,
+        headers: []
+    }
+    const headerobject = JSON.stringify(odatatools,null,'\t').split("\n");
+    let header = "/// Created by odatatools: https://marketplace.visualstudio.com/items?itemName=apazureck.odatatools\n";
+    header += "/// Creation Time: " + Date() + "\n";
+    header += "/// DO NOT DELETE THIS IN ORDER TO UPDATE YOUR SERVICE\n"
+    for (const line of headerobject)
+        header += "/// #" + line + "\n";
+    
+    header += "/// #END"
+    let ret = header;
+
+    if (importSelect === "Modular")
+        return ret + proxystring;
+
+    ret += "namespace " + ecschema.$.Namespace + " {\n";
     ret += proxystring + "\n"
     ret += "}";
     return ret;
@@ -119,7 +145,7 @@ class EntitySet {
 
 type GetOrPost = "GET" | "POST";
 
-async function addActionsAndFunctions(proxystring: string, metadata: DataService, legacy: boolean): Promise<string> {
+async function addActionsAndFunctions(proxystring: string, metadata: DataService): Promise<string> {
     log.appendLine("Looking for actions and functions")
     return new Promise<string>((resolve, reject) => {
         let ecschema = enumerable.asEnumerable(metadata.Schema).FirstOrDefault(x => x.EntityContainer != undefined);
@@ -281,9 +307,10 @@ async function getProxyString(uri: string, metadata: DataService, selectString: 
         // make the imports based on 
         let ret = "";
         if (selectString === "Modular") {
-            ret += "import { ProxyBase, EntitySet} from './odataproxybase';\n\n";
+            ret += "import { ProxyBase, EntitySet} from './odataproxybase';\n";
+            ret += "import * as odatajs from 'odatajs';\n\n"
         }
-        else
+        else 
             ret += "import ProxyBase = odatatools.ProxyBase;\nimport EntitySet = odatatools.EntitySet;\n\n";
         // get the entity container
         let ec = enumerable.asEnumerable(metadata.Schema).FirstOrDefault(x => x.EntityContainer != undefined).EntityContainer[0];

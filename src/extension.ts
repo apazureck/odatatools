@@ -2,8 +2,11 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { getInterfaces, updateInterfaces } from './odataCrawler';
-import { createProxy } from './proxyGenerator';
+import * as v040Crawler from './v040/odataCrawler';
+import * as v040ProxyGenerator from './v040/proxyGenerator';
+import * as v100Crawler from './v100/odataCrawler';
+import * as v100ProxyGenerator from './v100/proxyGenerator';
+import { Settings } from './settings'
 
 export class Global {
     static lastval: string = null;
@@ -23,14 +26,42 @@ export function activate(context: vscode.ExtensionContext) {
     log = vscode.window.createOutputChannel("oData Tools");
     log.show();
 
-    // The command has been defined in the package.json file
-    // Now provide the implementation of the command with  registerCommand
-    // The commandId parameter must match the command field in package.json
-    context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', getInterfaces));
-    context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', updateInterfaces));
-    context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', createProxy));
+    vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration);
+    onDidChangeConfiguration();
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {
+}
+
+function onDidChangeConfiguration() {
+    log.appendLine("Using Extension Version: " + Settings.UsageVersion);
+    log.appendLine("Insider mode active: " + Settings.IsInInsiderMode ? "Yes" : "No");
+    if (Settings.UsageVersion === "0.4") {
+        try {
+            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v040Crawler.getInterfaces));
+            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v040Crawler.updateInterfaces));
+            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v040ProxyGenerator.createProxy));
+        } catch (error) {
+            for (const cmd of Global.context.subscriptions)
+                cmd.dispose();
+            Global.context.subscriptions = [];
+            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v040Crawler.getInterfaces));
+            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v040Crawler.updateInterfaces));
+            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v040ProxyGenerator.createProxy));
+        }
+    } else {
+        try {
+            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v100Crawler.getInterfaces));
+            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v100Crawler.updateInterfaces));
+            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v100ProxyGenerator.createProxy));
+        } catch (error) {
+            for (const cmd of Global.context.subscriptions)
+                cmd.dispose();
+            Global.context.subscriptions = [];
+            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v100Crawler.getInterfaces));
+            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v100Crawler.updateInterfaces));
+            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v100ProxyGenerator.createProxy));
+        }
+    }
 }

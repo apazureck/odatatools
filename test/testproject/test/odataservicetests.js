@@ -1,4 +1,6 @@
-var MovieProxy = MovieService.MovieContainer;
+"use strict";
+const proxy_1 = require("../proxy/proxy");
+var MovieProxy = proxy_1.MovieService.MovieContainer;
 var serviceuri = "http://localhost:2200/moviedb";
 console.log("Starting Tests");
 QUnit.test("Default test", function (assert) {
@@ -6,6 +8,7 @@ QUnit.test("Default test", function (assert) {
 });
 QUnit.test("Test Get", (assert) => {
     let comm = new MovieProxy(serviceuri, "Testproxy");
+    comm.Addresses.Select("Id").Expand("Id").Get("3");
     let done = assert.async();
     comm.Addresses.Get().then((value) => {
         assert.ok(true);
