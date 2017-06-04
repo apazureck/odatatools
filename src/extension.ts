@@ -6,11 +6,36 @@ import * as v040Crawler from './v040/odataCrawler';
 import * as v040ProxyGenerator from './v040/proxyGenerator';
 import * as v100Crawler from './v100/odataCrawler';
 import * as v100ProxyGenerator from './v100/proxyGenerator';
-import { Settings } from './settings'
+import { Settings } from './settings';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class Global {
     static lastval: string = null;
     static context: vscode.ExtensionContext = null;
+
+    static get recentlyUsedAddresses(): string[] {
+        return (JSON.parse(fs.readFileSync(path.join(Global.context.extensionPath, "recentlyused.json"), 'utf-8')) as string[]).reverse();
+    }
+
+    static AddToRecentlyUsedAddresses(address: string) {
+        let recentlyused = JSON.parse(fs.readFileSync(path.join(Global.context.extensionPath, "recentlyused.json"), 'utf-8')) as string[];
+
+        // Check if already in list and push it to the top.
+        const foundelement = recentlyused.indexOf(address);
+        if(foundelement > 0) {
+            recentlyused.splice(foundelement, 1);
+            recentlyused.push(address);
+        // Else check if max number is exceeded
+        } else if(recentlyused.length > Settings.recentlyUsedLength) {
+            recentlyused.splice(0, 1);
+            recentlyused.push(address);
+        } else {
+            recentlyused.push(address);
+        }
+
+        fs.writeFile(path.join(Global.context.extensionPath, "recentlyused.json"), JSON.stringify(recentlyused));
+    }
 }
 
 export var log: vscode.OutputChannel;

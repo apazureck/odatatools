@@ -51,6 +51,11 @@
                         "1.0",
                         "0.4"
                     ]
+                },
+                "odatatools.recentlyUsedLength": {
+                    "type": "number",
+                    "default": 5,
+                    "description": "Length of recently used server addresses"
                 }
             }
         }

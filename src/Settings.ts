@@ -9,4 +9,8 @@ export class Settings {
     static get UsageVersion(): UsageVersion {
         return vscode.workspace.getConfiguration("odatatools").get("version", "1.0");
     }
+
+    static get recentlyUsedLength(): number {
+        return vscode.workspace.getConfiguration("odatatools").get("recentlyUsedLength", 5);
+    }
 }

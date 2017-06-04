@@ -13,7 +13,7 @@ export async function createProxy() {
     try {
         let maddr = await window.showInputBox({
             placeHolder: "http://my.odata.service/service.svc",
-            value: Global.lastval,
+            value: Global.recentlyUsedAddresses.pop(),
             prompt: "Please enter uri of your oData service.",
             ignoreFocusOut: true
         });
@@ -57,6 +57,7 @@ export async function createProxy() {
             fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odataproxybaseAsyncModular.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odataproxybase.ts")));
             fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odatajs.d.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odatajs.d.ts")));
         }
+        Global.AddToRecentlyUsedAddresses(maddr);
     } catch (error) {
         window.showErrorMessage("Could not create proxy. See output window for detail.");
         log.appendLine("Creating proxy returned following error:");
