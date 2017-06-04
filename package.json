@@ -1,78 +1,95 @@
 {
-  "name": "odatatools",
-  "displayName": "odataTools",
-  "description": "Tools for communicating with odata services in typescript",
-  "version": "0.4.0",
-  "publisher": "apazureck",
-  "engines": {
-    "vscode": "^1.5.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "onCommand:odatatools.GetInterfaces",
-    "onCommand:odatatools.UpdateInterfaces",
-    "onCommand:odatatools.GetProxy"
-  ],
-  "main": "./out/src/extension",
-  "contributes": {
-    "commands": [
-      {
-        "command": "odatatools.GetInterfaces",
-        "category": "oData",
-        "title": "Get Entity Interfaces from oData V4.0 Service",
-        "icon": "images/odata.png"
-      },
-      {
-        "command": "odatatools.UpdateInterfaces",
-        "category": "oData",
-        "title": "Update Entity Interfaces from oData V4.0 Service",
-        "icon": "images/odata.png"
-      },
-      {
-        "command": "odatatools.GetProxy",
-        "category": "oData",
-        "title": "Create Proxy (BETA)",
-        "icon": "images/odata.png"
-      }
-    ]
-  },
-  "scripts": {
-    "vscode:prepublish": "tsc -p ./",
-    "compile": "tsc -watch -p ./",
-    "postinstall": "node ./node_modules/vscode/bin/install"
-  },
-  "devDependencies": {
-    "@types/mocha": "^2.2.32",
-    "@types/node": "^7.0.5",
-    "assert": "^1.4.1",
-    "jasmine-core": "^2.5.2",
-    "mocha": "^3.2.0",
-    "qunitjs": "^2.1.1",
-    "request": "^2.81.0",
-    "typescript": "^2.0.3",
-    "vscode": "^1.0.0"
-  },
-  "dependencies": {
-    "linq-es2015": "^2.4.13",
-    "node-rest-client": "2.5.0",
-    "xml2js": "^0.4.17"
-  },
-  "author": {
-    "email": "info@pazureck.de",
-    "name": "Andreas Pazureck"
-  },
-  "keywords": [
-    "oData"
-  ],
-  "preview": true,
-  "galleryBanner": {
-    "color": "white",
-    "theme": "light"
-  },
-  "license": "MIT",
-  "bugs": "https://github.com/apazureck/odatatools/issues",
-  "repository": "https://github.com/apazureck/odatatools",
-  "icon": "images/odata.png"
+    "name": "odatatools",
+    "displayName": "odataTools",
+    "description": "Tools for communicating with odata services in typescript",
+    "version": "0.4.0",
+    "publisher": "apazureck",
+    "engines": {
+        "vscode": "^1.5.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:odatatools.GetInterfaces",
+        "onCommand:odatatools.UpdateInterfaces",
+        "onCommand:odatatools.GetProxy"
+    ],
+    "main": "./out/src/extension",
+    "contributes": {
+        "commands": [{
+                "command": "odatatools.GetInterfaces",
+                "category": "oData",
+                "title": "Get Entity Interfaces from oData V4.0 Service",
+                "icon": "images/odata.png"
+            },
+            {
+                "command": "odatatools.UpdateInterfaces",
+                "category": "oData",
+                "title": "Update Entity Interfaces from oData V4.0 Service",
+                "icon": "images/odata.png"
+            },
+            {
+                "command": "odatatools.GetProxy",
+                "category": "oData",
+                "title": "Create Proxy (BETA)",
+                "icon": "images/odata.png"
+            }
+        ],
+        "configuration": {
+            "properties": {
+                "odatatools.insiders": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Sets the extension in insiders mode and makes [Unreleased] features usable. May result in odd behavior."
+                },
+                "odatatools.version": {
+                    "type": "string",
+                    "default": "0.5.0+",
+                    "description": "For legacy reasons. To use old behavior set to version '0.4.0-'. See extension description for more details.",
+                    "enum": [
+                        "0.5.0+",
+                        "0.4.0-"
+                    ]
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "tsc -p ./",
+        "compile": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "devDependencies": {
+        "@types/mocha": "^2.2.32",
+        "@types/node": "^7.0.5",
+        "assert": "^1.4.1",
+        "jasmine-core": "^2.5.2",
+        "mocha": "^3.2.0",
+        "qunitjs": "^2.1.1",
+        "request": "^2.81.0",
+        "typescript": "^2.0.3",
+        "vscode": "^1.0.0"
+    },
+    "dependencies": {
+        "linq-es2015": "^2.4.13",
+        "node-rest-client": "2.5.0",
+        "xml2js": "^0.4.17"
+    },
+    "author": {
+        "email": "andreas@pazureck.de",
+        "name": "Andreas Pazureck"
+    },
+    "keywords": [
+        "oData"
+    ],
+    "preview": true,
+    "galleryBanner": {
+        "color": "white",
+        "theme": "light"
+    },
+    "license": "MIT",
+    "bugs": "https://github.com/apazureck/odatatools/issues",
+    "repository": "https://github.com/apazureck/odatatools",
+    "icon": "images/odata.png"
 }
