@@ -1,5 +1,3 @@
-import {MovieService} from '../proxy/proxy';
-
 import MovieProxy = MovieService.MovieContainer;
 
 var serviceuri = "http://localhost:2200/moviedb";

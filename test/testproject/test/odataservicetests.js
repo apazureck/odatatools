@@ -1,6 +1,4 @@
-"use strict";
-const proxy_1 = require("../proxy/proxy");
-var MovieProxy = proxy_1.MovieService.MovieContainer;
+var MovieProxy = MovieService.MovieContainer;
 var serviceuri = "http://localhost:2200/moviedb";
 console.log("Starting Tests");
 QUnit.test("Default test", function (assert) {
