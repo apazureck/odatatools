@@ -2,7 +2,7 @@
     "name": "odatatools",
     "displayName": "odataTools",
     "description": "Tools for communicating with odata services in typescript",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "publisher": "apazureck",
     "engines": {
         "vscode": "^1.5.0"
