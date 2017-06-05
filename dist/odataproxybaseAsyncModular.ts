@@ -1,4 +1,4 @@
-import * as odatajs from 'odatajs';
+import * as odatajs from './odatajs';
 
 enum Method {
     GET, POST, PUT, PATCH, DELETE

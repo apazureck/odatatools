@@ -23,11 +23,11 @@ export class Global {
 
         // Check if already in list and push it to the top.
         const foundelement = recentlyused.indexOf(address);
-        if(foundelement > 0) {
+        if (foundelement > 0) {
             recentlyused.splice(foundelement, 1);
             recentlyused.push(address);
-        // Else check if max number is exceeded
-        } else if(recentlyused.length > Settings.recentlyUsedLength) {
+            // Else check if max number is exceeded
+        } else if (recentlyused.length > Settings.recentlyUsedLength) {
             recentlyused.splice(0, 1);
             recentlyused.push(address);
         } else {
@@ -64,29 +64,35 @@ function onDidChangeConfiguration() {
     log.appendLine("Insider mode active: " + Settings.IsInInsiderMode ? "Yes" : "No");
     if (Settings.UsageVersion === "0.4") {
         try {
-            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v040Crawler.getInterfaces));
-            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v040Crawler.updateInterfaces));
-            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v040ProxyGenerator.createProxy));
+            registerV40Commands();
         } catch (error) {
             for (const cmd of Global.context.subscriptions)
                 cmd.dispose();
             Global.context.subscriptions = [];
-            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v040Crawler.getInterfaces));
-            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v040Crawler.updateInterfaces));
-            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v040ProxyGenerator.createProxy));
+            registerV40Commands();
         }
     } else {
         try {
-            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v100Crawler.getInterfaces));
-            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v100Crawler.updateInterfaces));
-            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v100ProxyGenerator.createProxy));
+            registerV100Commands();
         } catch (error) {
             for (const cmd of Global.context.subscriptions)
                 cmd.dispose();
             Global.context.subscriptions = [];
-            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v100Crawler.getInterfaces));
-            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v100Crawler.updateInterfaces));
-            Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v100ProxyGenerator.createProxy));
+            registerV100Commands();
         }
     }
+}
+
+function registerV40Commands(): void {
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v040Crawler.getInterfaces));
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v040Crawler.updateInterfaces));
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v040ProxyGenerator.createProxy));
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateProxy', () => vscode.window.showErrorMessage("Update proxy is not available for V4.0 legacy support")));
+}
+
+function registerV100Commands(): void {
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v100Crawler.getInterfaces));
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v100Crawler.updateInterfaces));
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v100ProxyGenerator.createProxy));
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateProxy', v100ProxyGenerator.updateProxy));
 }

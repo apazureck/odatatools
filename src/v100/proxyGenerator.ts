@@ -6,11 +6,26 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as request from 'request';
 import * as xml2js from 'xml2js';
+import {
+    createHeader,
+    GeneratorSettings,
+    getGeneratorSettingsFromDocumentText,
+    getMetadata,
+    GetOutputStyleFromUser,
+    Modularity,
+    NoHeaderError
+} from '../helper';
 
 const methodhook = "//${unboundMethods}"
 
 export async function createProxy() {
+    let generatorSettings: GeneratorSettings = {
+        modularity: "Ambient",
+        requestOptions: {},
+        source: "unknown"
+    };
     try {
+        // TODO: Change to quickpick to provide full file list
         let maddr = await window.showInputBox({
             placeHolder: "http://my.odata.service/service.svc",
             value: Global.recentlyUsedAddresses.pop(),
@@ -28,36 +43,15 @@ export async function createProxy() {
         maddr = maddr + "/$metadata";
 
         Global.lastval = maddr;
+        generatorSettings.source = maddr;
 
         log.appendLine("Getting Metadata from '" + maddr + "'");
-        let metadata = await getMetadata(maddr);
+        const metadata = await getMetadata(maddr);
 
-        // window.showInformationMessage("Select import type (ambient or modular) for generation.");
-        const importSelect = await window.showQuickPick(["Modular", "Ambient"], {
-            placeHolder: "Select to generate the service as a modular or ambient version."
-        }) as ImportType;
+        generatorSettings.modularity = await GetOutputStyleFromUser();
 
-        let proxystring = await getProxyString(maddr.replace("$metadata", ""), metadata["edmx:DataServices"][0], importSelect);
-        proxystring = await addActionsAndFunctions(proxystring, metadata["edmx:DataServices"][0]);
-        proxystring = surroundWithNamespace(proxystring, metadata["edmx:DataServices"][0], importSelect);
+        generateProxy(metadata, generatorSettings);
 
-        log.appendLine("Updating current file.");
-        window.activeTextEditor.edit((editbuilder) => {
-            editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), proxystring);
-        }).then((value) => {
-            log.appendLine("Successfully pasted data. Formatting Document.")
-            commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
-        });
-
-        log.appendLine("Copying Proxy Base module");
-        fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odatajs-4.0.0.js")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odatajs-4.0.0.js")));
-        if (importSelect === "Ambient")
-            fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odataproxybaseAsync.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odataproxybase.ts")));
-        else {
-            fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odataproxybaseAsyncModular.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odataproxybase.ts")));
-            fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odatajs.d.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odatajs.d.ts")));
-        }
-        Global.AddToRecentlyUsedAddresses(maddr);
     } catch (error) {
         window.showErrorMessage("Could not create proxy. See output window for detail.");
         log.appendLine("Creating proxy returned following error:");
@@ -65,30 +59,89 @@ export async function createProxy() {
             log.appendLine(error.originalStack);
         else
             log.appendLine(error.toString());
+
+        log.appendLine("Updating current file.");
+        await window.activeTextEditor.edit((editbuilder) => {
+            editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), createHeader(generatorSettings));
+        });
+
+        log.appendLine("Successfully pasted data. Formatting Document.")
+        commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
     }
 }
 
-function surroundWithNamespace(proxystring: string, metadata: DataService, importSelect: ImportType): string {
+async function generateProxy(metadata: Edmx, options: GeneratorSettings) {
+    // window.showInformationMessage("Select import type (ambient or modular) for generation.");
+
+    let proxystring = await getProxyString(options.source.replace("$metadata", ""), metadata["edmx:DataServices"][0], options.modularity);
+    proxystring = await addActionsAndFunctions(proxystring, metadata["edmx:DataServices"][0]);
+    proxystring = surroundWithNamespace(metadata["edmx:DataServices"][0], options, proxystring);
+
+    log.appendLine("Updating current file.");
+    await window.activeTextEditor.edit((editbuilder) => {
+        editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), proxystring);
+    });
+
+    log.appendLine("Successfully pasted data. Formatting Document.")
+    commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
+
+    log.appendLine("Copying Proxy Base module");
+    if (options.modularity === "Ambient") {
+        fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odatajs-4.0.0.js")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odatajs.js")));
+        fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odataproxybaseAsync.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odataproxybase.ts")));
+    }
+
+    else {
+        fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odataproxybaseAsyncModular.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odataproxybase.ts")));
+        fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odatajs.d.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odatajs.d.ts")));
+    }
+    Global.AddToRecentlyUsedAddresses(options.source);
+}
+
+export async function updateProxy() {
+    let header: GeneratorSettings;
+    try {
+        header = getGeneratorSettingsFromDocumentText(window.activeTextEditor.document.getText());
+
+        if (!header)
+            return window.showErrorMessage("Could not find valid odatatools header to generate proxy from. Use 'Create Proxy' command instead.");
+
+        if (!header.source)
+            return window.showErrorMessage("No source property in odatatools header. Use 'Create Proxy' command instead.");
+
+        log.appendLine("Getting Metadata from '" + header.source + "'");
+        const metadata = await getMetadata(header.source, header.requestOptions);
+
+        generateProxy(metadata, header);
+
+    } catch (error) {
+        window.showErrorMessage("Could not create proxy. See output window for detail.");
+        log.appendLine("Creating proxy returned following error:");
+        if (error.originalStack)
+            log.appendLine(error.originalStack);
+        else
+            log.appendLine(error.toString());
+
+        log.appendLine("Updating current file.");
+        await window.activeTextEditor.edit((editbuilder) => {
+            editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), createHeader(error instanceof NoHeaderError ? {
+                source: "unknown", modularity: "Ambient", requestOptions: {}
+            } : header));
+        });
+
+        log.appendLine("Created header");
+        commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
+    }
+}
+
+function surroundWithNamespace(metadata: DataService, options: GeneratorSettings, proxystring: string): string {
     const ecschema = enumerable.asEnumerable(metadata.Schema).FirstOrDefault(x => x.EntityContainer != undefined);
     if (!ecschema)
         throw new Error("No entity container found on odata service.");
 
-    // Create update information
-    let odatatools = {
-        source: Global.lastval,
-        headers: []
-    }
-    const headerobject = JSON.stringify(odatatools,null,'\t').split("\n");
-    let header = "/// Created by odatatools: https://marketplace.visualstudio.com/items?itemName=apazureck.odatatools\n";
-    header += "/// Creation Time: " + Date() + "\n";
-    header += "/// DO NOT DELETE THIS IN ORDER TO UPDATE YOUR SERVICE\n"
-    for (const line of headerobject)
-        header += "/// #" + line + "\n";
-    
-    header += "/// #END"
-    let ret = header;
+    let ret = createHeader(options);
 
-    if (importSelect === "Modular")
+    if (options.modularity === "Modular")
         return ret + proxystring;
 
     ret += "namespace " + ecschema.$.Namespace + " {\n";
@@ -171,7 +224,7 @@ async function addActionsAndFunctions(proxystring: string, metadata: DataService
 }
 
 function getUnboundActionsAndFunctions(ecschema: Schema): Method[] {
-    let all: Method[] = []
+    let all: Method[] = [];
     if (ecschema.Action) {
         log.appendLine("Found " + ecschema.Action.length + " OData Actions");
         let acts = ecschema.Action.filter(x => !x.$.IsBound);
@@ -274,44 +327,15 @@ function getSet(bindingParameter: Parameter, entitySets: { [type: string]: Entit
     }
 }
 
-async function getMetadata(maddr: string, options?: request.CoreOptions): Promise<Edmx> {
-    return new Promise<Edmx>((resolve, reject) => {
-        let rData = '';
-        request.get(maddr, options)
-            .on('data', (data) => {
-                rData += data;
-            })
-            .on('complete', (resp) => {
-                xml2js.parseString(rData, (err, data) => {
-                    try {
-                        if (!data["edmx:Edmx"]) {
-                            log.appendLine("Received invalid data:\n");
-                            log.append(data.toString());
-                            return reject(window.showErrorMessage("Response is not valid oData metadata. See output for more information"));
-                        }
-                        if (data["edmx:Edmx"])
-                            return resolve(data["edmx:Edmx"]);
-                        return reject("Not valid metadata")
-                    }
-                    catch (error) {
-                        reject(error);
-                    }
-                });
-            });
-    });
-}
-
-type ImportType = "Ambient" | "Modular"
-
-async function getProxyString(uri: string, metadata: DataService, selectString: ImportType): Promise<string> {
+async function getProxyString(uri: string, metadata: DataService, selectString: Modularity): Promise<string> {
     return new Promise<string>((resolve, reject) => {
         // make the imports based on 
         let ret = "";
         if (selectString === "Modular") {
             ret += "import { ProxyBase, EntitySet} from './odataproxybase';\n";
-            ret += "import * as odatajs from 'odatajs';\n\n"
+            ret += "import * as odatajs from './odatajs';\n\n"
         }
-        else 
+        else
             ret += "import ProxyBase = odatatools.ProxyBase;\nimport EntitySet = odatatools.EntitySet;\n\n";
         // get the entity container
         let ec = enumerable.asEnumerable(metadata.Schema).FirstOrDefault(x => x.EntityContainer != undefined).EntityContainer[0];

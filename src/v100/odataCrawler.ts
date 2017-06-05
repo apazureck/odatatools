@@ -1,3 +1,4 @@
+import { createHeader, getGeneratorSettingsFromDocumentText, getMetadata, GeneratorSettings, GetOutputStyleFromUser } from '../helper';
 import * as request from 'request';
 import * as xml2js from 'xml2js';
 import { IncomingMessage } from 'http';
@@ -8,7 +9,7 @@ export async function getInterfaces() {
     try {
         let input = await window.showInputBox({
             placeHolder: "http://my.odata.service/service.svc",
-            value: Global.lastval,
+            value: Global.recentlyUsedAddresses.pop(),
             prompt: "Please enter uri of your oData service.",
             ignoreFocusOut: true
         });
@@ -24,7 +25,13 @@ export async function getInterfaces() {
 
         Global.lastval = input;
 
-        let interfacesstring = await receiveInterfaces(input, window.activeTextEditor.document.uri.fsPath.endsWith("d.ts"));
+        let generatorSettings: GeneratorSettings = {
+            source: input,
+            modularity: await GetOutputStyleFromUser(),
+            requestOptions: {}
+        }
+
+        let interfacesstring = await receiveInterfaces(generatorSettings);
 
         log.appendLine("Putting generated code to the current Editor window.");
         if (!window.activeTextEditor)
@@ -42,58 +49,33 @@ export async function getInterfaces() {
     }
 }
 
-async function receiveInterfaces(input: string, ambient?: boolean, options?: request.CoreOptions): Promise<string> {
-    ambient = ambient || false;
-    return new Promise<string>((resolve, reject) => {
-        let rData = '';
-        request.get(input, options)
-            .on('data', (data) => {
-                rData += data;
-            })
-            .on('complete', (resp) => {
-                xml2js.parseString(rData, (err, data) => {
-                    try {
+async function receiveInterfaces(options: GeneratorSettings): Promise<string> {
+    try {
+        const edmx = await getMetadata(options.source);
+        log.appendLine("Creating Interfaces");
+        let interfacesstring = getInterfacesString(edmx["edmx:DataServices"][0].Schema, options);
 
-                        if (!data["edmx:Edmx"]) {
-                            log.appendLine("Received invalid data:\n");
-                            log.append(data.toString());
-                            return reject(window.showErrorMessage("Response is not valid oData metadata. See output for more information"));
-                        }
-                        let edmx: Edmx = data["edmx:Edmx"];
-                        let version = edmx.$.Version;
-                        log.appendLine("oData version: " + version);
-                        if (version != "4.0")
-                            window.showWarningMessage("WARNING! Current oDate Service Version is '" + version + "'. Trying to get interfaces, but service only supports Version 4.0! Outcome might be unexpected.");
+        log.appendLine("Creating Edm Types");
+        interfacesstring += edmTypes(options.modularity === "Ambient");
 
-                        log.appendLine("Creating Interfaces");
-                        let interfacesstring = getInterfacesString(edmx["edmx:DataServices"][0].Schema, ambient);
-
-                        log.appendLine("Creating Edm Types");
-                        interfacesstring += edmTypes(ambient);
-
-                        log.appendLine("Creating source line");
-                        interfacesstring += "\n/// Do not modify this line to being able to update your interfaces again:"
-                        interfacesstring += "\n/// #odata.source = '" + input + "'";
-                        resolve(interfacesstring)
-                    } catch (error) {
-                        console.error("Unknown error:\n", error.toString())
-                        window.showErrorMessage("Unknown error occurred, see console output for more information.");
-                        reject(error);
-                    }
-                });
-
-            });
-    });
+        log.appendLine("Creating source line");
+        interfacesstring += "\n/// Do not modify this line to being able to update your interfaces again:"
+        return createHeader(options) + interfacesstring;
+    } catch (error) {
+        console.error("Unknown error:\n", error.toString())
+        window.showErrorMessage("Unknown error occurred, see console output for more information.");
+        return createHeader(options);
+    }
 }
 
 export async function updateInterfaces() {
     try {
         log.appendLine("Looking for #odata.source hook");
-        let m = window.activeTextEditor.document.getText().match("/// #odata.source = '(.*?)'");
-        if (!m)
+        let generatorSettings = getGeneratorSettingsFromDocumentText(window.activeTextEditor.document.getText());
+        if (!generatorSettings)
             return window.showErrorMessage("Did not find odata source in document: '" + window.activeTextEditor.document.fileName + "'");
 
-        let interfacesstring = await receiveInterfaces(m[1], window.activeTextEditor.document.uri.fsPath.endsWith("d.ts"));
+        let interfacesstring = await receiveInterfaces(generatorSettings);
 
         log.appendLine("Updating current file.");
         window.activeTextEditor.edit((editbuilder) => {
@@ -105,7 +87,10 @@ export async function updateInterfaces() {
     } catch (error) {
         window.showErrorMessage("Could not update interfaces. See output window for detail.");
         log.appendLine("Creating proxy returned following error:");
-        log.appendLine(JSON.stringify(error));
+        if (error.originalStack)
+            log.appendLine(error.originalStack);
+        else
+            log.appendLine(error.toString());
     }
 }
 
@@ -138,10 +123,10 @@ function edmTypes(ambient: boolean): string {
     return input;
 }
 
-function getInterfacesString(schemas: Schema[], ambient: boolean): string {
+function getInterfacesString(schemas: Schema[], generatorSettings: GeneratorSettings): string {
     let ret = "";
     for (let schema of schemas) {
-        ret += (ambient ? "declare " : "") + "namespace " + schema.$.Namespace + " {\n";
+        ret += (generatorSettings.modularity === "Ambient" ? "declare " : "") + "namespace " + schema.$.Namespace + " {\n";
         if (schema.EntityType)
             for (let type of schema.EntityType) {
                 ret += "export interface " + type.$.Name + " {\n";

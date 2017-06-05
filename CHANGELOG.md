@@ -11,15 +11,16 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Setting: Extension Version selection to be able geting old behavior (0.x)
 - Setting: Insider mode (Not used for anything so far)
 - Async and await ES3/5/6+ Proxy
-- Additional headers for interface generation (only version 1.0+)
-- Additional headers for proxy generation (only version 1.0+)
-- Hook generation in proxy file
+- Additional request options for interface generation (only version 1.0+) **Not tested**
+- Additional request options for proxy generation (only version 1.0+) **Not tested**
+- Options in proxy file header
 
 ### Changed
 
 - Changelog file is now structured as suggested by keep a changelog
 - Hook in interface file is now json format (only version 1.0+)
 - Hooks are now pasted at the start with generation notes (only version 1.0+)
+- Last address is now saved permanently (recently used list)
 
 ### Deprecated
 

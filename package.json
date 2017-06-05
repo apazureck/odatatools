@@ -13,26 +13,33 @@
     "activationEvents": [
         "onCommand:odatatools.GetInterfaces",
         "onCommand:odatatools.UpdateInterfaces",
-        "onCommand:odatatools.GetProxy"
+        "onCommand:odatatools.GetProxy",
+        "onCommand:odatatools.UpdateProxy"
     ],
     "main": "./out/src/extension",
     "contributes": {
         "commands": [{
                 "command": "odatatools.GetInterfaces",
-                "category": "oData",
-                "title": "Get Entity Interfaces from oData V4.0 Service",
+                "category": "OData",
+                "title": "Create Interfaces from OData V4.0 Service",
                 "icon": "images/odata.png"
             },
             {
                 "command": "odatatools.UpdateInterfaces",
-                "category": "oData",
-                "title": "Update Entity Interfaces from oData V4.0 Service",
+                "category": "OData",
+                "title": "Update Interfaces from OData V4.0 Service",
                 "icon": "images/odata.png"
             },
             {
                 "command": "odatatools.GetProxy",
-                "category": "oData",
-                "title": "Create Proxy (BETA)",
+                "category": "OData",
+                "title": "Create proxy client from OData V4.0 Service",
+                "icon": "images/odata.png"
+            },
+            {
+                "command": "odatatools.UpdateProxy",
+                "category": "OData",
+                "title": "Update proxy client from OData V4.0 Service",
                 "icon": "images/odata.png"
             }
         ],
@@ -41,7 +48,7 @@
                 "odatatools.insiders": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Sets the extension in insiders mode and makes [Unreleased] features usable. May result in odd behavior."
+                    "description": "Sets the extension in insiders mode and makes [Insiders] features usable. See changelog for functions in insiders mode."
                 },
                 "odatatools.version": {
                     "type": "string",
@@ -55,7 +62,9 @@
                 "odatatools.recentlyUsedLength": {
                     "type": "number",
                     "default": 5,
-                    "description": "Length of recently used server addresses"
+                    "minimum": 1,
+                    "maximum": 20,
+                    "description": "Length of recently used server addresses (This does not have any effect yet, hopefully in later vscode releases)"
                 }
             }
         }
