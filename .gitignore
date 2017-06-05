@@ -16,3 +16,4 @@ node_modules
 /test/ODataTestService/ODataTestService/obj/Debug/ODataTestService.csproj.FileListAbsolute.txt
 /test/ODataTestService/ODataTestService/obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
 /test/ODataTestService/packages
+/test/ODataTestService/ODataTestService.Tests/bin/Debug

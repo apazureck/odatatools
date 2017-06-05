@@ -13,7 +13,8 @@ interface Edmx extends EdmxBase {
 }
 
 interface DataService {
-    Schema: Schema[]
+    Schema: Schema[],
+    Address: string
 }
 
 interface Schema extends EdmxBase {

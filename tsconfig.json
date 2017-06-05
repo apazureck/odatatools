@@ -1,5 +1,5 @@
 {
-   "compilerOptions": {
+    "compilerOptions": {
         "module": "commonjs",
         "target": "es6",
         "outDir": "out",
@@ -12,6 +12,7 @@
     "exclude": [
         "node_modules",
         ".vscode-test",
-        "./test/testproject"
+        "test/testproject",
+        "dist"
     ]
 }

@@ -1,6 +1,6 @@
 import { Client } from 'node-rest-client';
 import { window, TextEdit, Range, commands } from 'vscode';
-import { log, Global } from './extension';
+import { log, Global } from '../extension';
 
 export async function getInterfaces() {
     try {
@@ -196,7 +196,5 @@ function checkEdmType(typestring: string) {
 
 function getProperty(inprop: Property | NavigationProperty, forceoptional?: boolean) {
     let prop = inprop as Property;
-    if (typeof inprop === 'NavigationProperty')
-        prop.$.Nullable = true;
     return prop.$.Name + (typeof prop.$.Nullable !== 'undefined' ? (forceoptional ? "?" : (prop.$.Nullable ? "" : "?")) : "?") + ": " + getType(prop.$.Type) + ";\n"
 }

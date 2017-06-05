@@ -1,72 +1,83 @@
-namespace MovieService {
-    import ProxyBase = odatatools.ProxyBase;
-    import EntitySet = odatatools.EntitySet;
-    import ThenableCaller = odatatools.ThenableCaller;
-    import Thenable = odatatools.Thenable;
+/**************************************************************************
+Created by odatatools: https://marketplace.visualstudio.com/items?itemName=apazureck.odatatools
+Use Command 'odata: xyUpdate to refresh data while this file is active in the editor.
+Creation Time: Mon Jun 05 2017 22:59:23 GMT+0200 (Mitteleuropäische Sommerzeit)
+DO NOT DELETE THIS IN ORDER TO UPDATE YOUR SERVICE
+#ODATATOOLSOPTIONS
+{
+	"modularity": "Modular",
+	"requestOptions": {},
+	"source": "http://localhost:2200/moviedb/$metadata"
+}
+#ODATATOOLSOPTIONSEND
+**************************************************************************/
 
-    export class MovieContainer extends ProxyBase {
-        constructor(address: string, name?: string, additionalHeaders?: odatajs.Header) {
-            super(address, name, additionalHeaders);
-            this.Movies = new MovieEntitySet("Movies", address, "Id", additionalHeaders);
-            this.Customers = new EntitySet<ODataTestService.Models.Customer, ODataTestService.Models.DeltaCustomer>("Customers", address, "Id", additionalHeaders);
-            this.Addresses = new EntitySet<ODataTestService.Models.Address, ODataTestService.Models.DeltaAddress>("Addresses", address, "Id", additionalHeaders);
-        }
-        Movies: MovieEntitySet;
-        Customers: EntitySet<ODataTestService.Models.Customer, ODataTestService.Models.DeltaCustomer>;
-        Addresses: EntitySet<ODataTestService.Models.Address, ODataTestService.Models.DeltaAddress>;
-        SetSomething(value: Edm.Int32): Thenable<Edm.Int32> {
-            let callback = new ThenableCaller<Edm.Int32>();
+import { ProxyBase, EntitySet } from './odataproxybase';
+import * as odatajs from './odatajs';
+
+export class MovieContainer extends ProxyBase {
+    constructor(address: string, name?: string, additionalHeaders?: odatajs.Header) {
+        super(address, name, additionalHeaders);
+        this.Movies = new MovieEntitySet("Movies", address, "Id", additionalHeaders);
+        this.Customers = new EntitySet<ODataTestService.Models.Customer>("Customers", address, "Id", additionalHeaders);
+        this.Addresses = new EntitySet<ODataTestService.Models.Address>("Addresses", address, "Id", additionalHeaders);
+    }
+    Movies: MovieEntitySet;
+    Customers: EntitySet<ODataTestService.Models.Customer>;
+    Addresses: EntitySet<ODataTestService.Models.Address>;
+    SetSomething(value: Edm.Int32): Promise<Edm.Int32> {
+        return new Promise<Edm.Int32>((reject, resolve) => {
             let request: odatajs.Request = {
                 headers: this.Headers,
                 method: "GET",
                 requestUri: this.Address + "/SetSomething(value=" + value + ")",
             }
             odatajs.oData.request(request, (data, response) => {
-                callback.resolve(data.value);
+                resolve(data.value);
             }, (error) => {
                 console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                callback.reject(error);
+                reject(error);
             });
-            return callback;
-        }
-        CurrentTime(): Thenable<Edm.DateTimeOffset> {
-            let callback = new ThenableCaller<Edm.DateTimeOffset>();
+        });
+    }
+    CurrentTime(): Promise<Edm.DateTimeOffset> {
+        return new Promise<Edm.DateTimeOffset>((reject, resolve) => {
             let request: odatajs.Request = {
                 headers: this.Headers,
                 method: "GET",
                 requestUri: this.Address + "/CurrentTime",
             }
             odatajs.oData.request(request, (data, response) => {
-                callback.resolve(data.value);
+                resolve(data.value);
             }, (error) => {
                 console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                callback.reject(error);
+                reject(error);
             });
-            return callback;
-        }
-        GetSomething(value: Edm.Int32): Thenable<Edm.Int32> {
-            let callback = new ThenableCaller<Edm.Int32>();
+        });
+    }
+    GetSomething(value: Edm.Int32): Promise<Edm.Int32> {
+        return new Promise<Edm.Int32>((reject, resolve) => {
             let request: odatajs.Request = {
                 headers: this.Headers,
                 method: "GET",
                 requestUri: this.Address + "/GetSomething(value=" + value + ")",
             }
             odatajs.oData.request(request, (data, response) => {
-                callback.resolve(data.value);
+                resolve(data.value);
             }, (error) => {
                 console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                callback.reject(error);
+                reject(error);
             });
-            return callback;
-        }
-
+        });
     }
-    export class MovieEntitySet extends EntitySet<ODataTestService.Models.Movie, ODataTestService.Models.DeltaMovie> {
-        constructor(name: string, address: string, key: string, additionalHeaders?: odatajs.Header) {
-            super(name, address, key, additionalHeaders);
-        }
-        Rate(key: Edm.Int32, rating: Edm.Single, reason: Edm.String): Thenable<Edm.String> {
-            let callback = new ThenableCaller<Edm.String>();
+
+}
+export class MovieEntitySet extends EntitySet<ODataTestService.Models.Movie> {
+    constructor(name: string, address: string, key: string, additionalHeaders?: odatajs.Header) {
+        super(name, address, key, additionalHeaders);
+    }
+    Rate(key: Edm.Int32, rating: Edm.Single, reason: Edm.String): Promise<Edm.String> {
+        return new Promise<Edm.String>((reject, resolve) => {
             let request: odatajs.Request = {
                 headers: this.Headers,
                 method: "POST",
@@ -77,47 +88,45 @@ namespace MovieService {
                 }
             }
             odatajs.oData.request(request, (data, response) => {
-                callback.resolve(data.value);
+                resolve(data.value);
             }, (error) => {
                 console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                callback.reject(error);
+                reject(error);
             });
-            return callback;
-        }
+        });
+    }
 
-        ResetRating(key: Edm.Int32): Thenable<void> {
-            let callback = new ThenableCaller<void>();
+    ResetRating(key: Edm.Int32): Promise<void> {
+        return new Promise<void>((reject, resolve) => {
             let request: odatajs.Request = {
                 headers: this.Headers,
                 method: "POST",
                 requestUri: this.Address + "(" + key + ")/MovieService.ResetRating",
             }
             odatajs.oData.request(request, (data, response) => {
-                callback.resolve();
+                resolve();
             }, (error) => {
                 console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                callback.reject(error);
+                reject(error);
             });
-            return callback;
-        }
+        });
+    }
 
-        GetBestMovie(Genre: Edm.String): Thenable<ODataTestService.Models.Movie> {
-            let callback = new ThenableCaller<ODataTestService.Models.Movie>();
+    GetBestMovie(Genre: Edm.String): Promise<ODataTestService.Models.Movie> {
+        return new Promise<ODataTestService.Models.Movie>((reject, resolve) => {
             let request: odatajs.Request = {
                 headers: this.Headers,
                 method: "GET",
                 requestUri: this.Address + "/MovieService.GetBestMovie(Genre=" + Genre + ")",
             }
             odatajs.oData.request(request, (data, response) => {
-                callback.resolve(data.value);
+                resolve(data.value);
             }, (error) => {
                 console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                callback.reject(error);
+                reject(error);
             });
-            return callback;
-        }
-
+        });
     }
 
-
 }
+

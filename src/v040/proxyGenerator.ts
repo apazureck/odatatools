@@ -1,6 +1,6 @@
 import { Client } from 'node-rest-client';
 import { window, TextEdit, Range, commands, ExtensionContext } from 'vscode';
-import { log, Global } from './extension';
+import { log, Global } from '../extension';
 import * as enumerable from 'linq-es2015';
 import { Enumerable } from "linq-es2015";
 import * as fs from 'fs';

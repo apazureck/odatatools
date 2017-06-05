@@ -1,68 +1,66 @@
-var MovieService;
-(function (MovieService) {
-    var ProxyBase = odatatools.ProxyBase;
-    var EntitySet = odatatools.EntitySet;
-    var ThenableCaller = odatatools.ThenableCaller;
-    class MovieContainer extends ProxyBase {
-        constructor(address, name, additionalHeaders) {
-            super(address, name, additionalHeaders);
-            this.Movies = new MovieEntitySet("Movies", address, "Id", additionalHeaders);
-            this.Customers = new EntitySet("Customers", address, "Id", additionalHeaders);
-            this.Addresses = new EntitySet("Addresses", address, "Id", additionalHeaders);
-        }
-        SetSomething(value) {
-            let callback = new ThenableCaller();
+"use strict";
+const odataproxybase_1 = require("./odataproxybase");
+const odatajs = require("odatajs");
+class MovieContainer extends odataproxybase_1.ProxyBase {
+    constructor(address, name, additionalHeaders) {
+        super(address, name, additionalHeaders);
+        this.Movies = new MovieEntitySet("Movies", address, "Id", additionalHeaders);
+        this.Customers = new odataproxybase_1.EntitySet("Customers", address, "Id", additionalHeaders);
+        this.Addresses = new odataproxybase_1.EntitySet("Addresses", address, "Id", additionalHeaders);
+    }
+    SetSomething(value) {
+        return new Promise((reject, resolve) => {
             let request = {
                 headers: this.Headers,
                 method: "GET",
                 requestUri: this.Address + "/SetSomething(value=" + value + ")",
             };
             odatajs.oData.request(request, (data, response) => {
-                callback.resolve(data.value);
+                resolve(data.value);
             }, (error) => {
                 console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                callback.reject(error);
+                reject(error);
             });
-            return callback;
-        }
-        CurrentTime() {
-            let callback = new ThenableCaller();
+        });
+    }
+    CurrentTime() {
+        return new Promise((reject, resolve) => {
             let request = {
                 headers: this.Headers,
                 method: "GET",
                 requestUri: this.Address + "/CurrentTime",
             };
             odatajs.oData.request(request, (data, response) => {
-                callback.resolve(data.value);
+                resolve(data.value);
             }, (error) => {
                 console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                callback.reject(error);
+                reject(error);
             });
-            return callback;
-        }
-        GetSomething(value) {
-            let callback = new ThenableCaller();
+        });
+    }
+    GetSomething(value) {
+        return new Promise((reject, resolve) => {
             let request = {
                 headers: this.Headers,
                 method: "GET",
                 requestUri: this.Address + "/GetSomething(value=" + value + ")",
             };
             odatajs.oData.request(request, (data, response) => {
-                callback.resolve(data.value);
+                resolve(data.value);
             }, (error) => {
                 console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                callback.reject(error);
+                reject(error);
             });
-            return callback;
-        }
+        });
     }
-    MovieService.MovieContainer = MovieContainer;
-    class MovieEntitySet extends EntitySet {
-        constructor(name, address, key, additionalHeaders) {
-            super(name, address, key, additionalHeaders);
-        }
-        Rate(key, rating, reason) {
-            let callback = new ThenableCaller();
+}
+exports.MovieContainer = MovieContainer;
+class MovieEntitySet extends odataproxybase_1.EntitySet {
+    constructor(name, address, key, additionalHeaders) {
+        super(name, address, key, additionalHeaders);
+    }
+    Rate(key, rating, reason) {
+        return new Promise((reject, resolve) => {
             let request = {
                 headers: this.Headers,
                 method: "POST",
@@ -73,44 +71,43 @@ var MovieService;
                 }
             };
             odatajs.oData.request(request, (data, response) => {
-                callback.resolve(data.value);
+                resolve(data.value);
             }, (error) => {
                 console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                callback.reject(error);
+                reject(error);
             });
-            return callback;
-        }
-        ResetRating(key) {
-            let callback = new ThenableCaller();
+        });
+    }
+    ResetRating(key) {
+        return new Promise((reject, resolve) => {
             let request = {
                 headers: this.Headers,
                 method: "POST",
                 requestUri: this.Address + "(" + key + ")/MovieService.ResetRating",
             };
             odatajs.oData.request(request, (data, response) => {
-                callback.resolve();
+                resolve();
             }, (error) => {
                 console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                callback.reject(error);
+                reject(error);
             });
-            return callback;
-        }
-        GetBestMovie(Genre) {
-            let callback = new ThenableCaller();
+        });
+    }
+    GetBestMovie(Genre) {
+        return new Promise((reject, resolve) => {
             let request = {
                 headers: this.Headers,
                 method: "GET",
                 requestUri: this.Address + "/MovieService.GetBestMovie(Genre=" + Genre + ")",
             };
             odatajs.oData.request(request, (data, response) => {
-                callback.resolve(data.value);
+                resolve(data.value);
             }, (error) => {
                 console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                callback.reject(error);
+                reject(error);
             });
-            return callback;
-        }
+        });
     }
-    MovieService.MovieEntitySet = MovieEntitySet;
-})(MovieService || (MovieService = {}));
+}
+exports.MovieEntitySet = MovieEntitySet;
 //# sourceMappingURL=proxy.js.map

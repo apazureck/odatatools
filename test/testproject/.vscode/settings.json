@@ -4,7 +4,8 @@
         "**/.git": true,
         "**/.DS_Store": true,
         "**/*.js.map": true,
-        "**/*.js": {"when": "$(basename).ts"}
+        "**/*.js": { "when": "$(basename).ts" }
     },
-    "vsicons.presets.angular": false
+    "vsicons.presets.angular": false,
+    "odatatools.version": "0.5.0+"
 }

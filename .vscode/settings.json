@@ -7,7 +7,14 @@
     "search.exclude": {
         "out": true // set this to false to include "out" folder in search results
     },
-    "typescript.tsdk": "./node_modules/typescript/lib" ,// we want to use the TS server from our node_modules folder to control its version
+    "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
     "markdown-toc.orderedList": true,
-    "vsicons.presets.angular": false
+    "markdown-toc.anchorMode": "github.com",
+    "markdown-toc.depthFrom": 2,
+    "markdown-toc.depthTo": 4,
+    "vsicons.presets.angular": false,
+    "markdownlint.config": {
+        "MD013": false,
+        "MD024": false
+    }
 }

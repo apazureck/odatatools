@@ -2,7 +2,7 @@
     "name": "odatatools",
     "displayName": "odataTools",
     "description": "Tools for communicating with odata services in typescript",
-    "version": "0.4.0",
+    "version": "1.0.0",
     "publisher": "apazureck",
     "engines": {
         "vscode": "^1.5.0"
@@ -13,30 +13,62 @@
     "activationEvents": [
         "onCommand:odatatools.GetInterfaces",
         "onCommand:odatatools.UpdateInterfaces",
-        "onCommand:odatatools.GetProxy"
+        "onCommand:odatatools.GetProxy",
+        "onCommand:odatatools.UpdateProxy"
     ],
     "main": "./out/src/extension",
     "contributes": {
         "commands": [
             {
                 "command": "odatatools.GetInterfaces",
-                "category": "oData",
-                "title": "Get Entity Interfaces from oData V4.0 Service",
+                "category": "OData",
+                "title": "Create Interfaces from OData V4.0 Service",
                 "icon": "images/odata.png"
             },
             {
                 "command": "odatatools.UpdateInterfaces",
-                "category": "oData",
-                "title": "Update Entity Interfaces from oData V4.0 Service",
+                "category": "OData",
+                "title": "Update Interfaces from OData V4.0 Service",
                 "icon": "images/odata.png"
             },
             {
                 "command": "odatatools.GetProxy",
-                "category": "oData",
-                "title": "Create Proxy (BETA)",
+                "category": "OData",
+                "title": "Create proxy client from OData V4.0 Service",
+                "icon": "images/odata.png"
+            },
+            {
+                "command": "odatatools.UpdateProxy",
+                "category": "OData",
+                "title": "Update proxy client from OData V4.0 Service",
                 "icon": "images/odata.png"
             }
-        ]
+        ],
+        "configuration": {
+            "properties": {
+                "odatatools.insiders": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Sets the extension in insiders mode and makes [Insiders] features usable. See changelog for functions in insiders mode."
+                },
+                "odatatools.version": {
+                    "type": "string",
+                    "default": "1.0",
+                    "description": "For legacy reasons. To use old behavior set to version '0.4'. See extension description for more details.",
+                    "enum": [
+                        "1.0",
+                        "0.4"
+                    ]
+                },
+                "odatatools.recentlyUsedLength": {
+                    "type": "number",
+                    "default": 5,
+                    "minimum": 1,
+                    "maximum": 20,
+                    "description": "Length of recently used server addresses (This does not have any effect yet, hopefully in later vscode releases)"
+                }
+            }
+        }
     },
     "scripts": {
         "vscode:prepublish": "tsc -p ./",
@@ -50,15 +82,17 @@
         "jasmine-core": "^2.5.2",
         "mocha": "^3.2.0",
         "qunitjs": "^2.1.1",
-        "typescript": "^2.0.3",
-        "vscode": "^1.0.0"
+        "request": "^2.81.0",
+        "typescript": "2.3.4",
+        "vscode": "1.1.0"
     },
     "dependencies": {
-        "linq-es2015": "^2.4.13",
-        "node-rest-client": "2.5.0"
+        "linq-es2015": "2.4.22",
+        "node-rest-client": "3.1.0",
+        "xml2js": "0.4.17"
     },
     "author": {
-        "email": "info@pazureck.de",
+        "email": "andreas@pazureck.de",
         "name": "Andreas Pazureck"
     },
     "keywords": [
