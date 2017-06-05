@@ -21,11 +21,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Hook in interface file is now json format (only version 1.0+)
 - Hooks are now pasted at the start with generation notes (only version 1.0+)
 - Last address is now saved permanently (recently used list)
+- Request syntax in proxy (only version 1.0+)
 
 ### Deprecated
 
-- Version 4.0 and below custom classes (Thenable caller, etc.)
-- Support for version 4.0 and below
+- Version 0.4.0 and below custom classes (Thenable caller, etc.)
+- Support for version 0.4.0 and below
 
 ### Removed
 
