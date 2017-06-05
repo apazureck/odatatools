@@ -2,7 +2,7 @@
     "name": "odatatools",
     "displayName": "odataTools",
     "description": "Tools for communicating with odata services in typescript",
-    "version": "0.4.0",
+    "version": "1.0.0",
     "publisher": "apazureck",
     "engines": {
         "vscode": "^1.5.0"
@@ -18,7 +18,8 @@
     ],
     "main": "./out/src/extension",
     "contributes": {
-        "commands": [{
+        "commands": [
+            {
                 "command": "odatatools.GetInterfaces",
                 "category": "OData",
                 "title": "Create Interfaces from OData V4.0 Service",
