@@ -18,8 +18,7 @@
     ],
     "main": "./out/src/extension",
     "contributes": {
-        "commands": [
-            {
+        "commands": [{
                 "command": "odatatools.GetInterfaces",
                 "category": "OData",
                 "title": "Create Interfaces from OData V4.0 Service",
@@ -82,21 +81,21 @@
         "jasmine-core": "^2.5.2",
         "mocha": "^3.2.0",
         "qunitjs": "^2.1.1",
-        "request": "^2.81.0",
-        "typescript": "2.3.4",
-        "vscode": "1.1.0"
+        "typescript": "2.3.4"
     },
     "dependencies": {
         "linq-es2015": "2.4.22",
         "node-rest-client": "3.1.0",
-        "xml2js": "0.4.17"
+        "xml2js": "0.4.17",
+        "request": "^2.81.0",
+        "vscode": "1.1.0"
     },
     "author": {
         "email": "andreas@pazureck.de",
         "name": "Andreas Pazureck"
     },
     "keywords": [
-        "oData"
+        "oData", "proxyclient"
     ],
     "preview": true,
     "galleryBanner": {
