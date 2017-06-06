@@ -18,8 +18,7 @@
     ],
     "main": "./out/src/extension",
     "contributes": {
-        "commands": [
-            {
+        "commands": [{
                 "command": "odatatools.GetInterfaces",
                 "category": "OData",
                 "title": "Create Interfaces from OData V4.0 Service",
@@ -76,12 +75,12 @@
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "devDependencies": {
-        "@types/mocha": "^2.2.32",
-        "@types/node": "^7.0.5",
+        "@types/mocha": "^2.2.41",
+        "@types/node": "^7.0.28",
         "assert": "^1.4.1",
-        "jasmine-core": "^2.5.2",
-        "mocha": "^3.2.0",
-        "qunitjs": "^2.1.1",
+        "jasmine-core": "^2.6.2",
+        "mocha": "^3.4.2",
+        "qunitjs": "^2.3.3",
         "typescript": "2.3.4"
     },
     "dependencies": {
@@ -95,10 +94,7 @@
         "email": "andreas@pazureck.de",
         "name": "Andreas Pazureck"
     },
-    "keywords": [
-        "oData",
-        "proxyclient"
-    ],
+    "keywords": [ "oData", "proxyclient" ],
     "preview": true,
     "galleryBanner": {
         "color": "white",

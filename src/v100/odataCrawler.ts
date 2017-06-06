@@ -62,15 +62,15 @@ async function receiveInterfaces(options: GeneratorSettings): Promise<string> {
         interfacesstring += "\n/// Do not modify this line to being able to update your interfaces again:"
         return createHeader(options) + interfacesstring;
     } catch (error) {
-        console.error("Unknown error:\n", error.toString())
-        window.showErrorMessage("Unknown error occurred, see console output for more information.");
+        log.appendLine("Unknown error:\n" + error.toString());
+        window.showErrorMessage("Error occurred, see console output for more information.");
         return createHeader(options);
     }
 }
 
 export async function updateInterfaces() {
     try {
-        log.appendLine("Looking for #odata.source hook");
+        log.appendLine("Looking for header.");
         let generatorSettings = getGeneratorSettingsFromDocumentText(window.activeTextEditor.document.getText());
         if (!generatorSettings)
             return window.showErrorMessage("Did not find odata source in document: '" + window.activeTextEditor.document.fileName + "'");
