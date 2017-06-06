@@ -68,7 +68,7 @@ async function receiveInterfaces(input: string, ambient?: boolean): Promise<stri
                 interfacesstring += "\n/// #odata.source = '" + input + "'";
                 resolve(interfacesstring)
             } catch (error) {
-                console.error("Unknown error:\n", error.toString())
+                log.appendLine("Unknown error:\n" + error.toString())
                 window.showErrorMessage("Unknown error occurred, see console output for more information.");
                 reject(error);
             }
