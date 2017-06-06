@@ -2,7 +2,7 @@
     "name": "odatatools",
     "displayName": "odataTools",
     "description": "Tools for communicating with odata services in typescript",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "publisher": "apazureck",
     "engines": {
         "vscode": "^1.5.0"
@@ -18,7 +18,8 @@
     ],
     "main": "./out/src/extension",
     "contributes": {
-        "commands": [{
+        "commands": [
+            {
                 "command": "odatatools.GetInterfaces",
                 "category": "OData",
                 "title": "Create Interfaces from OData V4.0 Service",
@@ -94,7 +95,10 @@
         "email": "andreas@pazureck.de",
         "name": "Andreas Pazureck"
     },
-    "keywords": [ "oData", "proxyclient" ],
+    "keywords": [
+        "oData",
+        "proxyclient"
+    ],
     "preview": true,
     "galleryBanner": {
         "color": "white",
