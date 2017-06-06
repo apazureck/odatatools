@@ -59,7 +59,7 @@ export abstract class ODataQueryFilterOptions<T> extends ODataQueryOptionsGetSin
      * 
      * @memberof ODataQueryOptions
      */
-    Select(properties: keyof T | (keyof T)[]): ODataQueryOptionsGetSingle<T> {
+    Select(properties: keyof T | (keyof T)[]): ODataQueryFilterOptions<T> {
         if (typeof properties === "string")
             this.addToQuery("$select=" + properties);
         else
