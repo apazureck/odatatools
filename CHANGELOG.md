@@ -4,6 +4,13 @@ All notable changes to the "odatatools" will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.0.3] 2017-06-06 - Hotfix 3
+
+### Fixed
+
+* Errors in package.json
+* Error outputs to terminal
+
 ## [1.0.2] 2017-06-06 - Hotfix 2
 
 ### Added
