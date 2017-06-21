@@ -251,7 +251,11 @@ namespace odatatools {
                 // if id starts with $ it is additional odata parameters
 
                 odatajs.oData.request(request, (data, response) => {
-                    resolve(data);
+                    if(id) {
+                        resolve(data);
+                    } else {
+                        resolve(data.value);
+                    }
                     that.emptyQuery();
                 }, (error) => {
                     console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":\n" + (error.response | error.response.body));

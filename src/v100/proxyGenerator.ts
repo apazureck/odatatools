@@ -405,7 +405,7 @@ function _getParameterJSON(parameters: Parameter[]): string {
 function createMethod(method: Method, requesttype: GetOrPost, key?: string): string {
     // TODO: get key type
     let ret = method.$.Name + "(" + (method.$.IsBound ? (method.IsBoundToCollection ? "" : "key: " + key + (method.Parameter.length > 0 ? ", " : "")) : "") + _getParameters(method.Parameter) + "): " + "Promise" + "<" + _getReturnType(method.ReturnType) + ">{\n";
-    ret += "return new Promise<" + _getReturnType(method.ReturnType) + ">((reject, resolve) => {\n";
+    ret += "return new Promise<" + _getReturnType(method.ReturnType) + ">((resolve, reject) => {\n";
 
     ret += "let request: odatajs.Request = {\n";
     ret += "headers: this.Headers,\n";
