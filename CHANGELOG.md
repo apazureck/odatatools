@@ -4,6 +4,13 @@ All notable changes to the "odatatools" will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.0.4] 2017-06-06
+
+### Fixed
+
+* Reject and resolve were mixed up in OData Actions and Functions
+* Get does not return the entity array
+
 ## [1.0.3] 2017-06-06 - Hotfix 3
 
 ### Fixed
