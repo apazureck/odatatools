@@ -1,5 +1,5 @@
 interface EdmxBase {
-    
+
 }
 
 type ftype = "Action" | "Function"
@@ -71,7 +71,11 @@ interface NavigationProperty {
 }
 
 interface ComplexType extends EdmxBase {
-    $: { Name: string; }
+    $: {
+        Name: string;
+        BaseType?: string;
+        OpenType?: boolean;
+    }
     Property: Property[];
 }
 
@@ -95,7 +99,7 @@ interface Method {
     }
     Parameter?: Parameter[]
     ReturnType?: ReturnType[]
-    
+
     // added by proxygenerator:
     IsBoundToCollection?: boolean;
     Namespace: string

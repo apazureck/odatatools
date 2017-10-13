@@ -6,9 +6,28 @@ import * as v040Crawler from './v040/odataCrawler';
 import * as v040ProxyGenerator from './v040/proxyGenerator';
 import * as v100Crawler from './v100/odataCrawler';
 import * as v100ProxyGenerator from './v100/proxyGenerator';
+import * as v200Crawler from './v200/odataCrawler';
+import * as v200ProxyGenerator from './v200/proxyGenerator';
 import { Settings } from './settings';
 import * as fs from 'fs';
 import * as path from 'path';
+
+
+if (!('toJSON' in Error.prototype))
+Object.defineProperty(Error.prototype, 'toJSON', {
+    value: function () {
+        var alt = {};
+
+        Object.getOwnPropertyNames(this).forEach(function (key) {
+            alt[key] = this[key];
+        }, this);
+
+        return alt;
+    },
+    configurable: true,
+    writable: true
+});
+
 
 export class Global {
     static lastval: string = null;
@@ -62,24 +81,40 @@ export function deactivate() {
 function onDidChangeConfiguration() {
     log.appendLine("Using Extension Version: " + Settings.UsageVersion);
     log.appendLine("Insider mode active: " + Settings.IsInInsiderMode ? "Yes" : "No");
-    if (Settings.UsageVersion === "0.4") {
-        try {
-            registerV40Commands();
-        } catch (error) {
-            for (const cmd of Global.context.subscriptions)
-                cmd.dispose();
-            Global.context.subscriptions = [];
-            registerV40Commands();
-        }
-    } else {
-        try {
-            registerV100Commands();
-        } catch (error) {
-            for (const cmd of Global.context.subscriptions)
-                cmd.dispose();
-            Global.context.subscriptions = [];
-            registerV100Commands();
-        }
+    switch (Settings.UsageVersion) {
+        case "0.4":
+            try {
+                registerV40Commands();
+            } catch (error) {
+                for (const cmd of Global.context.subscriptions)
+                    cmd.dispose();
+                Global.context.subscriptions = [];
+                registerV40Commands();
+            }
+            break;
+        case "1.0":
+            try {
+                registerV100Commands();
+            } catch (error) {
+                for (const cmd of Global.context.subscriptions)
+                    cmd.dispose();
+                Global.context.subscriptions = [];
+                registerV100Commands();
+            }
+            break;
+        case "2.0":
+            try {
+                registerV200Commands();
+            } catch (error) {
+                for (const cmd of Global.context.subscriptions)
+                    cmd.dispose();
+                Global.context.subscriptions = [];
+                registerV200Commands();
+            }
+            break;
+        default:
+            vscode.window.showErrorMessage("Could not determine version " + Settings.UsageVersion + ". Please use valid version entries");
+            break;
     }
 }
 
@@ -95,4 +130,10 @@ function registerV100Commands(): void {
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v100Crawler.updateInterfaces));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v100ProxyGenerator.createProxy));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateProxy', v100ProxyGenerator.updateProxy));
+}
+function registerV200Commands(): void {
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v200Crawler.getInterfaces));
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v200Crawler.updateInterfaces));
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v200ProxyGenerator.createProxy));
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateProxy', v200ProxyGenerator.updateProxy));
 }

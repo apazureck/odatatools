@@ -1,32 +1,98 @@
-declare namespace ODataTestService.Models {
-    export interface Movie {
-        Id: Edm.Int32;
-        LenderId: Edm.Int32;
-        Avaiable: Edm.Boolean;
-        Rating: Edm.Single;
-        Genre?: Edm.String;
-        Reason?: Edm.String;
-        Lender?: ODataTestService.Models.Customer;
+/**************************************************************************
+Created by odatatools: https://marketplace.visualstudio.com/items?itemName=apazureck.odatatools
+Use Command 'odata: xyUpdate to refresh data while this file is active in the editor.
+Creation Time: Fri Oct 13 2017 18:48:48 GMT+0200 (Mitteleuropäische Sommerzeit)
+DO NOT DELETE THIS IN ORDER TO UPDATE YOUR SERVICE
+#ODATATOOLSOPTIONS
+{
+	"source": "http://http://services.odata.org/V4/(S(orqah5cghxizm4lomf2flrt0))/TripPinServiceRW/$metadata",
+	"requestOptions": {}
+}
+#ODATATOOLSOPTIONSEND
+**************************************************************************/
+
+
+
+declare namespace ODataDemo {
+    export interface Product {
+        ID: Edm.Int32;
+        Name: Edm.String;
+        Description: Edm.String;
+        ReleaseDate: Edm.DateTimeOffset;
+        DiscontinuedDate: Edm.DateTimeOffset;
+        Rating: Edm.Int16;
+        Price: Edm.Double;
+        Categories?: ODataDemo.Category[];
+        Supplier?: ODataDemo.Supplier;
+        ProductDetail?: ODataDemo.ProductDetail;
+
+    }
+    export interface FeaturedProduct {
+        Advertisement?: ODataDemo.Advertisement;
+
+    }
+    export interface ProductDetail {
+        ProductID: Edm.Int32;
+        Details: Edm.String;
+        Product?: ODataDemo.Product;
+
+    }
+    export interface Category {
+        ID: Edm.Int32;
+        Name: Edm.String;
+        Products?: ODataDemo.Product[];
+        [x: string]: any;
+    }
+    export interface Supplier {
+        ID: Edm.Int32;
+        Name: Edm.String;
+        Address: ODataDemo.Address;
+        Location: Edm.GeographyPoint;
+        Concurrency: Edm.Int32;
+        Products?: ODataDemo.Product[];
+
+    }
+    export interface Person {
+        ID: Edm.Int32;
+        Name: Edm.String;
+        PersonDetail?: ODataDemo.PersonDetail;
+
     }
     export interface Customer {
-        Id: Edm.Int32;
-        Name?: Edm.String;
-        Age: Edm.Int32;
-        Gender: ODataTestService.Models.Gender;
-        Balance: Edm.Double;
-        AddressId: Edm.Int32;
-        Address: ODataTestService.Models.Address;
-        Borrowed?: ODataTestService.Models.Movie[];
+        TotalExpense: Edm.Decimal;
+
+    }
+    export interface Employee {
+        EmployeeID: Edm.Int64;
+        HireDate: Edm.DateTimeOffset;
+        Salary: Edm.Single;
+
+    }
+    export interface PersonDetail {
+        PersonID: Edm.Int32;
+        Age: Edm.Byte;
+        Gender: Edm.Boolean;
+        Phone: Edm.String;
+        Address: ODataDemo.Address;
+        Photo: Edm.Stream;
+        Person?: ODataDemo.Person;
+
+    }
+    export interface Advertisement {
+        ID: Edm.Guid;
+        Name: Edm.String;
+        AirDate: Edm.DateTimeOffset;
+        FeaturedProduct?: ODataDemo.FeaturedProduct;
+
     }
     export interface Address {
-        Id: Edm.Int32;
-        Street?: Edm.String;
-        Zip?: Edm.String;
-        Inhabitants?: ODataTestService.Models.Customer[];
+        Street: Edm.String;
+        City: Edm.String;
+        State: Edm.String;
+        ZipCode: Edm.String;
+        Country: Edm.String;
+
     }
-    type Gender = "Male" | "Female" | "Other";
-}
-declare namespace MovieService {
 }
 
 type JSDate = Date;
@@ -48,6 +114,6 @@ declare namespace Edm {
     export type Single = number;
     export type String = string;
     export type TimeOfDay = string;
+    export type Stream = string;
+    export type GeographyPoint = any;
 }
-/// Do not modify this line to being able to update your interfaces again:
-/// #odata.source = 'http://localhost:2200/moviedb/$metadata'
