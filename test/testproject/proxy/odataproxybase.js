@@ -1,6 +1,6 @@
 var odatatools;
 (function (odatatools) {
-    var Method;
+    let Method;
     (function (Method) {
         Method[Method["GET"] = 0] = "GET";
         Method[Method["POST"] = 1] = "POST";
@@ -188,7 +188,12 @@ var odatatools;
                 const that = this;
                 // if id starts with $ it is additional odata parameters
                 odatajs.oData.request(request, (data, response) => {
-                    resolve(data);
+                    if (id) {
+                        resolve(data);
+                    }
+                    else {
+                        resolve(data.value);
+                    }
                     that.emptyQuery();
                 }, (error) => {
                     console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":\n" + (error.response | error.response.body));

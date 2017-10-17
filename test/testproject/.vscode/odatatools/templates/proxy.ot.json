@@ -1,0 +1,1122 @@
+{
+    "Namespace": "Microsoft.OData.Service.Sample.TrippinInMemory.Models",
+    "EntityContainer": {
+        "Name": "Container",
+        "EntitySets": [
+            {
+                "EntityType": {
+                    "Key": "UserName",
+                    "Name": "Person",
+                    "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person",
+                    "Properties": [
+                        {
+                            "Name": "UserName",
+                            "Type": "Edm.String",
+                            "Nullable": "false"
+                        },
+                        {
+                            "Name": "FirstName",
+                            "Type": "Edm.String",
+                            "Nullable": "false"
+                        },
+                        {
+                            "Name": "LastName",
+                            "Type": "Edm.String",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "MiddleName",
+                            "Type": "Edm.String",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "Gender",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.PersonGender",
+                            "Nullable": "false"
+                        },
+                        {
+                            "Name": "Age",
+                            "Type": "Edm.Int64",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "Emails",
+                            "Type": "Edm.String[]",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "AddressInfo",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Location[]",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "HomeAddress",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Location",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "FavoriteFeature",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Feature",
+                            "Nullable": "false"
+                        },
+                        {
+                            "Name": "Features",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Feature[]",
+                            "Nullable": "false"
+                        }
+                    ],
+                    "NavigationProperties": [
+                        {
+                            "Name": "Friends",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person[]",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "BestFriend",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "Trips",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Trip[]",
+                            "Nullable": true
+                        }
+                    ],
+                    "OpenType": false,
+                    "Actions": [
+                        {
+                            "IsBoundToCollection": false,
+                            "Name": "ShareTrip",
+                            "ReturnType": "void",
+                            "Parameters": [
+                                {
+                                    "Name": "userName",
+                                    "Nullable": "false",
+                                    "Unicode": "false",
+                                    "Type": "Edm.String"
+                                },
+                                {
+                                    "Name": "tripId",
+                                    "Nullable": "false",
+                                    "Type": "Edm.Int32"
+                                }
+                            ]
+                        }
+                    ],
+                    "Functions": [
+                        {
+                            "IsBoundToCollection": false,
+                            "Name": "GetFavoriteAirline",
+                            "ReturnType": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Airline",
+                            "Parameters": []
+                        },
+                        {
+                            "IsBoundToCollection": false,
+                            "Name": "GetFriendsTrips",
+                            "ReturnType": "Collection(Microsoft.OData.Service.Sample.TrippinInMemory.Models.Trip)",
+                            "Parameters": [
+                                {
+                                    "Name": "userName",
+                                    "Nullable": "false",
+                                    "Unicode": "false",
+                                    "Type": "Edm.String"
+                                }
+                            ]
+                        },
+                        {
+                            "IsBoundToCollection": false,
+                            "Name": "UpdatePersonLastName",
+                            "ReturnType": "Edm.Boolean",
+                            "Parameters": [
+                                {
+                                    "Name": "lastName",
+                                    "Nullable": "false",
+                                    "Unicode": "false",
+                                    "Type": "Edm.String"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "Name": "People",
+                "NavigationPropertyBindings": [
+                    {
+                        "Path": "Friends",
+                        "Target": "People"
+                    },
+                    {
+                        "Path": "BestFriend",
+                        "Target": "People"
+                    },
+                    {
+                        "Path": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Employee/Peers",
+                        "Target": "People"
+                    },
+                    {
+                        "Path": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Manager/DirectReports",
+                        "Target": "People"
+                    }
+                ],
+                "Actions": [],
+                "Functions": []
+            },
+            {
+                "EntityType": {
+                    "Key": "AirlineCode",
+                    "Name": "Airline",
+                    "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Airline",
+                    "Properties": [
+                        {
+                            "Name": "AirlineCode",
+                            "Type": "Edm.String",
+                            "Nullable": "false"
+                        },
+                        {
+                            "Name": "Name",
+                            "Type": "Edm.String",
+                            "Nullable": true
+                        }
+                    ],
+                    "NavigationProperties": [],
+                    "OpenType": false,
+                    "Actions": [],
+                    "Functions": []
+                },
+                "Name": "Airlines",
+                "NavigationPropertyBindings": [],
+                "Actions": [],
+                "Functions": []
+            },
+            {
+                "EntityType": {
+                    "Key": "IcaoCode",
+                    "Name": "Airport",
+                    "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Airport",
+                    "Properties": [
+                        {
+                            "Name": "Name",
+                            "Type": "Edm.String",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "IcaoCode",
+                            "Type": "Edm.String",
+                            "Nullable": "false"
+                        },
+                        {
+                            "Name": "IataCode",
+                            "Type": "Edm.String",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "Location",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.AirportLocation",
+                            "Nullable": true
+                        }
+                    ],
+                    "NavigationProperties": [],
+                    "OpenType": false,
+                    "Actions": [],
+                    "Functions": []
+                },
+                "Name": "Airports",
+                "NavigationPropertyBindings": [],
+                "Actions": [],
+                "Functions": []
+            },
+            {
+                "EntityType": {
+                    "Key": "UserName",
+                    "Name": "Person",
+                    "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person",
+                    "Properties": [
+                        {
+                            "Name": "UserName",
+                            "Type": "Edm.String",
+                            "Nullable": "false"
+                        },
+                        {
+                            "Name": "FirstName",
+                            "Type": "Edm.String",
+                            "Nullable": "false"
+                        },
+                        {
+                            "Name": "LastName",
+                            "Type": "Edm.String",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "MiddleName",
+                            "Type": "Edm.String",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "Gender",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.PersonGender",
+                            "Nullable": "false"
+                        },
+                        {
+                            "Name": "Age",
+                            "Type": "Edm.Int64",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "Emails",
+                            "Type": "Edm.String[]",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "AddressInfo",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Location[]",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "HomeAddress",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Location",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "FavoriteFeature",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Feature",
+                            "Nullable": "false"
+                        },
+                        {
+                            "Name": "Features",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Feature[]",
+                            "Nullable": "false"
+                        }
+                    ],
+                    "NavigationProperties": [
+                        {
+                            "Name": "Friends",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person[]",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "BestFriend",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person",
+                            "Nullable": true
+                        },
+                        {
+                            "Name": "Trips",
+                            "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Trip[]",
+                            "Nullable": true
+                        }
+                    ],
+                    "OpenType": false,
+                    "Actions": [
+                        {
+                            "IsBoundToCollection": false,
+                            "Name": "ShareTrip",
+                            "ReturnType": "void",
+                            "Parameters": [
+                                {
+                                    "Name": "userName",
+                                    "Nullable": "false",
+                                    "Unicode": "false",
+                                    "Type": "Edm.String"
+                                },
+                                {
+                                    "Name": "tripId",
+                                    "Nullable": "false",
+                                    "Type": "Edm.Int32"
+                                }
+                            ]
+                        }
+                    ],
+                    "Functions": [
+                        {
+                            "IsBoundToCollection": false,
+                            "Name": "GetFavoriteAirline",
+                            "ReturnType": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Airline",
+                            "Parameters": []
+                        },
+                        {
+                            "IsBoundToCollection": false,
+                            "Name": "GetFriendsTrips",
+                            "ReturnType": "Collection(Microsoft.OData.Service.Sample.TrippinInMemory.Models.Trip)",
+                            "Parameters": [
+                                {
+                                    "Name": "userName",
+                                    "Nullable": "false",
+                                    "Unicode": "false",
+                                    "Type": "Edm.String"
+                                }
+                            ]
+                        },
+                        {
+                            "IsBoundToCollection": false,
+                            "Name": "UpdatePersonLastName",
+                            "ReturnType": "Edm.Boolean",
+                            "Parameters": [
+                                {
+                                    "Name": "lastName",
+                                    "Nullable": "false",
+                                    "Unicode": "false",
+                                    "Type": "Edm.String"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "Name": "NewComePeople",
+                "NavigationPropertyBindings": [],
+                "Actions": [],
+                "Functions": []
+            }
+        ],
+        "Singletons": [],
+        "FunctionImports": [
+            {
+                "EntitySet": {
+                    "EntityType": {
+                        "Key": "UserName",
+                        "Name": "Person",
+                        "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person",
+                        "Properties": [
+                            {
+                                "Name": "UserName",
+                                "Type": "Edm.String",
+                                "Nullable": "false"
+                            },
+                            {
+                                "Name": "FirstName",
+                                "Type": "Edm.String",
+                                "Nullable": "false"
+                            },
+                            {
+                                "Name": "LastName",
+                                "Type": "Edm.String",
+                                "Nullable": true
+                            },
+                            {
+                                "Name": "MiddleName",
+                                "Type": "Edm.String",
+                                "Nullable": true
+                            },
+                            {
+                                "Name": "Gender",
+                                "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.PersonGender",
+                                "Nullable": "false"
+                            },
+                            {
+                                "Name": "Age",
+                                "Type": "Edm.Int64",
+                                "Nullable": true
+                            },
+                            {
+                                "Name": "Emails",
+                                "Type": "Edm.String[]",
+                                "Nullable": true
+                            },
+                            {
+                                "Name": "AddressInfo",
+                                "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Location[]",
+                                "Nullable": true
+                            },
+                            {
+                                "Name": "HomeAddress",
+                                "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Location",
+                                "Nullable": true
+                            },
+                            {
+                                "Name": "FavoriteFeature",
+                                "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Feature",
+                                "Nullable": "false"
+                            },
+                            {
+                                "Name": "Features",
+                                "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Feature[]",
+                                "Nullable": "false"
+                            }
+                        ],
+                        "NavigationProperties": [
+                            {
+                                "Name": "Friends",
+                                "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person[]",
+                                "Nullable": true
+                            },
+                            {
+                                "Name": "BestFriend",
+                                "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person",
+                                "Nullable": true
+                            },
+                            {
+                                "Name": "Trips",
+                                "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Trip[]",
+                                "Nullable": true
+                            }
+                        ],
+                        "OpenType": false,
+                        "Actions": [
+                            {
+                                "IsBoundToCollection": false,
+                                "Name": "ShareTrip",
+                                "ReturnType": "void",
+                                "Parameters": [
+                                    {
+                                        "Name": "userName",
+                                        "Nullable": "false",
+                                        "Unicode": "false",
+                                        "Type": "Edm.String"
+                                    },
+                                    {
+                                        "Name": "tripId",
+                                        "Nullable": "false",
+                                        "Type": "Edm.Int32"
+                                    }
+                                ]
+                            }
+                        ],
+                        "Functions": [
+                            {
+                                "IsBoundToCollection": false,
+                                "Name": "GetFavoriteAirline",
+                                "ReturnType": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Airline",
+                                "Parameters": []
+                            },
+                            {
+                                "IsBoundToCollection": false,
+                                "Name": "GetFriendsTrips",
+                                "ReturnType": "Collection(Microsoft.OData.Service.Sample.TrippinInMemory.Models.Trip)",
+                                "Parameters": [
+                                    {
+                                        "Name": "userName",
+                                        "Nullable": "false",
+                                        "Unicode": "false",
+                                        "Type": "Edm.String"
+                                    }
+                                ]
+                            },
+                            {
+                                "IsBoundToCollection": false,
+                                "Name": "UpdatePersonLastName",
+                                "ReturnType": "Edm.Boolean",
+                                "Parameters": [
+                                    {
+                                        "Name": "lastName",
+                                        "Nullable": "false",
+                                        "Unicode": "false",
+                                        "Type": "Edm.String"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "Name": "People",
+                    "NavigationPropertyBindings": [
+                        {
+                            "Path": "Friends",
+                            "Target": "People"
+                        },
+                        {
+                            "Path": "BestFriend",
+                            "Target": "People"
+                        },
+                        {
+                            "Path": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Employee/Peers",
+                            "Target": "People"
+                        },
+                        {
+                            "Path": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Manager/DirectReports",
+                            "Target": "People"
+                        }
+                    ],
+                    "Actions": [],
+                    "Functions": []
+                },
+                "Function": {
+                    "IsBoundToCollection": false,
+                    "Name": "GetPersonWithMostFriends",
+                    "ReturnType": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person",
+                    "Parameters": []
+                },
+                "Name": "GetPersonWithMostFriends"
+            },
+            {
+                "EntitySet": {
+                    "EntityType": {
+                        "Key": "IcaoCode",
+                        "Name": "Airport",
+                        "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Airport",
+                        "Properties": [
+                            {
+                                "Name": "Name",
+                                "Type": "Edm.String",
+                                "Nullable": true
+                            },
+                            {
+                                "Name": "IcaoCode",
+                                "Type": "Edm.String",
+                                "Nullable": "false"
+                            },
+                            {
+                                "Name": "IataCode",
+                                "Type": "Edm.String",
+                                "Nullable": true
+                            },
+                            {
+                                "Name": "Location",
+                                "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.AirportLocation",
+                                "Nullable": true
+                            }
+                        ],
+                        "NavigationProperties": [],
+                        "OpenType": false,
+                        "Actions": [],
+                        "Functions": []
+                    },
+                    "Name": "Airports",
+                    "NavigationPropertyBindings": [],
+                    "Actions": [],
+                    "Functions": []
+                },
+                "Function": {
+                    "IsBoundToCollection": false,
+                    "Name": "GetNearestAirport",
+                    "ReturnType": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Airport",
+                    "Parameters": [
+                        {
+                            "Name": "lat",
+                            "Nullable": "false",
+                            "Type": "Edm.Double"
+                        },
+                        {
+                            "Name": "lon",
+                            "Nullable": "false",
+                            "Type": "Edm.Double"
+                        }
+                    ]
+                },
+                "Name": "GetNearestAirport"
+            }
+        ],
+        "ActionImports": [
+            {
+                "Action": {
+                    "IsBoundToCollection": false,
+                    "Name": "ResetDataSource",
+                    "ReturnType": "void",
+                    "Parameters": []
+                },
+                "Name": "ResetDataSource"
+            }
+        ]
+    },
+    "Header": "",
+    "ComplexTypes": [
+        {
+            "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Location",
+            "Name": "Location",
+            "Properties": [
+                {
+                    "Name": "Address",
+                    "Type": "Edm.String",
+                    "Nullable": true
+                },
+                {
+                    "Name": "City",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.City",
+                    "Nullable": true
+                }
+            ],
+            "OpenType": false
+        },
+        {
+            "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.City",
+            "Name": "City",
+            "Properties": [
+                {
+                    "Name": "Name",
+                    "Type": "Edm.String",
+                    "Nullable": true
+                },
+                {
+                    "Name": "CountryRegion",
+                    "Type": "Edm.String",
+                    "Nullable": true
+                },
+                {
+                    "Name": "Region",
+                    "Type": "Edm.String",
+                    "Nullable": true
+                }
+            ],
+            "OpenType": false
+        },
+        {
+            "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.AirportLocation",
+            "Name": "AirportLocation",
+            "Properties": [
+                {
+                    "Name": "Loc",
+                    "Type": "Edm.GeographyPoint",
+                    "Nullable": true
+                }
+            ],
+            "BaseType": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Location",
+            "OpenType": false
+        },
+        {
+            "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.EventLocation",
+            "Name": "EventLocation",
+            "Properties": [
+                {
+                    "Name": "BuildingInfo",
+                    "Type": "Edm.String",
+                    "Nullable": true
+                }
+            ],
+            "BaseType": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Location",
+            "OpenType": false
+        }
+    ],
+    "EntityTypes": [
+        {
+            "Key": "UserName",
+            "Name": "Person",
+            "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person",
+            "Properties": [
+                {
+                    "Name": "UserName",
+                    "Type": "Edm.String",
+                    "Nullable": "false"
+                },
+                {
+                    "Name": "FirstName",
+                    "Type": "Edm.String",
+                    "Nullable": "false"
+                },
+                {
+                    "Name": "LastName",
+                    "Type": "Edm.String",
+                    "Nullable": true
+                },
+                {
+                    "Name": "MiddleName",
+                    "Type": "Edm.String",
+                    "Nullable": true
+                },
+                {
+                    "Name": "Gender",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.PersonGender",
+                    "Nullable": "false"
+                },
+                {
+                    "Name": "Age",
+                    "Type": "Edm.Int64",
+                    "Nullable": true
+                },
+                {
+                    "Name": "Emails",
+                    "Type": "Edm.String[]",
+                    "Nullable": true
+                },
+                {
+                    "Name": "AddressInfo",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Location[]",
+                    "Nullable": true
+                },
+                {
+                    "Name": "HomeAddress",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Location",
+                    "Nullable": true
+                },
+                {
+                    "Name": "FavoriteFeature",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Feature",
+                    "Nullable": "false"
+                },
+                {
+                    "Name": "Features",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Feature[]",
+                    "Nullable": "false"
+                }
+            ],
+            "NavigationProperties": [
+                {
+                    "Name": "Friends",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person[]",
+                    "Nullable": true
+                },
+                {
+                    "Name": "BestFriend",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person",
+                    "Nullable": true
+                },
+                {
+                    "Name": "Trips",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Trip[]",
+                    "Nullable": true
+                }
+            ],
+            "OpenType": false,
+            "Actions": [
+                {
+                    "IsBoundToCollection": false,
+                    "Name": "ShareTrip",
+                    "ReturnType": "void",
+                    "Parameters": [
+                        {
+                            "Name": "userName",
+                            "Nullable": "false",
+                            "Unicode": "false",
+                            "Type": "Edm.String"
+                        },
+                        {
+                            "Name": "tripId",
+                            "Nullable": "false",
+                            "Type": "Edm.Int32"
+                        }
+                    ]
+                }
+            ],
+            "Functions": [
+                {
+                    "IsBoundToCollection": false,
+                    "Name": "GetFavoriteAirline",
+                    "ReturnType": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Airline",
+                    "Parameters": []
+                },
+                {
+                    "IsBoundToCollection": false,
+                    "Name": "GetFriendsTrips",
+                    "ReturnType": "Collection(Microsoft.OData.Service.Sample.TrippinInMemory.Models.Trip)",
+                    "Parameters": [
+                        {
+                            "Name": "userName",
+                            "Nullable": "false",
+                            "Unicode": "false",
+                            "Type": "Edm.String"
+                        }
+                    ]
+                },
+                {
+                    "IsBoundToCollection": false,
+                    "Name": "UpdatePersonLastName",
+                    "ReturnType": "Edm.Boolean",
+                    "Parameters": [
+                        {
+                            "Name": "lastName",
+                            "Nullable": "false",
+                            "Unicode": "false",
+                            "Type": "Edm.String"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Key": "AirlineCode",
+            "Name": "Airline",
+            "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Airline",
+            "Properties": [
+                {
+                    "Name": "AirlineCode",
+                    "Type": "Edm.String",
+                    "Nullable": "false"
+                },
+                {
+                    "Name": "Name",
+                    "Type": "Edm.String",
+                    "Nullable": true
+                }
+            ],
+            "NavigationProperties": [],
+            "OpenType": false,
+            "Actions": [],
+            "Functions": []
+        },
+        {
+            "Key": "IcaoCode",
+            "Name": "Airport",
+            "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Airport",
+            "Properties": [
+                {
+                    "Name": "Name",
+                    "Type": "Edm.String",
+                    "Nullable": true
+                },
+                {
+                    "Name": "IcaoCode",
+                    "Type": "Edm.String",
+                    "Nullable": "false"
+                },
+                {
+                    "Name": "IataCode",
+                    "Type": "Edm.String",
+                    "Nullable": true
+                },
+                {
+                    "Name": "Location",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.AirportLocation",
+                    "Nullable": true
+                }
+            ],
+            "NavigationProperties": [],
+            "OpenType": false,
+            "Actions": [],
+            "Functions": []
+        },
+        {
+            "Key": "TripId",
+            "Name": "Trip",
+            "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Trip",
+            "Properties": [
+                {
+                    "Name": "TripId",
+                    "Type": "Edm.Int32",
+                    "Nullable": "false"
+                },
+                {
+                    "Name": "ShareId",
+                    "Type": "Edm.Guid",
+                    "Nullable": "false"
+                },
+                {
+                    "Name": "Name",
+                    "Type": "Edm.String",
+                    "Nullable": true
+                },
+                {
+                    "Name": "Budget",
+                    "Type": "Edm.Single",
+                    "Nullable": "false"
+                },
+                {
+                    "Name": "Description",
+                    "Type": "Edm.String",
+                    "Nullable": true
+                },
+                {
+                    "Name": "Tags",
+                    "Type": "Edm.String[]",
+                    "Nullable": true
+                },
+                {
+                    "Name": "StartsAt",
+                    "Type": "Edm.DateTimeOffset",
+                    "Nullable": "false"
+                },
+                {
+                    "Name": "EndsAt",
+                    "Type": "Edm.DateTimeOffset",
+                    "Nullable": "false"
+                }
+            ],
+            "NavigationProperties": [
+                {
+                    "Name": "PlanItems",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.PlanItem[]",
+                    "Nullable": true
+                }
+            ],
+            "OpenType": false,
+            "Actions": [],
+            "Functions": [
+                {
+                    "IsBoundToCollection": false,
+                    "Name": "GetInvolvedPeople",
+                    "ReturnType": "Collection(Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person)",
+                    "Parameters": []
+                }
+            ]
+        },
+        {
+            "Key": "PlanItemId",
+            "Name": "PlanItem",
+            "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.PlanItem",
+            "Properties": [
+                {
+                    "Name": "PlanItemId",
+                    "Type": "Edm.Int32",
+                    "Nullable": "false"
+                },
+                {
+                    "Name": "ConfirmationCode",
+                    "Type": "Edm.String",
+                    "Nullable": true
+                },
+                {
+                    "Name": "StartsAt",
+                    "Type": "Edm.DateTimeOffset",
+                    "Nullable": "false"
+                },
+                {
+                    "Name": "EndsAt",
+                    "Type": "Edm.DateTimeOffset",
+                    "Nullable": "false"
+                },
+                {
+                    "Name": "Duration",
+                    "Type": "Edm.Duration",
+                    "Nullable": "false"
+                }
+            ],
+            "NavigationProperties": [],
+            "OpenType": false,
+            "Actions": [],
+            "Functions": []
+        },
+        {
+            "Name": "Event",
+            "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Event",
+            "Properties": [
+                {
+                    "Name": "OccursAt",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.EventLocation",
+                    "Nullable": true
+                },
+                {
+                    "Name": "Description",
+                    "Type": "Edm.String",
+                    "Nullable": true
+                }
+            ],
+            "NavigationProperties": [],
+            "BaseType": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.PlanItem",
+            "OpenType": false,
+            "Actions": [],
+            "Functions": []
+        },
+        {
+            "Name": "PublicTransportation",
+            "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.PublicTransportation",
+            "Properties": [
+                {
+                    "Name": "SeatNumber",
+                    "Type": "Edm.String",
+                    "Nullable": true
+                }
+            ],
+            "NavigationProperties": [],
+            "BaseType": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.PlanItem",
+            "OpenType": false,
+            "Actions": [],
+            "Functions": []
+        },
+        {
+            "Name": "Flight",
+            "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Flight",
+            "Properties": [
+                {
+                    "Name": "FlightNumber",
+                    "Type": "Edm.String",
+                    "Nullable": true
+                }
+            ],
+            "NavigationProperties": [
+                {
+                    "Name": "Airline",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Airline",
+                    "Nullable": true
+                },
+                {
+                    "Name": "From",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Airport",
+                    "Nullable": true
+                },
+                {
+                    "Name": "To",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Airport",
+                    "Nullable": true
+                }
+            ],
+            "BaseType": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.PublicTransportation",
+            "OpenType": false,
+            "Actions": [],
+            "Functions": []
+        },
+        {
+            "Name": "Employee",
+            "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Employee",
+            "Properties": [
+                {
+                    "Name": "Cost",
+                    "Type": "Edm.Int64",
+                    "Nullable": "false"
+                }
+            ],
+            "NavigationProperties": [
+                {
+                    "Name": "Peers",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person[]",
+                    "Nullable": true
+                }
+            ],
+            "BaseType": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person",
+            "OpenType": false,
+            "Actions": [],
+            "Functions": []
+        },
+        {
+            "Name": "Manager",
+            "Fullname": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Manager",
+            "Properties": [
+                {
+                    "Name": "Budget",
+                    "Type": "Edm.Int64",
+                    "Nullable": "false"
+                },
+                {
+                    "Name": "BossOffice",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Location",
+                    "Nullable": true
+                }
+            ],
+            "NavigationProperties": [
+                {
+                    "Name": "DirectReports",
+                    "Type": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person[]",
+                    "Nullable": true
+                }
+            ],
+            "BaseType": "Microsoft.OData.Service.Sample.TrippinInMemory.Models.Person",
+            "OpenType": false,
+            "Actions": [],
+            "Functions": []
+        }
+    ],
+    "EnumTypes": [
+        {
+            "Name": "PersonGender",
+            "Members": [
+                {
+                    "Key": "Male",
+                    "Value": "0"
+                },
+                {
+                    "Key": "Female",
+                    "Value": "1"
+                },
+                {
+                    "Key": "Unknow",
+                    "Value": "2"
+                }
+            ]
+        },
+        {
+            "Name": "Feature",
+            "Members": [
+                {
+                    "Key": "Feature1",
+                    "Value": "0"
+                },
+                {
+                    "Key": "Feature2",
+                    "Value": "1"
+                },
+                {
+                    "Key": "Feature3",
+                    "Value": "2"
+                },
+                {
+                    "Key": "Feature4",
+                    "Value": "3"
+                }
+            ]
+        }
+    ],
+    "Functions": [],
+    "Actions": []
+}

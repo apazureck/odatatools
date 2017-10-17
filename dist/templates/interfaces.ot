@@ -21,6 +21,7 @@ declare namespace {{Namespace}} {
     }
     {{/each}}
     {{#each EnumTypes}}
+    // Enum Values: {{#each this.Members}}{{this.Key}} = {{this.Value}}{{#unless @last}}, {{/unless}}{{/each}}
     export type {{this.Name}} = {{#each this.Members}}"{{this.Key}}"{{#unless @last}} | {{/unless}}{{/each}};
     {{/each}}
 }

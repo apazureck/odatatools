@@ -1,3 +1,19 @@
+import { getEdmTypes } from './odataCrawler';
+import * as hb from 'handlebars';
+import {
+    IAction,
+    IActionImport,
+    IEntityContainer,
+    IEntitySet,
+    IEntityType,
+    IFunction,
+    IFunctionImport,
+    IMethod,
+    INavigationProperty,
+    INavigationPropertyBinding,
+    IODataMetadata,
+    IParameter,
+} from './outtypes';
 import { window, TextEdit, Range, commands, ExtensionContext } from 'vscode';
 import { log, Global } from '../extension';
 import * as enumerable from 'linq-es2015';
@@ -6,23 +22,29 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as request from 'request';
 import * as xml2js from 'xml2js';
+import { } from './outtypes';
 import {
     createHeader,
     GeneratorSettings,
+    getEntityTypeInterface,
     getGeneratorSettingsFromDocumentText,
     getMetadata,
+    getModifiedTemplates,
     GetOutputStyleFromUser,
+    getType,
     Modularity,
-    NoHeaderError
+    NoHeaderError,
+    TemplateGeneratorSettings,
 } from '../helper';
 
 const methodhook = "//${unboundMethods}"
 
 export async function createProxy() {
-    let generatorSettings: GeneratorSettings = {
+    let generatorSettings: TemplateGeneratorSettings = {
         modularity: "Ambient",
         requestOptions: {},
-        source: "unknown"
+        source: "unknown",
+        useTemplate: undefined
     };
     try {
         // TODO: Change to quickpick to provide full file list
@@ -45,12 +67,14 @@ export async function createProxy() {
         Global.lastval = maddr;
         generatorSettings.source = maddr;
 
+        const templates: { [key: string]: string } = getModifiedTemplates();
+
         log.appendLine("Getting Metadata from '" + maddr + "'");
         const metadata = await getMetadata(maddr);
 
-        generatorSettings.modularity = await GetOutputStyleFromUser();
+        // generatorSettings.modularity = await GetOutputStyleFromUser();
 
-        generateProxy(metadata, generatorSettings);
+        await generateProxy(metadata, generatorSettings, templates);
 
     } catch (error) {
         window.showErrorMessage("Could not create proxy. See output window for detail.");
@@ -70,12 +94,14 @@ export async function createProxy() {
     }
 }
 
-async function generateProxy(metadata: Edmx, options: GeneratorSettings) {
+async function generateProxy(metadata: Edmx, options: TemplateGeneratorSettings, templates: { [key: string]: string }) {
     // window.showInformationMessage("Select import type (ambient or modular) for generation.");
 
-    let proxystring = await getProxyString(options.source.replace("$metadata", ""), metadata["edmx:DataServices"][0], options.modularity);
-    proxystring = await addActionsAndFunctions(proxystring, metadata["edmx:DataServices"][0]);
-    proxystring = surroundWithNamespace(metadata["edmx:DataServices"][0], options, proxystring);
+    let entityContainer = getProxy(options.source.replace("$metadata", ""), metadata["edmx:DataServices"][0], options);
+    const proxystring = parseTemplate(options, entityContainer, templates);
+
+    // proxystring = await addActionsAndFunctions(proxystring, metadata["edmx:DataServices"][0]);
+    // let proxystring = surroundWithNamespace(metadata["edmx:DataServices"][0], options, proxystring);
 
     log.appendLine("Updating current file.");
     await window.activeTextEditor.edit((editbuilder) => {
@@ -99,7 +125,7 @@ async function generateProxy(metadata: Edmx, options: GeneratorSettings) {
 }
 
 export async function updateProxy() {
-    let header: GeneratorSettings;
+    let header: TemplateGeneratorSettings;
     try {
         header = getGeneratorSettingsFromDocumentText(window.activeTextEditor.document.getText());
 
@@ -112,7 +138,7 @@ export async function updateProxy() {
         log.appendLine("Getting Metadata from '" + header.source + "'");
         const metadata = await getMetadata(header.source, header.requestOptions);
 
-        generateProxy(metadata, header);
+        generateProxy(metadata, header, getModifiedTemplates());
 
     } catch (error) {
         window.showErrorMessage("Could not create proxy. See output window for detail.");
@@ -134,57 +160,12 @@ export async function updateProxy() {
     }
 }
 
-function surroundWithNamespace(metadata: DataService, options: GeneratorSettings, proxystring: string): string {
-    const ecschema = enumerable.asEnumerable(metadata.Schema).FirstOrDefault(x => x.EntityContainer != undefined);
-    if (!ecschema)
-        throw new Error("No entity container found on odata service.");
-
-    let ret = createHeader(options);
-
-    if (options.modularity === "Modular")
-        return ret + proxystring;
-
-    ret += "namespace " + ecschema.$.Namespace + " {\n";
-    ret += proxystring + "\n"
-    ret += "}";
-    return ret;
-}
-
 class EntitySet {
     constructor(public Type: string) {
-        this.Actions = [];
-        this.Functions = [];
     }
 
-    Actions: Method[];
-    Functions: Method[];
-
-    getImplementedClass(metadata: DataService): string {
-        let typedef = (enumerable.asEnumerable(metadata.Schema)
-            .SelectMany(x => {
-                if (!x.EntityType)
-                    return [];
-                return x.EntityType ? x.EntityType : [];
-            }) as Enumerable<EntityType>)
-            .FirstOrDefault(x => x.$.Name == this.Type);
-        let key = typedef.Key[0].PropertyRef[0].$.Name;
-        let keytype = enumerable.asEnumerable<Property>(typedef.Property).FirstOrDefault(x => x.$.Name === key).$.Type;
-
-        let ret = "export class " + this.getTypeName() + " extends " + this.getSubstitutedType() + " {\n";
-        ret += "constructor(name: string, address: string, key: string, additionalHeaders?: odatajs.Header) {";
-        ret += "super(name, address, key, additionalHeaders);\n";
-        ret += "}\n"
-        for (let a of this.Actions)
-            ret += createMethod(a, "POST", keytype) + "\n";
-        for (let f of this.Functions)
-            ret += createMethod(f, "GET", keytype) + "\n";
-        ret += "}\n"
-        return ret;
-    }
-
-    getSubstitutedType(): string {
-        return "EntitySet<" + this.Type + ">";
-    }
+    Actions: Method[] = [];
+    Functions: Method[] = [];
 
     private _getDeltaType(): string {
         let tcomponents = this.Type.split(".");
@@ -195,32 +176,6 @@ class EntitySet {
     getTypeName(): string {
         return this.Type.split(".").pop() + "EntitySet";
     }
-}
-
-type GetOrPost = "GET" | "POST";
-
-async function addActionsAndFunctions(proxystring: string, metadata: DataService): Promise<string> {
-    log.appendLine("Looking for actions and functions")
-    return new Promise<string>((resolve, reject) => {
-        let ecschema = enumerable.asEnumerable(metadata.Schema).FirstOrDefault(x => x.EntityContainer != undefined);
-        if (!ecschema)
-            reject("No entity container found on odata service.");
-
-        let entitysets = getBoundActionsAndFunctions(ecschema);
-
-        for (let typename in entitysets) {
-            proxystring = proxystring.replace(new RegExp(entitysets[typename].getSubstitutedType(), 'g'), entitysets[typename].getTypeName())
-            proxystring += "\n" + entitysets[typename].getImplementedClass(metadata) + "\n";
-        }
-
-        let unboundmethods: string = "";
-        for (let method of getUnboundActionsAndFunctions(ecschema)) {
-            unboundmethods += createMethod(method, method.Type === "Function" ? "GET" : "POST");
-        }
-        proxystring = proxystring.replace(methodhook, unboundmethods)
-
-        resolve(proxystring);
-    });
 }
 
 function getUnboundActionsAndFunctions(ecschema: Schema): Method[] {
@@ -245,72 +200,7 @@ function getUnboundActionsAndFunctions(ecschema: Schema): Method[] {
     return all;
 }
 
-function getBoundActionsAndFunctions(ecschema: Schema): { [type: string]: EntitySet } {
-    let entitySets: { [type: string]: EntitySet } = {};
-
-    if (ecschema.Action) {
-        log.appendLine("Found " + ecschema.Action.length + " OData Actions");
-        for (let a of ecschema.Action) {
-            try {
-                if (!a.$.IsBound)
-                    continue;
-                log.appendLine("Adding bound Action " + a.$.Name);
-
-                // if parameter bindingparameter exists it is a bound action/function
-                let bindingParameter = a.Parameter.find(x => x.$.Name === "bindingParameter");
-
-                if (bindingParameter) {
-                    let curset = getSet(bindingParameter, entitySets);
-                    // get rest of Parameters
-                    a.Parameter = a.Parameter.filter(x => x.$.Name !== "bindingParameter");
-                    a.Namespace = ecschema.$.Namespace;
-                    a.Type = "Action";
-                    curset.Actions.push(a);
-                    entitySets[curset.Type] = curset;
-                } else {
-                    // Method is not a bound action or function (NOT IMPLEMENTED SO FAR)
-                    log.appendLine("Does not support unbound function or action");
-                }
-            } catch (error) {
-                log.appendLine("Error occurred when adding action " + a.$.Name + ": " + error.toString())
-            }
-        }
-    }
-
-    if (ecschema.Function) {
-        log.appendLine("Found " + ecschema.Function.length + " OData Functions");
-        for (let f of ecschema.Function) {
-            try {
-                if (!f.$.IsBound)
-                    continue;
-                log.appendLine("Adding bound Function " + f.$.Name);
-
-                // if parameter bindingparameter exists it is a bound action/function
-                let bindingParameter = f.Parameter.find(x => x.$.Name === "bindingParameter");
-
-                if (bindingParameter) {
-                    let curset = getSet(bindingParameter, entitySets);
-                    // get rest of Parameters
-                    f.Parameter = f.Parameter.filter(x => x.$.Name !== "bindingParameter");
-                    f.IsBoundToCollection = bindingParameter.$.Type.match(/Collection\(.*\)/) != undefined;
-                    f.Namespace = ecschema.$.Namespace;
-                    f.Type = "Function";
-                    curset.Functions.push(f);
-                    entitySets[curset.Type] = curset;
-                } else {
-                    // Method is not a bound action or function (NOT IMPLEMENTED SO FAR)
-                    log.appendLine("Does not support unbound function or action");
-                }
-            } catch (error) {
-                log.appendLine("Error occurred when adding function " + f.$.Name + ": " + error.toString());
-            }
-        }
-    }
-
-    return entitySets;
-}
-
-function getSet(bindingParameter: Parameter, entitySets: { [type: string]: EntitySet }): EntitySet {
+function getSet(bindingParameter: Parameter, metadata: IODataMetadata): IEntitySet {
     let type: string;
     let colmatch = bindingParameter.$.Type.match(/Collection\((.*)\)/);
     if (colmatch) {
@@ -318,62 +208,190 @@ function getSet(bindingParameter: Parameter, entitySets: { [type: string]: Entit
     } else {
         type = bindingParameter.$.Type;
     }
-    // Return new entity set if not found.
+    return metadata.EntityContainer.EntitySets.find(x => x.EntityType.Fullname === bindingParameter.$.Name);
+}
+
+function getProxy(uri: string, metadata: DataService, options: TemplateGeneratorSettings): IODataMetadata {
+    // get the entity container
+    let schema: Schema;
     try {
-        if (!entitySets[type]) throw new Error();
-        return entitySets[type];
+        schema = metadata.Schema[0];
     } catch (error) {
-        return new EntitySet(type);
+        throw new Error("Could not find any entity container on OData Service");
+    }
+
+    const ec = schema.EntityContainer[0];
+    const types = getEdmTypes(schema, options);
+    const ret: IODataMetadata = {
+        Namespace: schema.$.Namespace,
+        EntityContainer: {
+            Name: ec.$.Name,
+            EntitySets: [],
+            Singletons: [],
+            FunctionImports: [],
+            ActionImports: [],
+        },
+        Header: "",
+        ComplexTypes: types.ComplexTypes,
+        EntityTypes: types.EntityTypes,
+        EnumTypes: types.EnumTypes,
+        Functions: [],
+        Actions: [],
+    }
+
+    for (const set of ec.EntitySet) {
+        const eset: IEntitySet = {
+            EntityType: ret.EntityTypes.find(x => x.Fullname === set.$.EntityType),
+            Name: set.$.Name,
+            NavigationPropertyBindings: set.NavigationPropertyBinding ? set.NavigationPropertyBinding.map<INavigationPropertyBinding>((x) => {
+                return {
+                    Path: x.$.Path,
+                    Target: x.$.Target,
+                }
+            }) : [],
+            Actions: [],
+            Functions: [],
+        }
+        eset.Actions = getBoundActionsToCollections(eset, schema);
+        eset.Functions = getBoundFunctionsToCollections(eset, schema);
+        ret.EntityContainer.EntitySets.push(eset);
+    }
+    getBoundMethodsToEntities(ret, schema);
+    getUnboundMethods(ret, schema);
+    return ret;
+}
+
+function getUnboundMethods(meta: IODataMetadata, schema: Schema): void {
+    const ec = schema.EntityContainer[0];
+    if (ec.FunctionImport) {
+        for (const fi of ec.FunctionImport) {
+            const funcImport: IFunctionImport = {
+                EntitySet: meta.EntityContainer.EntitySets.find(x => x.Name === fi.$.EntitySet),
+                Function: getUnboundMethod(schema.Function.find(x => schema.$.Namespace + "." + x.$.Name === fi.$.Function)),
+                IncludeInServiceDocument: fi.$.IncludeInServiceDocument,
+                Name: fi.$.Name,
+            }
+            meta.EntityContainer.FunctionImports.push(funcImport);
+        }
+    }
+    if (ec.ActionImport) {
+        for (const ai of ec.ActionImport) {
+            const actionImport: IActionImport = {
+                EntitySet: meta.EntityContainer.EntitySets.find(x => x.Name === ai.$.EntitySet),
+                Action: getUnboundMethod(schema.Action.find(x => schema.$.Namespace + "." + x.$.Name === ai.$.Action)),
+                Name: ai.$.Name,
+            }
+            meta.EntityContainer.ActionImports.push(actionImport);
+        }
     }
 }
 
-async function getProxyString(uri: string, metadata: DataService, selectString: Modularity): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-        // make the imports based on 
-        let ret = "";
-        if (selectString === "Modular") {
-            ret += "import { ProxyBase, EntitySet} from './odataproxybase';\n";
-            ret += "import * as odatajs from './odatajs';\n\n"
+function getBoundMethodsToEntities(meta: IODataMetadata, schema: Schema): void {
+    if (schema.Action) {
+        for (const action of schema.Action) {
+            for (const type of meta.EntityTypes) {
+                const m = getBoundMethod(action, type);
+                if (m && !m.IsBoundToCollection) {
+                    type.Actions.push(m);
+                }
+            }
         }
-        else
-            ret += "import ProxyBase = odatatools.ProxyBase;\nimport EntitySet = odatatools.EntitySet;\n\n";
-        // get the entity container
-        let ec = enumerable.asEnumerable(metadata.Schema).FirstOrDefault(x => x.EntityContainer != undefined).EntityContainer[0];
-        // Get a dictionary with key names as value and type names as key to fill in later on in the constructor.
-        let keys = (enumerable.asEnumerable(metadata.Schema).SelectMany(x => {
-            if (!x.EntityType)
-                return [];
-            // Set all names of the entity types with full namespace to get the right keys later on if duplicate type names are in different namespaces.
-            for (let t of x.EntityType)
-                t.$.Name = x.$.Namespace + "." + t.$.Name;
-            return x.EntityType ? x.EntityType : [];
-        }) as Enumerable<EntityType>).Select<{ name: string, key: string }>((x) => { return { name: x.$.Name, key: x.Key[0].PropertyRef[0].$.Name }; }).ToDictionary(k => k.name, v => v.key);
-        if (!ec)
-            return reject("Could not find any EntityContainer");
-        ret += "export class " + ec.$.Name + " extends ProxyBase {\n";
-        ret += "constructor(address: string, name?: string, additionalHeaders?: odatajs.Header) {\n"
-        ret += "super(address, name, additionalHeaders);\n";
-        for (let set of ec.EntitySet) {
-            ret += "this." + set.$.Name + " = new EntitySet<" + set.$.EntityType + ">(\"" + set.$.Name + "\", address, \"" + keys.get(set.$.EntityType) + "\", additionalHeaders);\n";
+    }
+    if (schema.Function) {
+        for (const func of schema.Function) {
+            for (const type of meta.EntityTypes) {
+                const m = getBoundMethod(func, type);
+                if (m && !m.IsBoundToCollection) {
+                    type.Functions.push(m);
+                }
+            }
         }
-        ret += "}\n"
-        for (let set of ec.EntitySet) {
-            ret += set.$.Name + ": EntitySet<" + set.$.EntityType + ">;\n";
-        }
-        ret += methodhook + "\n"
-        ret += "}";
-        resolve(ret);
-    });
+    }
 }
 
-function getDeltaName(name: string): string {
-    let nsarr = name.split(".")
-    let tname = nsarr.pop();
-    let ret = "";
-    for (let s of nsarr)
-        ret += s + ".";
+function getBoundActionsToCollections(set: IEntitySet, schema: Schema): IMethod[] {
+    const ret: IMethod[] = [];
+    for (const action of schema.Action) {
+        const m = getBoundMethod(action, set.EntityType);
+        if (m) {
+            if (m.IsBoundToCollection) {
+                ret.push(m);
+            }
+        }
+    }
+    return ret;
+}
 
-    return ret + "Delta" + tname;
+function getBoundFunctionsToCollections(set: IEntitySet, schema: Schema): IMethod[] {
+    const ret: IMethod[] = [];
+    for (const func of schema.Function) {
+        const m = getBoundMethod(func, set.EntityType);
+        if (m) {
+            if (m.IsBoundToCollection) {
+                ret.push(m);
+            }
+        }
+    }
+    return ret;
+}
+
+function getUnboundMethod(method: Method): IMethod {
+    if (!method) {
+        return undefined;
+    }
+    if (method.$.IsBound) {
+        return undefined;
+    }
+    return {
+        IsBoundToCollection: false,
+        Name: method.$.Name,
+        ReturnType: method.ReturnType ? method.ReturnType[0].$.Type : "void",
+        Parameters: getParameters(method.Parameter),
+    }
+}
+
+function getBoundMethod(method: Method, type: IEntityType): IMethod {
+    // check if method is bound
+    if (!method.$.IsBound) {
+        return undefined;
+    }
+    // check if parameters array exists
+    if (!method.Parameter) {
+        return undefined;
+    }
+    // get first parameter, which is the binding parameter and check if it is a collection
+    const collectionMatch = method.Parameter[0].$.Type.match(/^(Collection\()?(.*)\)?$/);
+    if (collectionMatch[2] === type.Fullname) {
+        // map to get copy of array
+        const params = method.Parameter.map(x => x);
+        params.splice(0, 1);
+        const outaction: IMethod = {
+            IsBoundToCollection: collectionMatch[1] === "Collection(" || false,
+            Name: method.$.Name,
+            ReturnType: method.ReturnType ? method.ReturnType[0].$.Type : "void",
+            Parameters: getParameters(params),
+        }
+        return outaction;
+    }
+}
+
+function getParameters(params: Parameter[]): IParameter[] {
+    const ret: IParameter[] = [];
+    if (!params)
+        return [];
+    for (const param of params) {
+        ret.push({
+            Name: param.$.Name,
+            Nullable: param.$.Nullable,
+            Unicode: param.$.Unicode,
+            Type: param.$.Type,
+            MaxLength: param.$.MaxLength,
+            Precision: param.$.Precision,
+            Scale: param.$.Scale,
+            SRID: param.$.SRID,
+        })
+    }
+    return ret;
 }
 
 function _getParameters(parameters: Parameter[]): string {
@@ -402,29 +420,6 @@ function _getParameterJSON(parameters: Parameter[]): string {
     return ret + "}";
 }
 
-function createMethod(method: Method, requesttype: GetOrPost, key?: string): string {
-    // TODO: get key type
-    let ret = method.$.Name + "(" + (method.$.IsBound ? (method.IsBoundToCollection ? "" : "key: " + key + (method.Parameter.length > 0 ? ", " : "")) : "") + _getParameters(method.Parameter) + "): " + "Promise" + "<" + _getReturnType(method.ReturnType) + ">{\n";
-    ret += "return new Promise<" + _getReturnType(method.ReturnType) + ">((resolve, reject) => {\n";
-
-    ret += "let request: odatajs.Request = {\n";
-    ret += "headers: this.Headers,\n";
-    ret += "method: \"" + requesttype + "\",\n";
-    ret += _getRequestUri(method)
-    if (method.Type === "Action" && method.Parameter && method.Parameter.length > 0)
-        ret += "data: " + _getParameterJSON(method.Parameter) + "\n";
-    ret += "}\n";
-    ret += "odatajs.oData.request(request, (data, response) => {\n";
-    ret += "resolve(" + (method.ReturnType ? "data.value" : "") + ");\n";
-    ret += "}, (error) => {\n";
-    ret += "console.error(error.name + \" \" + error.message + \" | \" + (error.response | error.response.statusText) + \":\" + (error.response | error.response.body));\n";
-    ret += "reject(error);\n";
-    ret += "});\n";
-    ret += "});\n";
-    ret += "}\n";
-    return ret;
-}
-
 function _getRequestUri(method: Method): string {
     let uri = "requestUri: this.Address  + \""
     if (method.Type === "Function") {
@@ -443,4 +438,21 @@ function _getRequestParameters(parameters: Parameter[]) {
     }
     ret = ret.substr(0, ret.length - 2);
     return ret + ")";
+}
+
+function parseTemplate(generatorSettings: TemplateGeneratorSettings, proxy: IODataMetadata, templates: { [key: string]: string }): string {
+    if (!generatorSettings.useTemplate) {
+        generatorSettings.useTemplate = Object.keys(templates)[1];
+    }
+
+    log.appendLine("Produced Data:");
+    log.appendLine(JSON.stringify(proxy));
+
+    const template = hb.compile(templates[generatorSettings.useTemplate], {
+        noEscape: true
+    });
+
+    // Update header to set currently used template
+    proxy.Header = createHeader(generatorSettings);
+    return template(proxy);
 }
