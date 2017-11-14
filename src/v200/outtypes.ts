@@ -1,4 +1,4 @@
-import { IODataMetadata } from './outtypes';
+import { IODataSchema } from './outtypes';
 export interface IInterfaces {
     ComplexTypes: ComplexType[];
     EntityTypes: EntityType[];
@@ -8,6 +8,7 @@ export interface IInterfaces {
 export interface IMethod {
     Name: string;
     IsBoundToCollection: boolean;
+    IsBound: boolean;
     ReturnType: string
 }
 
@@ -21,6 +22,7 @@ export interface IEntityType extends IComplexType {
 export interface IComplexType {
     Name: string;
     Fullname: string;
+    Namespace: string;
     Properties: IProperty[];
     BaseType: string;
     OpenType: boolean;
@@ -46,20 +48,22 @@ export interface IEnum {
 }
 
 export interface INavigationProperty extends IProperty {
-    
+
 }
 
-export interface IODataMetadata extends IODataEntities {
-    EntityContainer: IEntityContainer;
+export interface IODataSchema extends IODataEntities {
+    Namespace: string;
+    EntityContainer?: IEntityContainer;
     Functions: IFunction[];
     Actions: IAction[];
 }
 
-export interface IAction extends IMethod {}
-export interface IFunction extends IMethod {}
+export interface IAction extends IMethod { }
+export interface IFunction extends IMethod { }
 export interface IMethod {
     Parameters: IParameter[];
     ReturnType: string | undefined;
+    FullName: string;
 }
 
 export interface IParameter {
@@ -75,7 +79,6 @@ export interface IParameter {
 
 export interface IODataEntities {
     Header: string;
-    Namespace: string;
     EntityTypes: IEntityType[];
     ComplexTypes: IComplexType[];
     EnumTypes: IEnum[];
@@ -84,7 +87,7 @@ export interface IODataEntities {
 
 /// Proxy generator
 
-export interface IEntityContainer {
+export interface IEntityContainer extends ISchemaChild {
     Name: string;
     EntitySets: IEntitySet[];
     Singletons: ISingleton[];
@@ -92,12 +95,17 @@ export interface IEntityContainer {
     ActionImports: IActionImport[];
 }
 
-export interface IEntitySet {
+export interface IEntitySet extends ISchemaChild {
     Name: string;
     EntityType: IEntityType;
     NavigationPropertyBindings: INavigationPropertyBinding[];
     Actions: IMethod[];
     Functions: IMethod[];
+}
+
+export interface ISchemaChild {
+    Namespace: string;
+    FullName: string;
 }
 
 export interface IFunctionImport extends IMethodImport {

@@ -97,7 +97,6 @@ async function receiveInterfaces(options: GeneratorSettings): Promise<IODataEnti
         return {
             Header: createHeader(options),
             EntityTypes: [],
-            Namespace: "",
             ComplexTypes: [],
             EnumTypes: [],
         }
@@ -137,13 +136,11 @@ type Partial<T> = {[P in keyof T]?: T[P]}
 export function getEdmTypes(schema: Schema, generatorSettings: GeneratorSettings): IODataEntities {
     let metadata: IODataEntities = {
         Header: "",
-        Namespace: "",
         EntityTypes: [],
         ComplexTypes: [],
         EnumTypes: [],
     };
 
-    metadata.Namespace = schema.$.Namespace;
     if (schema.EntityType) {
         for (let type of schema.EntityType) {
             const p = getEntityTypeInterface(type, schema);
@@ -153,6 +150,7 @@ export function getEdmTypes(schema: Schema, generatorSettings: GeneratorSettings
     if (schema.ComplexType) {
         for (let type of schema.ComplexType) {
             const p: IComplexType = {
+                Namespace: schema.$.Namespace,
                 Fullname: schema.$.Namespace + "." + type.$.Name,
                 Name: type.$.Name,
                 Properties: [],

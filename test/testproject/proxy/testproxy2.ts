@@ -1,3 +1,23 @@
+/**************************************************************************
+Created by odatatools: https://marketplace.visualstudio.com/items?itemName=apazureck.odatatools
+Use Command 'odata: xyUpdate to refresh data while this file is active in the editor.
+Creation Time: Tue Nov 14 2017 13:44:28 GMT+0100 (Mitteleuropäische Zeit)
+DO NOT DELETE THIS IN ORDER TO UPDATE YOUR SERVICE
+#ODATATOOLSOPTIONS
+{
+	"modularity": "Ambient",
+	"requestOptions": {},
+	"source": "http://localhost:2200/moviedb/$metadata",
+	"useTemplate": "proxy.ot",
+	"testTemplate": true
+}
+#ODATATOOLSOPTIONSEND
+**************************************************************************/
+
+
+
+// Base classes ##########################################################
+// Leave this in order to use the base classes
 namespace odatatools {
     enum Method {
         GET, POST, PUT, PATCH, DELETE
@@ -251,7 +271,7 @@ namespace odatatools {
                 // if id starts with $ it is additional odata parameters
 
                 odatajs.oData.request(request, (data, response) => {
-                    if(id) {
+                    if (id) {
                         resolve(data);
                     } else {
                         resolve(data.value);
@@ -410,4 +430,221 @@ declare namespace odatajs {
 
     interface Header { [name: string]: string }
 }
+
+type JSDate = Date;
+
+declare namespace Edm {
+    export type Duration = string;
+    export type Binary = string;
+    export type Boolean = boolean;
+    export type Byte = number;
+    export type Date = JSDate;
+    export type DateTimeOffset = JSDate;
+    export type Decimal = number;
+    export type Double = number;
+    export type Guid = string;
+    export type Int16 = number;
+    export type Int32 = number;
+    export type Int64 = number;
+    export type SByte = number;
+    export type Single = number;
+    export type String = string;
+    export type TimeOfDay = string;
+    export type Stream = string;
+    export type GeographyPoint = any;
+}
+
 console.log("Loaded odataproxybase");
+
+// ###################################### Implementation ################
+
+
+namespace ODataTestService.Models {
+
+    export interface Movie {
+        Id: Edm.Int32;
+        LenderId: Edm.Int32;
+        Avaiable: Edm.Boolean;
+        Rating: Edm.Single;
+        Genre: Edm.String;
+        Reason: Edm.String;
+        Lender?: ODataTestService.Models.Customer;
+
+    }
+    export interface Customer {
+        Id: Edm.Int32;
+        Name: Edm.String;
+        Age: Edm.Int32;
+        Gender: ODataTestService.Models.Gender;
+        Balance: Edm.Double;
+        AddressId: Edm.Int32;
+        Address?: ODataTestService.Models.Address;
+        Borrowed?: ODataTestService.Models.Movie[];
+
+    }
+    export interface Address {
+        Id: Edm.Int32;
+        Street: Edm.String;
+        Zip: Edm.String;
+        Inhabitants?: ODataTestService.Models.Customer[];
+
+    }
+    // Enum Values: Male = 0, Female = 1, Other = 2
+    export type Gender = "Male" | "Female" | "Other";
+
+    //EntitySets
+}
+
+
+namespace MovieService {
+
+
+    export class MovieContainer extends odatatools.ProxyBase {
+        constructor(address: string, name?: string, additionalHeaders?: odatajs.Header) {
+            super(address, name, additionalHeaders);
+            this.Movies = new odatatools.EntitySet<ODataTestService.Models.Movie>("Movies", address, "Id", additionalHeaders);
+            this.Customers = new odatatools.EntitySet<ODataTestService.Models.Customer>("Customers", address, "Id", additionalHeaders);
+            this.Addresses = new odatatools.EntitySet<ODataTestService.Models.Address>("Addresses", address, "Id", additionalHeaders);
+        }
+        Movies: odatatools.EntitySet<Movie>;
+        Customers: odatatools.EntitySet<Customer>;
+        Addresses: odatatools.EntitySet<Address>;
+
+        // Unbound Functions
+
+        CurrentTime(): Promise<Edm.DateTimeOffset> {
+            return new Promise<Edm.DateTimeOffset>((reject, resolve) => {
+                let request: odatajs.Request = {
+                    headers: this.Headers,
+                    method: "GET",
+                    requestUri: this.Address + "/.CurrentTime()",
+                }
+                odatajs.oData.request(request, (data, response) => {
+                    resolve(data.value || data);
+                }, (error) => {
+                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                    reject(error);
+                });
+            });
+        }
+        GetSomething(value: Edm.Int32): Promise<Edm.Int32> {
+            return new Promise<Edm.Int32>((reject, resolve) => {
+                let request: odatajs.Request = {
+                    headers: this.Headers,
+                    method: "GET",
+                    requestUri: this.Address + "/.GetSomething(value=" + value + ")",
+                }
+                odatajs.oData.request(request, (data, response) => {
+                    resolve(data.value || data);
+                }, (error) => {
+                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                    reject(error);
+                });
+            });
+        }
+
+        //Unbound Actions
+
+        SetSomething(value: Edm.Int32): Promise<Edm.Int32> {
+            return new Promise<Edm.Int32>((reject, resolve) => {
+                let request: odatajs.Request = {
+                    headers: this.Headers,
+                    method: "POST",
+                    requestUri: this.Address + "/.SetSomething()",
+                    data: {
+                        value: value,
+                    },
+                }
+                odatajs.oData.request(request, (data, response) => {
+                    resolve(data.value || data);
+                }, (error) => {
+                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                    reject(error);
+                });
+            });
+        }
+    }
+    //EntitySets
+    export class MoviesEntitySet extends odatatools.EntitySet<Movie> {
+        constructor(name: string, address: string, key: string, additionalHeaders?: odatajs.Header) {
+            super(name, address, key, additionalHeaders);
+        }
+
+        // Bound to entity set Actions
+
+        // Bound to entity set Functions
+
+        // Bound to entity Actions
+
+        Rate(bindingParameter: ODataTestService.Models.Movie, rating: Edm.Single, reason: Edm.String): Promise<Edm.String> {
+            return new Promise<Edm.String>((reject, resolve) => {
+                let request: odatajs.Request = {
+                    headers: this.Headers,
+                    method: "POST",
+                    requestUri: this.Address + "(" + bindingParameter + ")/.Rate()",
+                    data: {
+                        rating: rating,
+                        reason: reason,
+                    },
+                }
+                odatajs.oData.request(request, (data, response) => {
+                    resolve(data.value || data);
+                }, (error) => {
+                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                    reject(error);
+                });
+            });
+        }
+        ResetRating(bindingParameter: ODataTestService.Models.Movie): Promise<void> {
+            return new Promise<void>((reject, resolve) => {
+                let request: odatajs.Request = {
+                    headers: this.Headers,
+                    method: "POST",
+                    requestUri: this.Address + "(" + bindingParameter + ")/.ResetRating()",
+                    data: {
+                    },
+                }
+                odatajs.oData.request(request, (data, response) => {
+                    resolve(data.value || data);
+                }, (error) => {
+                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                    reject(error);
+                });
+            });
+        }
+
+        // Bound to entity Functions
+
+    }
+    export class CustomersEntitySet extends odatatools.EntitySet<Customer> {
+        constructor(name: string, address: string, key: string, additionalHeaders?: odatajs.Header) {
+            super(name, address, key, additionalHeaders);
+        }
+
+        // Bound to entity set Actions
+
+        // Bound to entity set Functions
+
+        // Bound to entity Actions
+
+
+        // Bound to entity Functions
+
+    }
+    export class AddressesEntitySet extends odatatools.EntitySet<Address> {
+        constructor(name: string, address: string, key: string, additionalHeaders?: odatajs.Header) {
+            super(name, address, key, additionalHeaders);
+        }
+
+        // Bound to entity set Actions
+
+        // Bound to entity set Functions
+
+        // Bound to entity Actions
+
+
+        // Bound to entity Functions
+
+    }
+}
+

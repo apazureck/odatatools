@@ -1,130 +1,6 @@
 {{Header}}
 
-namespace {{Namespace}} {
-
-    export class {{EntityContainer.Name}} extends odatatools.ProxyBase {
-        constructor(address: string, name?: string, additionalHeaders?: odatajs.Header) {
-            super(address, name, additionalHeaders);
-            {{#each EntityContainer.EntitySets}}
-            this.{{this.Name}} = new odatatools.EntitySet<{{this.EntityType.Name}}>("{{this.Name}}", address, "{{this.EntityType.Key}}", additionalHeaders);
-            {{/each}}
-        }
-        {{#each EntityContainer.EntitySets}}
-        {{this.Name}}: odatatools.EntitySet<{{this.EntityType.Name}}>;
-        {{/each}}
-        
-        // Unbound Functions
-
-        {{#each EntityContainer.FunctionImports}}
-        {{this.Name}}({{#each this.Function.Parameters}}{{this.Name}}: {{this.Type}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.Function.ReturnType}}> {
-            return new Promise<{{this.Function.ReturnType}}>((reject, resolve) => {
-                let request: odatajs.Request = {
-                    headers: this.Headers,
-                    method: "GET",
-                    requestUri: this.Address + "/{{@root.Namespace}}.{{this.Function.Name}}({{#each this.Function.Parameters}}{{this.Name}}="+{{this.Name}}+"{{#unless @last}},{{/unless}}{{/each}})",
-                }
-                odatajs.oData.request(request, (data, response) => {
-                    resolve(data.value || data);
-                }, (error) => {
-                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                    reject(error);
-                });
-            });
-        }
-        {{/each}}
-
-        //Unbound Actions
-
-        {{#each EntityContainer.ActionImports}}
-        {{this.Name}}({{#each this.Action.Parameters}}{{this.Name}}: {{this.Type}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.Action.ReturnType}}> {
-            return new Promise<{{this.Action.ReturnType}}>((reject, resolve) => {
-                let request: odatajs.Request = {
-                    headers: this.Headers,
-                    method: "POST",
-                    requestUri: this.Address + "/{{@root.Namespace}}.{{this.Action.Name}}()",
-                    data: {
-                        {{#each this.Action.Parameters}}
-                        {{this.Name}}: {{this.Name}};
-                        {{/each}}
-                    },
-                }
-                odatajs.oData.request(request, (data, response) => {
-                    resolve(data.value || data);
-                }, (error) => {
-                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                    reject(error);
-                });
-            });
-        }
-        {{/each}}
-        
-    }
-    export class MovieEntitySet extends EntitySet<ODataTestService.Models.Movie> {
-        constructor(name: string, address: string, key: string, additionalHeaders?: odatajs.Header) {
-            super(name, address, key, additionalHeaders);
-        }
-        Rate(key: Edm.Int32, rating: Edm.Single, reason: Edm.String): Promise<Edm.String> {
-            return new Promise<Edm.String>((reject, resolve) => {
-                let request: odatajs.Request = {
-                    headers: this.Headers,
-                    method: "POST",
-                    requestUri: this.Address + "(" + key + ")/MovieService.Rate",
-                    data: {
-                        rating: rating,
-                        reason: reason
-                    }
-                }
-                odatajs.oData.request(request, (data, response) => {
-                    resolve(data.value);
-                }, (error) => {
-                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                    reject(error);
-                });
-            });
-        }
-
-        ResetRating(key: Edm.Int32): Promise<void> {
-            return new Promise<void>((reject, resolve) => {
-                let request: odatajs.Request = {
-                    headers: this.Headers,
-                    method: "POST",
-                    requestUri: this.Address + "(" + key + ")/MovieService.ResetRating",
-                }
-                odatajs.oData.request(request, (data, response) => {
-                    resolve();
-                }, (error) => {
-                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                    reject(error);
-                });
-            });
-        }
-
-        GetBestMovie(Genre: Edm.String): Promise<ODataTestService.Models.Movie> {
-            return new Promise<ODataTestService.Models.Movie>((reject, resolve) => {
-                let request: odatajs.Request = {
-                    headers: this.Headers,
-                    method: "GET",
-                    requestUri: this.Address + "/MovieService.GetBestMovie(Genre=" + Genre + ")",
-                }
-                odatajs.oData.request(request, (data, response) => {
-                    resolve(data.value);
-                }, (error) => {
-                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                    reject(error);
-                });
-            });
-        }
-
-    }
-
-
-}
-
-
-// Base classes ##############################################################################################################
-
-
-
+// Base classes ##########################################################
 // Leave this in order to use the base classes
 namespace odatatools {
     enum Method {
@@ -539,4 +415,176 @@ declare namespace odatajs {
     interface Header { [name: string]: string }
 }
 
+type JSDate = Date;
+
+declare namespace Edm {
+    export type Duration = string;
+    export type Binary = string;
+    export type Boolean = boolean;
+    export type Byte = number;
+    export type Date = JSDate;
+    export type DateTimeOffset = JSDate;
+    export type Decimal = number;
+    export type Double = number;
+    export type Guid = string;
+    export type Int16 = number;
+    export type Int32 = number;
+    export type Int64 = number;
+    export type SByte = number;
+    export type Single = number;
+    export type String = string;
+    export type TimeOfDay = string;
+    export type Stream = string;
+    export type GeographyPoint = any;
+}
+
 console.log("Loaded odataproxybase");
+
+// ###################################### Implementation ################
+
+{{#each schemas}}
+
+namespace {{this.Namespace}} {
+
+    {{#each EntityTypes}}
+    export interface {{this.Name}} {
+        {{#each this.Properties}}
+        {{this.Name}}: {{this.Type}};
+        {{/each}}
+        {{#each this.NavigationProperties}}
+        {{this.Name}}{{#if Nullable}}?{{/if}}: {{this.Type}};
+        {{/each}}
+        {{#if this.OpenType}}[x: string]: any;{{/if}}
+    }
+    {{/each}}
+    {{#each ComplexTypes}}
+    export interface {{this.Name}} {
+        {{#each this.Properties}}
+        {{this.Name}}: {{this.Type}};
+        {{/each}}
+        {{#if this.OpenType}}[x: string]: any;{{/if}}
+    }
+    {{/each}}
+    {{#each EnumTypes}}
+    // Enum Values: {{#each this.Members}}{{this.Key}} = {{this.Value}}{{#unless @last}}, {{/unless}}{{/each}}
+    export type {{this.Name}} = {{#each this.Members}}"{{this.Key}}"{{#unless @last}} | {{/unless}}{{/each}};
+    {{/each}}
+
+    {{#if this.EntityContainer}}
+    export class {{this.EntityContainer.Name}} extends odatatools.ProxyBase {
+        constructor(address: string, name?: string, additionalHeaders?: odatajs.Header) {
+            super(address, name, additionalHeaders);
+            {{#each this.EntityContainer.EntitySets}}
+            this.{{this.Name}} = new odatatools.EntitySet<{{this.EntityType.Fullname}}>("{{this.Name}}", address, "{{this.EntityType.Key}}", additionalHeaders);
+            {{/each}}
+        }
+        {{#each this.EntityContainer.EntitySets}}
+        {{this.Name}}: odatatools.EntitySet<{{this.EntityType.Name}}>;
+        {{/each}}
+        
+        // Unbound Functions
+
+        {{#each this.EntityContainer.FunctionImports}}
+        {{this.Name}}({{#each this.Function.Parameters}}{{this.Name}}: {{this.Type}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.Function.ReturnType}}> {
+            return new Promise<{{this.Function.ReturnType}}>((reject, resolve) => {
+                let request: odatajs.Request = {
+                    headers: this.Headers,
+                    method: "GET",
+                    requestUri: this.Address + "/{{@root.Namespace}}.{{this.Function.Name}}({{~#each this.Function.Parameters}}{{this.Name}}="+{{this.Name}}+"{{#unless @last}},{{/unless}}{{~/each}})",
+                }
+                odatajs.oData.request(request, (data, response) => {
+                    resolve(data.value || data);
+                }, (error) => {
+                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                    reject(error);
+                });
+            });
+        }
+        {{/each}}
+
+        //Unbound Actions
+
+        {{#each this.EntityContainer.ActionImports}}
+        {{this.Name}}({{#each this.Action.Parameters}}{{this.Name}}: {{this.Type}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.Action.ReturnType}}> {
+            return new Promise<{{this.Action.ReturnType}}>((reject, resolve) => {
+                let request: odatajs.Request = {
+                    headers: this.Headers,
+                    method: "POST",
+                    requestUri: this.Address + "/{{@root.Namespace}}.{{this.Action.Name}}()",
+                    data: {
+                        {{#each this.Action.Parameters}}
+                        {{this.Name}}: {{this.Name}},
+                        {{/each}}
+                    },
+                }
+                odatajs.oData.request(request, (data, response) => {
+                    resolve(data.value || data);
+                }, (error) => {
+                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                    reject(error);
+                });
+            });
+        }
+        {{/each}}
+    }
+    {{/if}}
+    //EntitySets
+    {{#each this.EntityContainer.EntitySets}}
+    export class {{this.Name}}EntitySet extends odatatools.EntitySet<{{this.EntityType.Name}}> {
+        constructor(name: string, address: string, key: string, additionalHeaders?: odatajs.Header) {
+            super(name, address, key, additionalHeaders);
+        }
+
+        // Bound to entity set Actions
+
+        // Bound to entity set Functions
+
+        // Bound to entity Actions
+
+        {{#each this.EntityType.Actions}}
+        {{this.Name}}({{#each this.Parameters}}{{this.Name}}: {{this.Type}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.ReturnType}}> {
+            return new Promise<{{this.ReturnType}}>((reject, resolve) => {
+                let request: odatajs.Request = {
+                    headers: this.Headers,
+                    method: "POST",
+                    requestUri: this.Address + "(" + {{this.Parameters.0.Name}} + ")/{{@root.Namespace}}.{{this.Name}}()",
+                    data: {
+                        {{~#each this.Parameters}}{{~#unless @first}}
+                        {{this.Name}}: {{this.Name}},
+                        {{~/unless}}{{~/each}}
+                    },
+                }
+                odatajs.oData.request(request, (data, response) => {
+                    resolve(data.value || data);
+                }, (error) => {
+                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                    reject(error);
+                });
+            });
+        }
+        {{/each}}
+
+        // Bound to entity Functions
+
+        {{#each this.EntityType.Functions}}
+        {{this.Name}}({{#each this.Parameters}}{{this.Name}}: {{this.Type}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.ReturnType}}> {
+            return new Promise<{{this.ReturnType}}>((reject, resolve) => {
+                let request: odatajs.Request = {
+                    headers: this.Headers,
+                    method: "GET",
+                    requestUri: this.Address + "(" + {{this.Parameters.0.Name}} + ")/{{@root.Namespace}}.{{this.Name}}({{~#each this.Parameters}}{{#unless @first}}{{this.Name}}="+{{this.Name}}+"{{#unless @last}},{{/unless}}{{/unless}}{{~/each}})",
+                }
+                odatajs.oData.request(request, (data, response) => {
+                    resolve(data.value || data);
+                }, (error) => {
+                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                    reject(error);
+                });
+            });
+        }
+        {{/each}}
+    }
+    {{/each}}
+}
+
+{{/each}}
