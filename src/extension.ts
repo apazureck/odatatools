@@ -122,7 +122,7 @@ function registerV40Commands(): void {
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v040Crawler.getInterfaces));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v040Crawler.updateInterfaces));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v040ProxyGenerator.createProxy));
-    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateProxy', () => vscode.window.showErrorMessage("Update proxy is not available for V4.0 legacy support")));
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateProxy', () => vscode.window.showErrorMessage("Update proxy is not available for V0.4 legacy support")));
 }
 
 function registerV100Commands(): void {
@@ -132,8 +132,8 @@ function registerV100Commands(): void {
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateProxy', v100ProxyGenerator.updateProxy));
 }
 function registerV200Commands(): void {
-    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v200Crawler.getInterfaces));
-    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v200Crawler.updateInterfaces));
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', () => vscode.window.showErrorMessage("Get Interfaces is deprecated. Use Get Proxy instead.")));
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', () => vscode.window.showErrorMessage("Update Interfaces is deprecated. Use Update Proxy instead.")));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v200ProxyGenerator.createProxy));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateProxy', v200ProxyGenerator.updateProxy));
 }

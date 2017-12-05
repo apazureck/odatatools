@@ -190,17 +190,6 @@ function getUnboundActionsAndFunctions(ecschema: Schema): Method[] {
     return all;
 }
 
-function getSet(bindingParameter: Parameter, metadata: IODataSchema): IEntitySet {
-    let type: string;
-    let colmatch = bindingParameter.$.Type.match(/Collection\((.*)\)/);
-    if (colmatch) {
-        type = colmatch[1];
-    } else {
-        type = bindingParameter.$.Type;
-    }
-    return metadata.EntityContainer.EntitySets.find(x => x.EntityType.Fullname === bindingParameter.$.Name);
-}
-
 interface ITypeStorage {
     complex: IComplexType[];
     entity: IEntityType[];
@@ -537,7 +526,7 @@ function _getRequestParameters(parameters: Parameter[]) {
 
 function parseTemplate(generatorSettings: TemplateGeneratorSettings, schemas: IODataSchema[], templates: { [key: string]: string }): string {
     if (!generatorSettings.useTemplate) {
-        generatorSettings.useTemplate = Object.keys(templates)[1];
+        generatorSettings.useTemplate = Object.keys(templates)[0];
     }
 
     const proxy = {

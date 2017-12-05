@@ -20,51 +20,7 @@ import * as hb from 'handlebars';
 import { IODataEntities, IEntityType, IComplexType, IEnum } from './outtypes'
 
 export async function getInterfaces() {
-    try {
-        let input = await window.showInputBox({
-            placeHolder: "http://my.odata.service/service.svc",
-            value: Global.recentlyUsedAddresses.pop(),
-            prompt: "Please enter uri of your oData service.",
-            ignoreFocusOut: true
-        });
-
-        if (!input)
-            return;
-
-        input = input.replace("$metadata", "");
-        if (input.endsWith("/"))
-            input = input.substr(0, input.length - 1);
-
-        input = input + "/$metadata";
-
-        Global.lastval = input;
-
-        let generatorSettings: TemplateGeneratorSettings = {
-            source: input,
-            modularity: undefined,
-            requestOptions: {},
-            useTemplate: undefined
-        }
-
-        const templates: { [key: string]: string } = getModifiedTemplates();
-
-        const interfaces = await receiveInterfaces(generatorSettings);
-        const interfacestring = parseTemplate(generatorSettings, interfaces, templates);
-
-        log.appendLine("Putting generated code to the current Editor window.");
-        if (!window.activeTextEditor)
-            return window.showErrorMessage("No active window selected.");
-
-        window.activeTextEditor.edit((editBuilder) => {
-            editBuilder.replace(window.activeTextEditor.selection, interfacestring);
-        }).then((value) => {
-            commands.executeCommand("editor.action.formatDocument");
-        });
-    } catch (error) {
-        window.showErrorMessage("Could not create interfaces. See output window for detail.");
-        log.appendLine("Creating proxy returned following error:");
-        log.appendLine(JSON.stringify(error));
-    }
+    window.showErrorMessage("Deprecated in Version 2.0. Please use the Proxy functions to get metadata from your OData Service");
 }
 
 function parseTemplate(generatorSettings: TemplateGeneratorSettings, interfaces: IODataEntities, templates: { [key: string]: string }): string {
@@ -104,31 +60,7 @@ async function receiveInterfaces(options: GeneratorSettings): Promise<IODataEnti
 }
 
 export async function updateInterfaces() {
-    try {
-        log.appendLine("Looking for header.");
-        let generatorSettings = getGeneratorSettingsFromDocumentText(window.activeTextEditor.document.getText()) as TemplateGeneratorSettings;
-        if (!generatorSettings)
-            return window.showErrorMessage("Did not find odata source in document: '" + window.activeTextEditor.document.fileName + "'");
-
-        let interfaces = await receiveInterfaces(generatorSettings);
-
-        const templates: { [key: string]: string } = getModifiedTemplates();
-
-        log.appendLine("Updating current file.");
-        window.activeTextEditor.edit((editbuilder) => {
-            editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), parseTemplate(generatorSettings, interfaces, templates))
-        }).then((value) => {
-            log.appendLine("Successfully pasted data. Formatting Document.")
-            commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
-        });
-    } catch (error) {
-        window.showErrorMessage("Could not update interfaces. See output window for detail.");
-        log.appendLine("Creating proxy returned following error:");
-        if (error.originalStack)
-            log.appendLine(error.originalStack);
-        else
-            log.appendLine(error.toString());
-    }
+    window.showErrorMessage("Deprecated in Version 2.0. Please use the Proxy functions to get metadata from your OData Service");
 }
 
 type Partial<T> = {[P in keyof T]?: T[P]}

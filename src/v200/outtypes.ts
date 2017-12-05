@@ -13,7 +13,7 @@ export interface IMethod {
 }
 
 export interface IEntityType extends IComplexType {
-    Key: string;
+    Key: IProperty;
     NavigationProperties: INavigationProperty[];
     Actions: IMethod[];
     Functions: IMethod[];

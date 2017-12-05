@@ -101,7 +101,7 @@ export function getModifiedTemplates(): { [x: string]: string } {
 
 export function getEntityTypeInterface(type: EntityType, schema: Schema): IEntityType {
     const p: Partial<IEntityType> = {
-        Key: type.Key ? type.Key[0].PropertyRef[0].$.Name : undefined,
+        // Key: type.Key ? type.Key[0].PropertyRef[0].$.Name : undefined,
         Name: type.$.Name,
         Fullname: schema.$.Namespace + "." + type.$.Name,
         Properties: [],
@@ -118,6 +118,9 @@ export function getEntityTypeInterface(type: EntityType, schema: Schema): IEntit
                 Type: getType(prop.$.Type),
                 Nullable: prop.$.Nullable || true,
             });
+    if(type.Key) {
+        p.Key = p.Properties[0];
+    }
     if (type.NavigationProperty)
         for (const prop of type.NavigationProperty) {
             let navprop = prop as Property;

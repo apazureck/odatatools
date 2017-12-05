@@ -21,14 +21,18 @@ namespace ODataTestService.Controllers
         [ODataRoute("SetSomething")]
         public IHttpActionResult SetSomething(ODataActionParameters parameters)
         {
-            return Ok(parameters["value"]);
+            var l = new List<int>();
+            l.Add((int)parameters["value"]);
+            return Ok(SingleResult.Create(l.AsQueryable()));
         }
 
         [HttpGet]
         [ODataRoute("GetSomething(value={value})")]
         public IHttpActionResult GetSomething([FromODataUri]int value)
         {
-            return Ok(value);
+            var l = new List<int>();
+            l.Add(value);
+            return Ok(SingleResult.Create(l.AsQueryable()));
         }
     }
 }
