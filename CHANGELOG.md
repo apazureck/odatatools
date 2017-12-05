@@ -4,6 +4,12 @@ All notable changes to the "odatatools" will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.1.0] 2017-12-05
+
+### Added
+
+* Version 2.0 in Insider mode supporting customizable templates
+
 ## [1.0.4] 2017-06-06
 
 ### Fixed

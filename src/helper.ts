@@ -87,14 +87,22 @@ export function getModifiedTemplates(): { [x: string]: string } {
     let ret: { [x: string]: string } = {};
     try {
         files = fs.readdirSync(path.join(rootpath, ".vscode", "odatatools", "templates"));
+        if (files.length == 0)
+            throw new Error("No templates found");
     } catch (error) {
-        fs.mkdirSync(path.join(rootpath, ".vscode", "odatatools"));
-        fs.mkdirSync(path.join(rootpath, ".vscode", "odatatools", "templates"));
-        fse.copySync(path.join(Global.context.extensionPath, "dist", "templates"), path.join(rootpath, ".vscode", "odatatools", "templates"), { recursive: false });
+        try {
+            fs.mkdirSync(path.join(rootpath, ".vscode", "odatatools"));
+            fs.mkdirSync(path.join(rootpath, ".vscode", "odatatools", "templates"));
+        } catch (error) {
+
+        }
+        fse.copySync(path.join(Global.context.extensionPath, "dist", "templates", "promise"), path.join(rootpath, ".vscode", "odatatools", "templates"), { recursive: false });
         files = fs.readdirSync(path.join(rootpath, ".vscode", "odatatools", "templates"));
     }
     for (const file of files) {
-        ret[file] = fs.readFileSync(path.join(rootpath, ".vscode", "odatatools", "templates", file), 'utf-8');
+        // Get all OData Templates
+        if(path.extname(file) === ".ot")
+            ret[file] = fs.readFileSync(path.join(rootpath, ".vscode", "odatatools", "templates", file), 'utf-8');
     }
     return ret;
 }
@@ -118,7 +126,7 @@ export function getEntityTypeInterface(type: EntityType, schema: Schema): IEntit
                 Type: getType(prop.$.Type),
                 Nullable: prop.$.Nullable || true,
             });
-    if(type.Key) {
+    if (type.Key) {
         p.Key = p.Properties[0];
     }
     if (type.NavigationProperty)

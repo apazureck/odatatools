@@ -18,7 +18,7 @@ import {
     IODataSchema,
     IParameter,
 } from './outtypes';
-import { window, TextEdit, Range, commands, ExtensionContext } from 'vscode';
+import { window, TextEdit, Range, commands, ExtensionContext, workspace } from 'vscode';
 import { log, Global } from '../extension';
 import * as enumerable from 'linq-es2015';
 import { Enumerable } from "linq-es2015";
