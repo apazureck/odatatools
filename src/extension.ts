@@ -14,19 +14,19 @@ import * as path from 'path';
 
 
 if (!('toJSON' in Error.prototype))
-Object.defineProperty(Error.prototype, 'toJSON', {
-    value: function () {
-        var alt = {};
+    Object.defineProperty(Error.prototype, 'toJSON', {
+        value: function () {
+            var alt = {};
 
-        Object.getOwnPropertyNames(this).forEach(function (key) {
-            alt[key] = this[key];
-        }, this);
+            Object.getOwnPropertyNames(this).forEach(function (key) {
+                alt[key] = this[key];
+            }, this);
 
-        return alt;
-    },
-    configurable: true,
-    writable: true
-});
+            return alt;
+        },
+        configurable: true,
+        writable: true
+    });
 
 
 export class Global {
@@ -132,6 +132,10 @@ function registerV100Commands(): void {
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateProxy', v100ProxyGenerator.updateProxy));
 }
 function registerV200Commands(): void {
+    if (!Settings.IsInInsiderMode) {
+        vscode.window.showErrorMessage("Version 2.0 using templates is still in a beta phase. Please activate the insider mode in your settings.\nUse it at own risk. Features may greatly change in the future and your template might not work anymore!");
+        return;
+    }
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', () => vscode.window.showErrorMessage("Get Interfaces is deprecated. Use Get Proxy instead.")));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', () => vscode.window.showErrorMessage("Update Interfaces is deprecated. Use Update Proxy instead.")));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v200ProxyGenerator.createProxy));

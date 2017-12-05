@@ -8,7 +8,7 @@ DO NOT DELETE THIS IN ORDER TO UPDATE YOUR SERVICE
 	"modularity": "Ambient",
 	"requestOptions": {},
 	"source": "http://localhost:2200/moviedb/$metadata",
-	"testTemplate": true
+	"template": "proxy.ot"
 }
 #ODATATOOLSOPTIONSEND
 **************************************************************************/
