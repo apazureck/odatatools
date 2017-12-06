@@ -1,7 +1,6 @@
 import { createHeader, getGeneratorSettingsFromDocumentText, getMetadata, GeneratorSettings, GetOutputStyleFromUser } from '../helper';
 import * as request from 'request';
 import * as xml2js from 'xml2js';
-import { IncomingMessage } from 'http';
 import { window, TextEdit, Range, commands } from 'vscode';
 import { log, Global } from '../extension';
 

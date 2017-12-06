@@ -1,8 +1,8 @@
 {
     "name": "odatatools",
-    "displayName": "odataTools",
-    "description": "Tools for communicating with odata services in typescript",
-    "version": "1.0.4",
+    "displayName": "OData Client Generator",
+    "description": "Tools for generating clients for OData Webservices",
+    "version": "1.1.0",
     "publisher": "apazureck",
     "engines": {
         "vscode": "^1.5.0"
@@ -56,6 +56,7 @@
                     "default": "1.0",
                     "description": "For legacy reasons. To use old behavior set to version '0.4'. See extension description for more details.",
                     "enum": [
+                        "2.0",
                         "1.0",
                         "0.4"
                     ]
@@ -76,20 +77,26 @@
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "devDependencies": {
-        "@types/mocha": "^2.2.41",
-        "@types/node": "^7.0.28",
-        "assert": "^1.4.1",
-        "jasmine-core": "^2.6.2",
-        "mocha": "^3.4.2",
-        "qunitjs": "^2.3.3",
-        "typescript": "2.3.4"
+        "@types/fs-extra": "4.0.5",
+        "@types/handlebars": "4.0.36",
+        "@types/mocha": "2.2.44",
+        "@types/ncp": "2.0.1",
+        "@types/node": "8.0.55",
+        "assert": "1.4.1",
+        "jasmine-core": "2.8.0",
+        "mocha": "4.0.1",
+        "qunitjs": "2.4.1",
+        "typescript": "2.6.2"
     },
     "dependencies": {
-        "linq-es2015": "2.4.22",
+        "fs-extra": "4.0.3",
+        "handlebars": "4.0.11",
+        "linq-es2015": "2.4.29",
+        "ncp": "2.0.0",
         "node-rest-client": "3.1.0",
-        "xml2js": "0.4.17",
-        "request": "^2.81.0",
-        "vscode": "1.1.0"
+        "request": "2.83.0",
+        "vscode": "1.1.10",
+        "xml2js": "0.4.19"
     },
     "author": {
         "email": "andreas@pazureck.de",

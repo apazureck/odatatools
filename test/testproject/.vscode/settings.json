@@ -6,6 +6,5 @@
         "**/*.js.map": true,
         "**/*.js": { "when": "$(basename).ts" }
     },
-    "vsicons.presets.angular": false,
-    "odatatools.version": "0.5.0+"
+    "vsicons.presets.angular": false
 }

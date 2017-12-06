@@ -6,9 +6,28 @@ import * as v040Crawler from './v040/odataCrawler';
 import * as v040ProxyGenerator from './v040/proxyGenerator';
 import * as v100Crawler from './v100/odataCrawler';
 import * as v100ProxyGenerator from './v100/proxyGenerator';
+import * as v200Crawler from './v200/odataCrawler';
+import * as v200ProxyGenerator from './v200/proxyGenerator';
 import { Settings } from './settings';
 import * as fs from 'fs';
 import * as path from 'path';
+
+
+if (!('toJSON' in Error.prototype))
+    Object.defineProperty(Error.prototype, 'toJSON', {
+        value: function () {
+            var alt = {};
+
+            Object.getOwnPropertyNames(this).forEach(function (key) {
+                alt[key] = this[key];
+            }, this);
+
+            return alt;
+        },
+        configurable: true,
+        writable: true
+    });
+
 
 export class Global {
     static lastval: string = null;
@@ -34,7 +53,9 @@ export class Global {
             recentlyused.push(address);
         }
 
-        fs.writeFile(path.join(Global.context.extensionPath, "recentlyused.json"), JSON.stringify(recentlyused));
+        fs.writeFile(path.join(Global.context.extensionPath, "recentlyused.json"), JSON.stringify(recentlyused), (error) => {
+            log.appendLine("An error occurred writing recently used file: " + error);
+        });
     }
 }
 
@@ -62,24 +83,40 @@ export function deactivate() {
 function onDidChangeConfiguration() {
     log.appendLine("Using Extension Version: " + Settings.UsageVersion);
     log.appendLine("Insider mode active: " + Settings.IsInInsiderMode ? "Yes" : "No");
-    if (Settings.UsageVersion === "0.4") {
-        try {
-            registerV40Commands();
-        } catch (error) {
-            for (const cmd of Global.context.subscriptions)
-                cmd.dispose();
-            Global.context.subscriptions = [];
-            registerV40Commands();
-        }
-    } else {
-        try {
-            registerV100Commands();
-        } catch (error) {
-            for (const cmd of Global.context.subscriptions)
-                cmd.dispose();
-            Global.context.subscriptions = [];
-            registerV100Commands();
-        }
+    switch (Settings.UsageVersion) {
+        case "0.4":
+            try {
+                registerV40Commands();
+            } catch (error) {
+                for (const cmd of Global.context.subscriptions)
+                    cmd.dispose();
+                Global.context.subscriptions = [];
+                registerV40Commands();
+            }
+            break;
+        case "1.0":
+            try {
+                registerV100Commands();
+            } catch (error) {
+                for (const cmd of Global.context.subscriptions)
+                    cmd.dispose();
+                Global.context.subscriptions = [];
+                registerV100Commands();
+            }
+            break;
+        case "2.0":
+            try {
+                registerV200Commands();
+            } catch (error) {
+                for (const cmd of Global.context.subscriptions)
+                    cmd.dispose();
+                Global.context.subscriptions = [];
+                registerV200Commands();
+            }
+            break;
+        default:
+            vscode.window.showErrorMessage("Could not determine version " + Settings.UsageVersion + ". Please use valid version entries");
+            break;
     }
 }
 
@@ -87,7 +124,7 @@ function registerV40Commands(): void {
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v040Crawler.getInterfaces));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v040Crawler.updateInterfaces));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v040ProxyGenerator.createProxy));
-    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateProxy', () => vscode.window.showErrorMessage("Update proxy is not available for V4.0 legacy support")));
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateProxy', () => vscode.window.showErrorMessage("Update proxy is not available for V0.4 legacy support")));
 }
 
 function registerV100Commands(): void {
@@ -95,4 +132,14 @@ function registerV100Commands(): void {
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v100Crawler.updateInterfaces));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v100ProxyGenerator.createProxy));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateProxy', v100ProxyGenerator.updateProxy));
+}
+function registerV200Commands(): void {
+    if (!Settings.IsInInsiderMode) {
+        vscode.window.showErrorMessage("Version 2.0 using templates is still in a beta phase. Please activate the insider mode in your settings.\nUse it at own risk. Features may greatly change in the future and your template might not work anymore!");
+        return;
+    }
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', () => vscode.window.showErrorMessage("Get Interfaces is deprecated. Use Get Proxy instead.")));
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', () => vscode.window.showErrorMessage("Update Interfaces is deprecated. Use Update Proxy instead.")));
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v200ProxyGenerator.createProxy));
+    Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateProxy', v200ProxyGenerator.updateProxy));
 }

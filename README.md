@@ -12,6 +12,7 @@ This extension targets to speed up access to an oData service to use it within *
   - Bound and unbound OData Actions and Functions
   - Asynchronous calls using `async await` (ES6+ and ES5/ES3 Promise shim)
   - Linq-like syntax for creating requests
+- [**Version 2.0 (Insider): Create your own proxy using handlebars templates**](https://github.com/apazureck/odatatools/wiki/Custom-Templates)
 
 ## Example how to generate Typescript interfaces for your OData Service
 

@@ -1,5 +1,5 @@
 interface EdmxBase {
-    
+
 }
 
 type ftype = "Action" | "Function"
@@ -31,7 +31,9 @@ interface EntityContainer {
     $: {
         Name: string;
     },
-    EntitySet: EntitySet[]
+    EntitySet: EntitySet[],
+    FunctionImport: FunctionImport[],
+    ActionImport: ActionImport[],
 }
 
 interface EntitySet {
@@ -39,7 +41,25 @@ interface EntitySet {
         Name: string,
         EntityType: string
     }
-    NavigationPropertyBinding: NavigationPropertyBinding[]
+    NavigationPropertyBinding: NavigationPropertyBinding[];
+    FunctionImport: FunctionImport[]
+}
+
+interface FunctionImport {
+    $: {
+        Name: string;
+        Function: string;
+        EntitySet?: string;
+        IncludeInServiceDocument?: boolean;
+    }
+}
+
+interface ActionImport {
+    $: {
+        Name: string;
+        Action: string;
+        EntitySet?: string;
+    }
 }
 
 interface NavigationPropertyBinding {
@@ -71,7 +91,11 @@ interface NavigationProperty {
 }
 
 interface ComplexType extends EdmxBase {
-    $: { Name: string; }
+    $: {
+        Name: string;
+        BaseType?: string;
+        OpenType?: boolean;
+    }
     Property: Property[];
 }
 
@@ -95,7 +119,7 @@ interface Method {
     }
     Parameter?: Parameter[]
     ReturnType?: ReturnType[]
-    
+
     // added by proxygenerator:
     IsBoundToCollection?: boolean;
     Namespace: string
@@ -115,6 +139,10 @@ interface Parameter {
         Name: string;
         Type: string;
         Unicode?: boolean;
-        Nullable?: boolean
+        Nullable?: boolean;
+        Precision?: number;
+        MaxLength?: number;
+        Scale?: number | "variable" | "floating";
+        SRID?: string;
     }
 }

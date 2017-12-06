@@ -52,7 +52,7 @@ namespace System.Web.Odata.Builder
                 foreach (PropertyInfo pi in set.ClrType.GetProperties(BindingFlags.Instance | BindingFlags.Public))
                 {
                     
-                    foreach (ExpandSourceAttribute a in pi.GetCustomAttributes(typeof(ExpandSourceAttribute), true).Cast<ExpandSourceAttribute>())
+                    foreach (ExpandSourceAttribute a in pi.GetCustomAttributes<ExpandSourceAttribute>(true))
                     {
                         var exs = new ExternalSource { EntitySet = a.SourceEntitySet, IsLocal = a.IsLocal, NavigationProperty = pi, Key = key, ForeignKey = a.ForeignKey };
                         PropertyInfo fk;

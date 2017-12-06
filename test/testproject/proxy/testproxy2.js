@@ -1,6 +1,23 @@
+/**************************************************************************
+Created by odatatools: https://marketplace.visualstudio.com/items?itemName=apazureck.odatatools
+Use Command 'odata: xyUpdate to refresh data while this file is active in the editor.
+Creation Time: Tue Dec 05 2017 15:06:25 GMT+0100 (Mitteleuropäische Zeit)
+DO NOT DELETE THIS IN ORDER TO UPDATE YOUR SERVICE
+#ODATATOOLSOPTIONS
+{
+    "modularity": "Ambient",
+    "requestOptions": {},
+    "source": "http://localhost:2200/moviedb/$metadata",
+    "useTemplate": "proxy.ot",
+    "testTemplate": true
+}
+#ODATATOOLSOPTIONSEND
+**************************************************************************/
+// Base classes ##########################################################
+// Leave this in order to use the base classes
 var odatatools;
 (function (odatatools) {
-    var Method;
+    let Method;
     (function (Method) {
         Method[Method["GET"] = 0] = "GET";
         Method[Method["POST"] = 1] = "POST";
@@ -180,20 +197,22 @@ var odatatools;
                     requri = this.Address;
                 }
                 requri += this.resolveODataOptions();
+                this.emptyQuery();
                 let request = {
                     headers: this.Headers,
                     method: Method[Method.GET],
                     requestUri: requri
                 };
-                const that = this;
-                // if id starts with $ it is additional odata parameters
                 odatajs.oData.request(request, (data, response) => {
-                    resolve(data);
-                    that.emptyQuery();
+                    if (id) {
+                        resolve(data);
+                    }
+                    else {
+                        resolve(data.value);
+                    }
                 }, (error) => {
                     console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":\n" + (error.response | error.response.body));
                     reject(error);
-                    that.emptyQuery();
                 });
             });
         }
@@ -319,4 +338,121 @@ var odatatools;
     }
 })(odatatools || (odatatools = {}));
 console.log("Loaded odataproxybase");
-//# sourceMappingURL=odataproxybase.js.map
+var MovieService;
+(function (MovieService) {
+    class MovieContainer extends odatatools.ProxyBase {
+        constructor(address, name, additionalHeaders) {
+            super(address, name, additionalHeaders);
+            this.Movies = new MoviesEntitySet("Movies", address, "[object Object]", additionalHeaders);
+            this.Customers = new CustomersEntitySet("Customers", address, "[object Object]", additionalHeaders);
+            this.Addresses = new AddressesEntitySet("Addresses", address, "[object Object]", additionalHeaders);
+        }
+        // Unbound Functions
+        CurrentTime() {
+            return new Promise((resolve, reject) => {
+                let request = {
+                    headers: this.Headers,
+                    method: "GET",
+                    requestUri: this.Address + "/CurrentTime()",
+                };
+                odatajs.oData.request(request, (data, response) => {
+                    resolve(data.value || data);
+                }, (error) => {
+                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                    reject(error);
+                });
+            });
+        }
+        GetSomething(value) {
+            return new Promise((resolve, reject) => {
+                let request = {
+                    headers: this.Headers,
+                    method: "GET",
+                    requestUri: this.Address + "/GetSomething(value=" + value + ")",
+                };
+                odatajs.oData.request(request, (data, response) => {
+                    resolve(data.value || data);
+                }, (error) => {
+                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                    reject(error);
+                });
+            });
+        }
+        //Unbound Actions
+        SetSomething(value) {
+            return new Promise((resolve, reject) => {
+                let request = {
+                    headers: this.Headers,
+                    method: "POST",
+                    requestUri: this.Address + "/SetSomething()",
+                    data: {
+                        value: value,
+                    },
+                };
+                odatajs.oData.request(request, (data, response) => {
+                    resolve(data.value || data);
+                }, (error) => {
+                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                    reject(error);
+                });
+            });
+        }
+    }
+    MovieService.MovieContainer = MovieContainer;
+    //EntitySets
+    class MoviesEntitySet extends odatatools.EntitySet {
+        constructor(name, address, key, additionalHeaders) {
+            super(name, address, key, additionalHeaders);
+        }
+        // Bound to entity Actions
+        Rate(key, rating, reason) {
+            return new Promise((resolve, reject) => {
+                let request = {
+                    headers: this.Headers,
+                    method: "POST",
+                    requestUri: this.Address + "(" + key + ")/MovieService.Rate()",
+                    data: {
+                        rating: rating,
+                        reason: reason,
+                    },
+                };
+                odatajs.oData.request(request, (data, response) => {
+                    resolve(data.value || data);
+                }, (error) => {
+                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                    reject(error);
+                });
+            });
+        }
+        ResetRating(key) {
+            return new Promise((resolve, reject) => {
+                let request = {
+                    headers: this.Headers,
+                    method: "POST",
+                    requestUri: this.Address + "(" + key + ")/MovieService.ResetRating()",
+                    data: {},
+                };
+                odatajs.oData.request(request, (data, response) => {
+                    resolve(data.value || data);
+                }, (error) => {
+                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
+                    reject(error);
+                });
+            });
+        }
+    }
+    MovieService.MoviesEntitySet = MoviesEntitySet;
+    class CustomersEntitySet extends odatatools.EntitySet {
+        constructor(name, address, key, additionalHeaders) {
+            super(name, address, key, additionalHeaders);
+        }
+    }
+    MovieService.CustomersEntitySet = CustomersEntitySet;
+    class AddressesEntitySet extends odatatools.EntitySet {
+        constructor(name, address, key, additionalHeaders) {
+            super(name, address, key, additionalHeaders);
+        }
+    }
+    MovieService.AddressesEntitySet = AddressesEntitySet;
+})(MovieService || (MovieService = {}));
+//# sourceMappingURL=testproxy2.js.map
