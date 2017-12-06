@@ -53,7 +53,9 @@ export class Global {
             recentlyused.push(address);
         }
 
-        fs.writeFile(path.join(Global.context.extensionPath, "recentlyused.json"), JSON.stringify(recentlyused));
+        fs.writeFile(path.join(Global.context.extensionPath, "recentlyused.json"), JSON.stringify(recentlyused), (error) => {
+            log.appendLine("An error occurred writing recently used file: " + error);
+        });
     }
 }
 
