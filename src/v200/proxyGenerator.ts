@@ -1,4 +1,3 @@
-import { getEdmTypes } from './odataCrawler';
 import * as hb from 'handlebars';
 import {
     IAction,
@@ -47,62 +46,9 @@ hb.logger.log = (level, obj) => {
     log.appendLine("# " + obj);
 }
 
-export async function createProxy() {
-    let generatorSettings: TemplateGeneratorSettings = {
-        modularity: "Ambient",
-        requestOptions: {},
-        source: "unknown",
-        useTemplate: undefined
-    };
-    try {
-        // TODO: Change to quickpick to provide full file list
-        let maddr = await window.showInputBox({
-            placeHolder: "http://my.odata.service/service.svc",
-            value: Global.recentlyUsedAddresses.pop(),
-            prompt: "Please enter uri of your oData service.",
-            ignoreFocusOut: true,
-        });
 
-        if (!maddr)
-            return;
 
-        maddr = maddr.replace("$metadata", "");
-        if (maddr.endsWith("/"))
-            maddr = maddr.substr(0, maddr.length - 1);
-
-        maddr = maddr + "/$metadata";
-
-        Global.lastval = maddr;
-        generatorSettings.source = maddr;
-
-        const templates: { [key: string]: string } = getModifiedTemplates();
-
-        log.appendLine("Getting Metadata from '" + maddr + "'");
-        const metadata = await getMetadata(maddr);
-
-        // generatorSettings.modularity = await GetOutputStyleFromUser();
-
-        await generateProxy(metadata, generatorSettings, templates);
-
-    } catch (error) {
-        window.showErrorMessage("Could not create proxy. See output window for detail.");
-        log.appendLine("Creating proxy returned following error:");
-        if (error.originalStack)
-            log.appendLine(error.originalStack);
-        else
-            log.appendLine(error.toString());
-
-        log.appendLine("Updating current file.");
-        await window.activeTextEditor.edit((editbuilder) => {
-            editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), createHeader(generatorSettings));
-        });
-
-        log.appendLine("Successfully pasted data. Formatting Document.")
-        commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
-    }
-}
-
-async function generateProxy(metadata: Edmx, options: TemplateGeneratorSettings, templates: { [key: string]: string }) {
+export async function generateProxy(metadata: Edmx, options: TemplateGeneratorSettings, templates: { [key: string]: string }) {
     // window.showInformationMessage("Select import type (ambient or modular) for generation.");
 
     let schemas = getProxy(options.source.replace("$metadata", ""), metadata["edmx:DataServices"][0], options);
@@ -130,42 +76,6 @@ async function generateProxy(metadata: Edmx, options: TemplateGeneratorSettings,
     //     fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odatajs.d.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odatajs.d.ts")));
     // }
     Global.AddToRecentlyUsedAddresses(options.source);
-}
-
-export async function updateProxy() {
-    let header: TemplateGeneratorSettings;
-    try {
-        header = getGeneratorSettingsFromDocumentText(window.activeTextEditor.document.getText());
-
-        if (!header)
-            return window.showErrorMessage("Could not find valid odatatools header to generate proxy from. Use 'Create Proxy' command instead.");
-
-        if (!header.source)
-            return window.showErrorMessage("No source property in odatatools header. Use 'Create Proxy' command instead.");
-
-        log.appendLine("Getting Metadata from '" + header.source + "'");
-        const metadata = await getMetadata(header.source, header.requestOptions);
-
-        generateProxy(metadata, header, getModifiedTemplates());
-
-    } catch (error) {
-        window.showErrorMessage("Could not create proxy. See output window for detail.");
-        log.appendLine("Creating proxy returned following error:");
-        if (error.originalStack)
-            log.appendLine(error.originalStack);
-        else
-            log.appendLine(error.toString());
-
-        log.appendLine("Updating current file.");
-        await window.activeTextEditor.edit((editbuilder) => {
-            editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), createHeader(error instanceof NoHeaderError ? {
-                source: "unknown", modularity: "Ambient", requestOptions: {}
-            } : header));
-        });
-
-        log.appendLine("Created header");
-        commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
-    }
 }
 
 function getUnboundActionsAndFunctions(ecschema: Schema): Method[] {
@@ -552,4 +462,56 @@ function parseTemplate(generatorSettings: TemplateGeneratorSettings, schemas: IO
         log.appendLine(error.message);
         throw error;
     }
+}
+
+export function getEdmTypes(schema: Schema, generatorSettings: GeneratorSettings): IODataEntities {
+    let metadata: IODataEntities = {
+        Header: "",
+        EntityTypes: [],
+        ComplexTypes: [],
+        EnumTypes: [],
+    };
+
+    if (schema.EntityType) {
+        for (let type of schema.EntityType) {
+            const p = getEntityTypeInterface(type, schema);
+            metadata.EntityTypes.push(p as IEntityType);
+        }
+    }
+    if (schema.ComplexType) {
+        for (let type of schema.ComplexType) {
+            const p: IComplexType = {
+                Namespace: schema.$.Namespace,
+                Fullname: schema.$.Namespace + "." + type.$.Name,
+                Name: type.$.Name,
+                Properties: [],
+                BaseType: type.$.BaseType || undefined,
+                OpenType: type.$.OpenType || false,
+            }
+            if (type.Property)
+                for (let prop of type.Property)
+                    p.Properties.push({
+                        Name: prop.$.Name,
+                        Type: getType(prop.$.Type),
+                        Nullable: prop.$.Nullable || true
+                    });
+            metadata.ComplexTypes.push(p);
+        }
+    }
+    if (schema.EnumType) {
+        for (let enumtype of schema.EnumType) {
+            const p: IEnum = {
+                Name: enumtype.$.Name,
+                Members: [],
+            }
+            for (const member of enumtype.Member) {
+                p.Members.push({
+                    Key: member.$.Name,
+                    Value: member.$.Value,
+                })
+            }
+            metadata.EnumTypes.push(p);
+        }
+    }
+    return metadata;
 }
