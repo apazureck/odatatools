@@ -31,6 +31,7 @@ import {
     GeneratorSettings,
     getEntityTypeInterface,
     getGeneratorSettingsFromDocumentText,
+    getHostAddressFromUser,
     getMetadata,
     getModifiedTemplates,
     GetOutputStyleFromUser,
@@ -46,7 +47,44 @@ hb.logger.log = (level, obj) => {
     log.appendLine("# " + obj);
 }
 
+export async function createProxy() {
+    let generatorSettings: TemplateGeneratorSettings = {
+        modularity: "Ambient",
+        requestOptions: {},
+        source: "unknown",
+        useTemplate: undefined
+    };
+    try {
+        let maddr = await getHostAddressFromUser();
 
+        Global.lastval = maddr;
+        generatorSettings.source = maddr;
+
+        const templates: { [key: string]: string } = getModifiedTemplates();
+
+        log.appendLine("Getting Metadata from '" + maddr + "'");
+        const metadata = await getMetadata(maddr);
+
+        await generateProxy(metadata, generatorSettings, templates);
+
+        Global.AddToRecentlyUsedAddresses(maddr);
+    } catch (error) {
+        window.showErrorMessage("Could not create proxy. See output window for detail.");
+        log.appendLine("Creating proxy returned following error:");
+        if (error.originalStack)
+            log.appendLine(error.originalStack);
+        else
+            log.appendLine(error.toString());
+
+        log.appendLine("Updating current file.");
+        await window.activeTextEditor.edit((editbuilder) => {
+            editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), createHeader(generatorSettings));
+        });
+
+        log.appendLine("Successfully pasted data. Formatting Document.")
+        commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
+    }
+}
 
 export async function generateProxy(metadata: Edmx, options: TemplateGeneratorSettings, templates: { [key: string]: string }) {
     // window.showInformationMessage("Select import type (ambient or modular) for generation.");
