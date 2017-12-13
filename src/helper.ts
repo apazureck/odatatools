@@ -157,12 +157,19 @@ export async function getHostAddressFromUser(): Promise<string> {
             placeHolder: "Select from recently used addresses or add new entry"
         });
     if (pick === "New Entry...")
-        return await window.showInputBox({
+        pick = await window.showInputBox({
             placeHolder: "http://my.odata.service/service.svc",
             value: Global.recentlyUsedAddresses.pop(),
             prompt: "Please enter uri of your oData service.",
             ignoreFocusOut: true,
         });
-    else
-        return pick;
+
+    if (!pick)
+        throw new Error("User did not input valid address");
+
+    pick = pick.replace("$metadata", "");
+    if (pick.endsWith("/"))
+        pick = pick.substr(0, pick.length - 1);
+
+    return pick + "/$metadata";
 }

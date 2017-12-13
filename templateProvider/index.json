@@ -1,0 +1,12 @@
+{
+    "availableTemplates": [
+        {
+            "name": "promise",
+            "language": "ts/Typescript",
+            "author": "Andreas Pazureck",
+            "email": "andreas@pazureck.de",
+            "source": "ts-promise",
+            "description": "A simple Typescript/ES6 Promise temlate using a fluent-like syntax to retreive data from a OData V4 service"
+        }
+    ]
+}

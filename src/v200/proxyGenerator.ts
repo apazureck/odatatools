@@ -58,15 +58,6 @@ export async function createProxy() {
     try {
         let maddr = await getHostAddressFromUser();
 
-        if (!maddr)
-            return;
-
-        maddr = maddr.replace("$metadata", "");
-        if (maddr.endsWith("/"))
-            maddr = maddr.substr(0, maddr.length - 1);
-
-        maddr = maddr + "/$metadata";
-
         Global.lastval = maddr;
         generatorSettings.source = maddr;
 
@@ -74,8 +65,6 @@ export async function createProxy() {
 
         log.appendLine("Getting Metadata from '" + maddr + "'");
         const metadata = await getMetadata(maddr);
-
-        // generatorSettings.modularity = await GetOutputStyleFromUser();
 
         await generateProxy(metadata, generatorSettings, templates);
 

@@ -23,42 +23,6 @@ export async function getInterfaces() {
     window.showErrorMessage("Deprecated in Version 2.0. Please use the Proxy functions to get metadata from your OData Service");
 }
 
-function parseTemplate(generatorSettings: TemplateGeneratorSettings, interfaces: IODataEntities, templates: { [key: string]: string }): string {
-    if (!generatorSettings.useTemplate) {
-        generatorSettings.useTemplate = Object.keys(templates)[0];
-    }
-
-    const template = hb.compile(templates[generatorSettings.useTemplate], {
-        noEscape: true
-    });
-
-    // Update header to set currently used template
-    interfaces.Header = createHeader(generatorSettings);
-    return template(interfaces);
-}
-
-async function receiveInterfaces(options: GeneratorSettings): Promise<IODataEntities> {
-    try {
-        const edmx = await getMetadata(options.source);
-        log.appendLine("Creating Interfaces");
-        let interfaces = getEdmTypes(edmx["edmx:DataServices"][0].Schema[0], options);
-        interfaces.Header = createHeader(options);
-
-        log.appendLine("Creating source line");
-        // interfacesstring += "\n/// Do not modify this line to being able to update your interfaces again:"
-        return interfaces;
-    } catch (error) {
-        log.appendLine("Unknown error:\n" + error.toString());
-        window.showErrorMessage("Error occurred, see console output for more information.");
-        return {
-            Header: createHeader(options),
-            EntityTypes: [],
-            ComplexTypes: [],
-            EnumTypes: [],
-        }
-    }
-}
-
 export async function updateInterfaces() {
     window.showErrorMessage("Deprecated in Version 2.0. Please use the Proxy functions to get metadata from your OData Service");
 }
