@@ -32,6 +32,7 @@ import {
     GeneratorSettings,
     getEntityTypeInterface,
     getGeneratorSettingsFromDocumentText,
+    getHostAddressFromUser,
     getMetadata,
     getModifiedTemplates,
     GetOutputStyleFromUser,
@@ -55,13 +56,7 @@ export async function createProxy() {
         useTemplate: undefined
     };
     try {
-        // TODO: Change to quickpick to provide full file list
-        let maddr = await window.showInputBox({
-            placeHolder: "http://my.odata.service/service.svc",
-            value: Global.recentlyUsedAddresses.pop(),
-            prompt: "Please enter uri of your oData service.",
-            ignoreFocusOut: true,
-        });
+        let maddr = await getHostAddressFromUser();
 
         if (!maddr)
             return;
@@ -84,6 +79,7 @@ export async function createProxy() {
 
         await generateProxy(metadata, generatorSettings, templates);
 
+        Global.AddToRecentlyUsedAddresses(maddr);
     } catch (error) {
         window.showErrorMessage("Could not create proxy. See output window for detail.");
         log.appendLine("Creating proxy returned following error:");

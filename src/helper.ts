@@ -7,6 +7,7 @@ import * as path from 'path';
 import { Global } from './extension';
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
+import * as mkd from 'mkdirp';
 
 export type Modularity = "Ambient" | "Modular";
 
@@ -101,7 +102,7 @@ export function getModifiedTemplates(): { [x: string]: string } {
     }
     for (const file of files) {
         // Get all OData Templates
-        if(path.extname(file) === ".ot")
+        if (path.extname(file) === ".ot")
             ret[file] = fs.readFileSync(path.join(rootpath, ".vscode", "odatatools", "templates", file), 'utf-8');
     }
     return ret;
@@ -147,4 +148,21 @@ export function getType(typestring: string): string {
         return m[1] + "[]";
     }
     return typestring;
+}
+
+export async function getHostAddressFromUser(): Promise<string> {
+    let pick: string = "New Entry...";
+    if (Global.recentlyUsedAddresses && Global.recentlyUsedAddresses.length > 0)
+        pick = await window.showQuickPick(["New Entry..."].concat(Global.recentlyUsedAddresses), {
+            placeHolder: "Select from recently used addresses or add new entry"
+        });
+    if (pick === "New Entry...")
+        return await window.showInputBox({
+            placeHolder: "http://my.odata.service/service.svc",
+            value: Global.recentlyUsedAddresses.pop(),
+            prompt: "Please enter uri of your oData service.",
+            ignoreFocusOut: true,
+        });
+    else
+        return pick;
 }

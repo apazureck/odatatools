@@ -1,7 +1,7 @@
 /**************************************************************************
 Created by odatatools: https://marketplace.visualstudio.com/items?itemName=apazureck.odatatools
 Use Command 'odata: xyUpdate to refresh data while this file is active in the editor.
-Creation Time: Tue Dec 05 2017 23:20:51 GMT+0100 (Mitteleuropäische Zeit)
+Creation Time: Wed Dec 13 2017 01:42:02 GMT+0100 (Mitteleuropäische Zeit)
 DO NOT DELETE THIS IN ORDER TO UPDATE YOUR SERVICE
 #ODATATOOLSOPTIONS
 {

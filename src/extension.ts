@@ -11,6 +11,7 @@ import * as v200ProxyGenerator from './v200/proxyGenerator';
 import { Settings } from './settings';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as mkd from 'mkdirp';
 
 
 if (!('toJSON' in Error.prototype))
@@ -32,13 +33,31 @@ if (!('toJSON' in Error.prototype))
 export class Global {
     static lastval: string = null;
     static context: vscode.ExtensionContext = null;
-
+    private static readonly recentlyUsedJsonPath = path.join(vscode.workspace.rootPath, ".vscode", "odatatools", "recentlyused.json");
+    /**
+     * Gets recently used address from project folder ${workspaceRoot}/.vscode/odatatools/recentlyused.json
+     * 
+     * @readonly
+     * @static
+     * @type {string[]}
+     * @memberof Global
+     */
     static get recentlyUsedAddresses(): string[] {
-        return (JSON.parse(fs.readFileSync(path.join(Global.context.extensionPath, "recentlyused.json"), 'utf-8')) as string[]).reverse();
+        if (fs.existsSync(this.recentlyUsedJsonPath))
+            return (JSON.parse(fs.readFileSync(this.recentlyUsedJsonPath, 'utf-8')) as string[]).reverse();
+        else
+            return [];
     }
 
     static AddToRecentlyUsedAddresses(address: string) {
-        let recentlyused = JSON.parse(fs.readFileSync(path.join(Global.context.extensionPath, "recentlyused.json"), 'utf-8')) as string[];
+        // Check if recently used json exists and create if not
+        if(!fs.existsSync(this.recentlyUsedJsonPath)) {
+            mkd.sync(path.dirname(this.recentlyUsedJsonPath));
+            fs.writeFileSync(this.recentlyUsedJsonPath, "[]");
+        }
+
+        // Read recently used json file
+        let recentlyused = JSON.parse(fs.readFileSync(this.recentlyUsedJsonPath, 'utf-8')) as string[];
 
         // Check if already in list and push it to the top.
         const foundelement = recentlyused.indexOf(address);
