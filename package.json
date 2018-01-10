@@ -67,6 +67,19 @@
           "minimum": 1,
           "maximum": 20,
           "description": "Length of recently used server addresses (This does not have any effect yet, hopefully in later vscode releases)"
+        },
+        "odatatools.logLevel": {
+          "type": "string",
+          "default": "Info",
+          "enum": [
+            "Trace",
+            "Debug",
+            "Info",
+            "Warning",
+            "Error",
+            "Fatal"
+          ],
+          "description": "The loglevel to use in the output window"
         }
       }
     }
@@ -83,6 +96,7 @@
     "@types/mocha": "2.2.44",
     "@types/ncp": "2.0.1",
     "@types/node": "8.0.55",
+    "@types/request": "^2.0.9",
     "assert": "1.4.1",
     "jasmine-core": "2.8.0",
     "mocha": "4.0.1",

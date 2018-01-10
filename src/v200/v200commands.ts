@@ -1,7 +1,11 @@
 import { generateProxy } from './proxyGenerator';
-import { Global, log } from '../extension';
+import { Global } from '../extension';
+import { Log } from '../log';
 import { TemplateGeneratorSettings, getModifiedTemplates, getMetadata, createHeader, getGeneratorSettingsFromDocumentText, NoHeaderError } from '../helper';
 import { window, Range, commands } from 'vscode';
+
+const log = new Log("v200commands");
+
 export async function createProxy() {
     let generatorSettings: TemplateGeneratorSettings = {
         modularity: "Ambient",
@@ -32,7 +36,7 @@ export async function createProxy() {
 
         const templates: { [key: string]: string } = getModifiedTemplates();
 
-        log.appendLine("Getting Metadata from '" + maddr + "'");
+        log.Info("Getting Metadata from '" + maddr + "'");
         const metadata = await getMetadata(maddr);
 
         // generatorSettings.modularity = await GetOutputStyleFromUser();
@@ -41,19 +45,19 @@ export async function createProxy() {
 
     } catch (error) {
         window.showErrorMessage("Could not create proxy. See output window for detail.");
-        log.appendLine("Creating proxy returned following error:");
+        log.Error("Creating proxy returned following error:");
         if (error.originalStack)
-            log.appendLine(error.originalStack);
+            log.Error(error.originalStack);
         else
-            log.appendLine(error.toString());
+            log.Error(error.toString());
 
-        log.appendLine("Updating current file.");
+        log.Info("Updating current file.");
         await window.activeTextEditor.edit((editbuilder) => {
             editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), createHeader(generatorSettings));
         });
 
-        log.appendLine("Successfully pasted data. Formatting Document.")
-        commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
+        log.Info("Successfully pasted data. Formatting Document.")
+        commands.executeCommand("editor.action.formatDocument").then(() => log.Info("Finished"));
     }
 }
 
@@ -68,27 +72,27 @@ export async function updateProxy() {
         if (!header.source)
             return window.showErrorMessage("No source property in odatatools header. Use 'Create Proxy' command instead.");
 
-        log.appendLine("Getting Metadata from '" + header.source + "'");
+        log.Info("Getting Metadata from '" + header.source + "'");
         const metadata = await getMetadata(header.source, header.requestOptions);
 
         generateProxy(metadata, header, getModifiedTemplates());
 
     } catch (error) {
         window.showErrorMessage("Could not create proxy. See output window for detail.");
-        log.appendLine("Creating proxy returned following error:");
+        log.Error("Creating proxy returned following error:");
         if (error.originalStack)
-            log.appendLine(error.originalStack);
+            log.Error(error.originalStack);
         else
-            log.appendLine(error.toString());
+            log.Error(error.toString());
 
-        log.appendLine("Updating current file.");
+        log.Info("Updating current file.");
         await window.activeTextEditor.edit((editbuilder) => {
             editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), createHeader(error instanceof NoHeaderError ? {
                 source: "unknown", modularity: "Ambient", requestOptions: {}
             } : header));
         });
 
-        log.appendLine("Created header");
-        commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
+        log.Info("Created header");
+        commands.executeCommand("editor.action.formatDocument").then(() => log.Info("Finished"));
     }
 }

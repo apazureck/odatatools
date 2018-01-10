@@ -1,7 +1,3 @@
-{{Header}}
-
-// Base classes ##########################################################
-// Leave this in order to use the base classes
 namespace odatatools {
     enum Method {
         GET, POST, PUT, PATCH, DELETE
@@ -62,7 +58,7 @@ namespace odatatools {
          * 
          * @memberof ODataQueryOptions
          */
-        Select(properties: keyof T | (keyof T)[] | string): ODataQueryFilterOptions<T> {
+        Select(properties: keyof T | (keyof T)[]): ODataQueryFilterOptions<T> {
             if (typeof properties === "string")
                 this.addToQuery("$select=" + properties);
             else
@@ -132,7 +128,7 @@ namespace odatatools {
          * 
          * @memberof ODataQueryFilterOptions
          */
-        Expand(properties: keyof T | (keyof T)[] | string): ODataQueryFilterOptions<T> {
+        Expand(properties: keyof T | (keyof T)[]): ODataQueryFilterOptions<T> {
             if (typeof properties === "string")
                 this.addToQuery("$expand=" + properties);
             else
@@ -246,12 +242,13 @@ namespace odatatools {
                     requri = this.Address;
                 }
                 requri += this.resolveODataOptions();
-                this.emptyQuery();
                 let request: odatajs.Request = {
                     headers: this.Headers,
                     method: Method[Method.GET],
                     requestUri: requri
                 }
+                const that = this;
+                // if id starts with $ it is additional odata parameters
 
                 odatajs.oData.request(request, (data, response) => {
                     if(id) {
@@ -259,9 +256,11 @@ namespace odatatools {
                     } else {
                         resolve(data.value);
                     }
+                    that.emptyQuery();
                 }, (error) => {
                     console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":\n" + (error.response | error.response.body));
                     reject(error);
+                    that.emptyQuery();
                 });
             });
         }
@@ -411,190 +410,4 @@ declare namespace odatajs {
 
     interface Header { [name: string]: string }
 }
-
-type JSDate = Date;
-
-declare namespace Edm {
-    export type Duration = string;
-    export type Binary = string;
-    export type Boolean = boolean;
-    export type Byte = number;
-    export type Date = JSDate;
-    export type DateTimeOffset = JSDate;
-    export type Decimal = number;
-    export type Double = number;
-    export type Guid = string;
-    export type Int16 = number;
-    export type Int32 = number;
-    export type Int64 = number;
-    export type SByte = number;
-    export type Single = number;
-    export type String = string;
-    export type TimeOfDay = string;
-    export type Stream = string;
-    export type GeographyPoint = any;
-}
-
 console.log("Loaded odataproxybase");
-
-// ###################################### Implementation ################
-
-{{#each schemas as |schema|}}
-
-namespace {{this.Namespace}} {
-
-    {{#each this.EntityTypes}}
-    export interface {{this.Name}} {
-        {{#each this.Properties}}
-        {{this.Name}}{{#if this.Nullable}}?{{/if}}: {{this.Type.Name}}{{#if this.Type.IsCollection}}[]{{/if}};
-        {{/each}}
-        {{#each this.NavigationProperties}}
-        {{this.Name}}?: {{this.Type.Name}}{{#if this.Type.IsCollection}}[]{{/if}};
-        {{/each}}
-        {{#if this.OpenType}}[x: string]: any;{{/if}}
-    }
-    {{/each}}
-    {{#each this.ComplexTypes}}
-    export interface {{this.Name}} {
-        {{#each this.Properties}}
-        {{this.Name}}{{#if this.Nullable}}?{{/if}}: {{this.Type.Name}}{{#if this.Type.IsCollection}}[]{{/if}};
-        {{/each}}
-        {{#if this.OpenType}}[x: string]: any;{{/if}}
-    }
-    {{/each}}
-    {{#each this.EnumTypes}}
-    // Enum Values: {{#each this.Members}}{{this.Key}} = {{this.Value}}{{#unless @last}}, {{/unless}}{{/each}}
-    export type {{this.Name}} = {{#each this.Members}}"{{this.Key}}"{{#unless @last}} | {{/unless}}{{/each}};
-    {{/each}}
-
-    {{#if this.EntityContainer}}
-    export class {{this.EntityContainer.Name}} extends odatatools.ProxyBase {
-        constructor(address: string, name?: string, additionalHeaders?: odatajs.Header) {
-            super(address, name, additionalHeaders);
-            {{#each this.EntityContainer.EntitySets}}
-            this.{{this.Name}} = new {{this.Name}}EntitySet("{{this.Name}}", address, "{{this.EntityType.Key.Name}}", additionalHeaders);
-            {{/each}}
-        }
-        {{#each this.EntityContainer.EntitySets}}
-        {{this.Name}}: {{this.Name}}EntitySet;
-        {{/each}}
-        
-        // Unbound Functions
-
-        {{#each this.EntityContainer.FunctionImports}}
-        {{this.Name}}({{#each this.Function.Parameters}}{{this.Name}}: {{this.Type.Name}}{{#if this.Type.IsCollection}}[]{{/if}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.Function.ReturnType.Name}}{{#if this.ReturnType.IsCollection}}[]{{/if}}> {
-            return new Promise<{{this.Function.ReturnType.Name}}{{#if this.ReturnType.IsCollection}}[]{{/if}}>((resolve, reject) => {
-                let request: odatajs.Request = {
-                    headers: this.Headers,
-                    method: "GET",
-                    requestUri: this.Address + "/{{this.Function.Name}}({{~#each this.Function.Parameters}}{{this.Name}}="+{{this.Name}}+"{{#unless @last}},{{/unless}}{{~/each}})",
-                }
-                odatajs.oData.request(request, (data, response) => {
-                    resolve({{#unless this.ReturnType.IsVoid}}(data || {}).value || data{{/unless}});
-                }, (error) => {
-                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                    reject(error);
-                });
-            });
-        }
-        {{/each}}
-
-        //Unbound Actions
-
-        {{#each this.EntityContainer.ActionImports}}
-        {{this.Name}}({{#each this.Action.Parameters}}{{this.Name}}: {{this.Type.Name}}{{#if this.Type.IsCollection}}[]{{/if}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.Action.ReturnType.Name}}{{#if this.ReturnType.IsCollection}}[]{{/if}}> {
-            return new Promise<{{this.Action.ReturnType.Name}}{{#if this.ReturnType.IsCollection}}[]{{/if}}>((resolve, reject) => {
-                let request: odatajs.Request = {
-                    headers: this.Headers,
-                    method: "POST",
-                    requestUri: this.Address + "/{{this.Action.Name}}()",
-                    data: {
-                        {{#each this.Action.Parameters}}
-                        {{this.Name}}: {{this.Name}},
-                        {{/each}}
-                    },
-                }
-                odatajs.oData.request(request, (data, response) => {
-                    resolve({{#unless this.ReturnType.IsVoid}}(data || {}).value || data{{/unless}});
-                }, (error) => {
-                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                    reject(error);
-                });
-            });
-        }
-        {{/each}}
-    }
-    {{/if}}
-    {{#if this.EntityContainer.EntitySets.length}}
-    //EntitySets
-    {{/if}}
-    {{#each this.EntityContainer.EntitySets as |eset|}}
-    export class {{this.Name}}EntitySet extends odatatools.EntitySet<{{this.EntityType.Fullname}}> {
-        constructor(name: string, address: string, key: string, additionalHeaders?: odatajs.Header) {
-            super(name, address, key, additionalHeaders);
-        }
-
-        {{#if this.EntityType.Actions.length}}// Bound to entity Actions{{/if}}
-        {{#each this.EntityType.Actions}}
-        {{this.Name}}({{#each this.Parameters}}{{#if @first}}key: {{eset.EntityType.Key.Type.Name}}{{else}}{{this.Name}}: {{this.Type.Name}}{{#if this.Type.IsCollection}}[]{{/if}}{{/if}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.ReturnType.Name}}{{#if this.ReturnType.IsCollection}}[]{{/if}}> {
-            return new Promise<{{this.ReturnType.Name}}{{#if this.ReturnType.IsCollection}}[]{{/if}}>((resolve, reject) => {
-                let request: odatajs.Request = {
-                    headers: this.Headers,
-                    method: "POST",
-                    requestUri: this.Address + "(" + key + ")/{{schema.Namespace}}.{{this.Name}}()",
-                    data: {
-                        {{~#each this.Parameters}}{{~#unless @first}}
-                        {{this.Name}}: {{this.Name}},
-                        {{~/unless}}{{~/each}}
-                    },
-                }
-                odatajs.oData.request(request, (data, response) => {
-                    resolve({{#unless this.ReturnType.IsVoid}}(data || {}).value || data{{/unless}});
-                }, (error) => {
-                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                    reject(error);
-                });
-            });
-        }
-        {{/each}}
-        {{#if this.EntityType.Functions.length}}// Bound to entity Functions{{/if}}
-        {{#each this.EntityType.Functions}}
-        {{this.Name}}({{#each this.Parameters}}{{this.Name}}: {{this.Type.Name}}{{#if this.Type.IsCollection}}[]{{/if}}{{#if this.Type.IsCollection}}[]{{/if}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.ReturnType.Name}}{{#if this.ReturnType.IsCollection}}[]{{/if}}> {
-            return new Promise<{{this.ReturnType.Name}}{{#if this.ReturnType.IsCollection}}[]{{/if}}>((resolve, reject) => {
-                let request: odatajs.Request = {
-                    headers: this.Headers,
-                    method: "GET",
-                    requestUri: this.Address + "(" + {{this.Parameters.0.Name}} + ")/{{schema.Namespace}}.{{this.Name}}({{~#each this.Parameters}}{{#unless @first}}{{this.Name}}="+{{this.Name}}+"{{#unless @last}},{{/unless}}{{/unless}}{{~/each}})",
-                }
-                odatajs.oData.request(request, (data, response) => {
-                    resolve({{#unless this.ReturnType.IsVoid}}(data || {}).value || data{{/unless}});
-                }, (error) => {
-                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                    reject(error);
-                });
-            });
-        }
-        {{/each}}
-        {{#if this.Functions.length}}// Bound to collection Functions{{/if}}
-        {{#each this.Functions}}
-        {{this.Name}}({{#each this.Parameters}}{{#unless @first}}{{this.Name}}: {{this.Type.Name}}{{#if this.Type.IsCollection}}[]{{/if}}{{#unless @last}}, {{/unless}}{{/unless}}{{/each}}): Promise<{{this.ReturnType.Name}}{{#if this.ReturnType.IsCollection}}[]{{/if}}> {
-            return new Promise<{{this.ReturnType.Name}}{{#if this.ReturnType.IsCollection}}[]{{/if}}>((resolve, reject) => {
-                let request: odatajs.Request = {
-                    headers: this.Headers,
-                    method: "GET",
-                    requestUri: this.Address + "/{{schema.Namespace}}.{{this.Name}}({{~#each this.Parameters}}{{#unless @first}}{{this.Name}}="+{{this.Name}}+"{{#unless @last}},{{/unless}}{{/unless}}{{~/each}})",
-                }
-                odatajs.oData.request(request, (data, response) => {
-                    resolve({{#unless this.ReturnType.IsVoid}}(data || {}).value || data{{/unless}});
-                }, (error) => {
-                    console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":" + (error.response | error.response.body));
-                    reject(error);
-                });
-            });
-        }
-        {{/each}}
-    }
-    {{/each}}
-}
-
-{{/each}}

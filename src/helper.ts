@@ -1,5 +1,5 @@
-import { IEntityType } from './v200/outtypes';
-import { log } from './extension';
+import { IEntityType, ISimpleType } from './v200/outtypes';
+import { Log } from './log';
 import * as xml2js from 'xml2js';
 import * as request from 'request';
 import { window, workspace } from "vscode";
@@ -10,6 +10,8 @@ import * as fse from 'fs-extra';
 import * as mkd from 'mkdirp';
 
 export type Modularity = "Ambient" | "Modular";
+
+const log = new Log("helpers");
 
 export interface GeneratorSettings {
     source: string,
@@ -60,8 +62,8 @@ export async function getMetadata(maddr: string, options?: request.CoreOptions):
                 xml2js.parseString(rData, (err, data) => {
                     try {
                         if (!data["edmx:Edmx"]) {
-                            log.appendLine("Received invalid data:\n");
-                            log.append(data.toString());
+                            log.Error("Received invalid data:\n");
+                            log.Error(data.toString());
                             return reject(window.showErrorMessage("Response is not valid oData metadata. See output for more information"));
                         }
                         if (data["edmx:Edmx"])
@@ -72,6 +74,9 @@ export async function getMetadata(maddr: string, options?: request.CoreOptions):
                         reject(error);
                     }
                 });
+            })
+            .on('error', (resp) => {
+                return 0;
             });
     });
 }
@@ -108,46 +113,20 @@ export function getModifiedTemplates(): { [x: string]: string } {
     return ret;
 }
 
-export function getEntityTypeInterface(type: EntityType, schema: Schema): IEntityType {
-    const p: Partial<IEntityType> = {
-        // Key: type.Key ? type.Key[0].PropertyRef[0].$.Name : undefined,
-        Name: type.$.Name,
-        Fullname: schema.$.Namespace + "." + type.$.Name,
-        Properties: [],
-        NavigationProperties: [],
-        BaseType: type.$.BaseType || undefined,
-        OpenType: type.$.OpenType || false,
-        Actions: [],
-        Functions: [],
-    };
-    if (type.Property)
-        for (let prop of type.Property)
-            p.Properties.push({
-                Name: prop.$.Name,
-                Type: getType(prop.$.Type),
-                Nullable: prop.$.Nullable || true,
-            });
-    if (type.Key) {
-        p.Key = p.Properties[0];
-    }
-    if (type.NavigationProperty)
-        for (const prop of type.NavigationProperty) {
-            let navprop = prop as Property;
-            p.NavigationProperties.push({
-                Name: navprop.$.Name,
-                Type: getType(navprop.$.Type),
-                Nullable: navprop.$.Nullable || true
-            });
-        }
-    return p as IEntityType;
-}
-
-export function getType(typestring: string): string {
+export function getType(typestring: string): ISimpleType {
     let m = typestring.match(/Collection\((.*)\)/);
     if (m) {
-        return m[1] + "[]";
+        return {
+            IsCollection: true,
+            Name: m[1],
+            IsVoid: m[1] === "void",
+        }
     }
-    return typestring;
+    return {
+        Name: typestring,
+        IsCollection: false,
+        IsVoid: typestring === "void",
+    }
 }
 
 export async function getHostAddressFromUser(): Promise<string> {
@@ -172,4 +151,38 @@ export async function getHostAddressFromUser(): Promise<string> {
         pick = pick.substr(0, pick.length - 1);
 
     return pick + "/$metadata";
+}
+
+export function getEntityTypeInterface(type: EntityType, schema: Schema): IEntityType {
+    const p: Partial<IEntityType> = {
+        // Key: type.Key ? type.Key[0].PropertyRef[0].$.Name : undefined,
+        Name: type.$.Name,
+        Fullname: schema.$.Namespace + "." + type.$.Name,
+        Properties: [],
+        NavigationProperties: [],
+        BaseType: type.$.BaseType || undefined,
+        OpenType: type.$.OpenType || false,
+        Actions: [],
+        Functions: [],
+    };
+    if (type.Property)
+        for (let prop of type.Property)
+            p.Properties.push({
+                Name: prop.$.Name,
+                Type: getType(prop.$.Type),
+                Nullable: prop.$.Nullable ? (prop.$.Nullable == "false" ? false : true) : true,
+            });
+    if (type.Key) {
+        p.Key = p.Properties[0];
+    }
+    if (type.NavigationProperty)
+        for (const prop of type.NavigationProperty) {
+            let navprop = prop as Property;
+            p.NavigationProperties.push({
+                Name: navprop.$.Name,
+                Type: getType(navprop.$.Type),
+                Nullable: true,
+            });
+        }
+    return p as IEntityType;
 }

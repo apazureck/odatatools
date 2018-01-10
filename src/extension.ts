@@ -11,7 +11,10 @@ import { Settings } from './settings';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as mkd from 'mkdirp';
+import { Log } from './log';
 
+Log.activate();
+const log = new Log("extension");
 
 if (!('toJSON' in Error.prototype))
     Object.defineProperty(Error.prototype, 'toJSON', {
@@ -42,6 +45,7 @@ export class Global {
      * @memberof Global
      */
     static get recentlyUsedAddresses(): string[] {
+        log.Trace();
         if (fs.existsSync(this.recentlyUsedJsonPath))
             return (JSON.parse(fs.readFileSync(this.recentlyUsedJsonPath, 'utf-8')) as string[]).reverse();
         else
@@ -72,23 +76,21 @@ export class Global {
         }
 
         fs.writeFile(path.join(Global.context.extensionPath, "recentlyused.json"), JSON.stringify(recentlyused), (error) => {
-            log.appendLine("An error occurred writing recently used file: " + error);
+            log.Error("An error occurred writing recently used file: " + error);
         });
     }
 }
 
-export var log: vscode.OutputChannel;
 export var lastval: string = null;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+    log.Trace();
     Global.context = context;
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
     console.log('Extension "odatatools" is now active!');
-    log = vscode.window.createOutputChannel("oData Tools");
-    log.show();
 
     vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration);
     onDidChangeConfiguration();
@@ -96,11 +98,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
+    log.Trace();
 }
 
 function onDidChangeConfiguration() {
-    log.appendLine("Using Extension Version: " + Settings.UsageVersion);
-    log.appendLine("Insider mode active: " + Settings.IsInInsiderMode ? "Yes" : "No");
+    log.Info("Using Extension Version: " + Settings.UsageVersion);
+    log.Info("Insider mode active: " + (Settings.IsInInsiderMode ? "Yes" : "No"));
     switch (Settings.UsageVersion) {
         case "0.4":
             try {
@@ -139,6 +142,7 @@ function onDidChangeConfiguration() {
 }
 
 function registerV40Commands(): void {
+    log.Trace();
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v040Crawler.getInterfaces));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v040Crawler.updateInterfaces));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v040ProxyGenerator.createProxy));
@@ -146,12 +150,14 @@ function registerV40Commands(): void {
 }
 
 function registerV100Commands(): void {
+    log.Trace();
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v100Crawler.getInterfaces));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v100Crawler.updateInterfaces));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v100ProxyGenerator.createProxy));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateProxy', v100ProxyGenerator.updateProxy));
 }
 function registerV200Commands(): void {
+    log.Trace();
     if (!Settings.IsInInsiderMode) {
         vscode.window.showErrorMessage("Version 2.0 using templates is still in a beta phase. Please activate the insider mode in your settings.\nUse it at own risk. Features may greatly change in the future and your template might not work anymore!");
         return;

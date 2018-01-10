@@ -4,6 +4,22 @@ All notable changes to the "odatatools" will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.2.0] 2017-12-15
+
+### Added
+
+* Version 2.0: Recently Used menu
+* ISimpleType for simple types
+
+### Fixed
+
+* Nullable of Properties was not boolean, but string
+* Template error: key did not set name in Child of Proxybase on entityset
+* Expand in default typescript template does now allow any string
+* Type collection of simple type could not be converted. Added ISimpleType interface to do so
+* Typescript template handled if response did return undefined
+* Fixed problems with void type (data was undefined)
+
 ## [1.1.0] 2017-12-05
 
 ### Added

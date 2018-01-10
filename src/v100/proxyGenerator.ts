@@ -1,5 +1,6 @@
 import { window, TextEdit, Range, commands, ExtensionContext } from 'vscode';
-import { log, Global } from '../extension';
+import { Global } from '../extension';
+import { Log } from '../log';
 import * as enumerable from 'linq-es2015';
 import { Enumerable } from "linq-es2015";
 import * as fs from 'fs';
@@ -16,7 +17,8 @@ import {
     NoHeaderError
 } from '../helper';
 
-const methodhook = "//${unboundMethods}"
+const methodhook = "//${unboundMethods}";
+const log = new Log("proxyGeneratorV100");
 
 export async function createProxy() {
     let generatorSettings: GeneratorSettings = {
@@ -45,7 +47,7 @@ export async function createProxy() {
         Global.lastval = maddr;
         generatorSettings.source = maddr;
 
-        log.appendLine("Getting Metadata from '" + maddr + "'");
+        log.Info("Getting Metadata from '" + maddr + "'");
         const metadata = await getMetadata(maddr);
 
         generatorSettings.modularity = await GetOutputStyleFromUser();
@@ -54,19 +56,19 @@ export async function createProxy() {
 
     } catch (error) {
         window.showErrorMessage("Could not create proxy. See output window for detail.");
-        log.appendLine("Creating proxy returned following error:");
+        log.Info("Creating proxy returned following error:");
         if (error.originalStack)
-            log.appendLine(error.originalStack);
+            log.Error(error.originalStack);
         else
-            log.appendLine(error.toString());
+            log.Error(error.toString());
 
-        log.appendLine("Updating current file.");
+        log.Info("Updating current file.");
         await window.activeTextEditor.edit((editbuilder) => {
             editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), createHeader(generatorSettings));
         });
 
-        log.appendLine("Successfully pasted data. Formatting Document.")
-        commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
+        log.Info("Successfully pasted data. Formatting Document.")
+        commands.executeCommand("editor.action.formatDocument").then(() => log.Info("Finished"));
     }
 }
 
@@ -77,15 +79,15 @@ async function generateProxy(metadata: Edmx, options: GeneratorSettings) {
     proxystring = await addActionsAndFunctions(proxystring, metadata["edmx:DataServices"][0]);
     proxystring = surroundWithNamespace(metadata["edmx:DataServices"][0], options, proxystring);
 
-    log.appendLine("Updating current file.");
+    log.Info("Updating current file.");
     await window.activeTextEditor.edit((editbuilder) => {
         editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), proxystring);
     });
 
-    log.appendLine("Successfully pasted data. Formatting Document.")
-    commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
+    log.Info("Successfully pasted data. Formatting Document.")
+    commands.executeCommand("editor.action.formatDocument").then(() => log.Info("Finished"));
 
-    log.appendLine("Copying Proxy Base module");
+    log.Info("Copying Proxy Base module");
     if (options.modularity === "Ambient") {
         fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odatajs-4.0.0.js")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odatajs.js")));
         fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odataproxybaseAsync.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odataproxybase.ts")));
@@ -109,28 +111,28 @@ export async function updateProxy() {
         if (!header.source)
             return window.showErrorMessage("No source property in odatatools header. Use 'Create Proxy' command instead.");
 
-        log.appendLine("Getting Metadata from '" + header.source + "'");
+        log.Info("Getting Metadata from '" + header.source + "'");
         const metadata = await getMetadata(header.source, header.requestOptions);
 
         generateProxy(metadata, header);
 
     } catch (error) {
         window.showErrorMessage("Could not create proxy. See output window for detail.");
-        log.appendLine("Creating proxy returned following error:");
+        log.Info("Creating proxy returned following error:");
         if (error.originalStack)
-            log.appendLine(error.originalStack);
+            log.Error(error.originalStack);
         else
-            log.appendLine(error.toString());
+            log.Error(error.toString());
 
-        log.appendLine("Updating current file.");
+        log.Info("Updating current file.");
         await window.activeTextEditor.edit((editbuilder) => {
             editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), createHeader(error instanceof NoHeaderError ? {
                 source: "unknown", modularity: "Ambient", requestOptions: {}
             } : header));
         });
 
-        log.appendLine("Created header");
-        commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
+        log.Info("Created header");
+        commands.executeCommand("editor.action.formatDocument").then(() => log.Info("Finished"));
     }
 }
 
@@ -200,7 +202,7 @@ class EntitySet {
 type GetOrPost = "GET" | "POST";
 
 async function addActionsAndFunctions(proxystring: string, metadata: DataService): Promise<string> {
-    log.appendLine("Looking for actions and functions")
+    log.Info("Looking for actions and functions")
     return new Promise<string>((resolve, reject) => {
         let ecschema = enumerable.asEnumerable(metadata.Schema).FirstOrDefault(x => x.EntityContainer != undefined);
         if (!ecschema)
@@ -226,7 +228,7 @@ async function addActionsAndFunctions(proxystring: string, metadata: DataService
 function getUnboundActionsAndFunctions(ecschema: Schema): Method[] {
     let all: Method[] = [];
     if (ecschema.Action) {
-        log.appendLine("Found " + ecschema.Action.length + " OData Actions");
+        log.Info("Found " + ecschema.Action.length + " OData Actions");
         let acts = ecschema.Action.filter(x => !x.$.IsBound);
         for (let a of acts) {
             a.Type = "Function";
@@ -234,7 +236,7 @@ function getUnboundActionsAndFunctions(ecschema: Schema): Method[] {
         }
     }
     if (ecschema.Function) {
-        log.appendLine("Found " + ecschema.Function.length + " OData Functions");
+        log.Info("Found " + ecschema.Function.length + " OData Functions");
         let fcts = ecschema.Function.filter(x => !x.$.IsBound);
         for (let f of fcts) {
             f.Type = "Function";
@@ -249,12 +251,12 @@ function getBoundActionsAndFunctions(ecschema: Schema): { [type: string]: Entity
     let entitySets: { [type: string]: EntitySet } = {};
 
     if (ecschema.Action) {
-        log.appendLine("Found " + ecschema.Action.length + " OData Actions");
+        log.Info("Found " + ecschema.Action.length + " OData Actions");
         for (let a of ecschema.Action) {
             try {
                 if (!a.$.IsBound)
                     continue;
-                log.appendLine("Adding bound Action " + a.$.Name);
+                log.Info("Adding bound Action " + a.$.Name);
 
                 // if parameter bindingparameter exists it is a bound action/function
                 let bindingParameter = a.Parameter.find(x => x.$.Name === "bindingParameter");
@@ -269,21 +271,21 @@ function getBoundActionsAndFunctions(ecschema: Schema): { [type: string]: Entity
                     entitySets[curset.Type] = curset;
                 } else {
                     // Method is not a bound action or function (NOT IMPLEMENTED SO FAR)
-                    log.appendLine("Does not support unbound function or action");
+                    log.Warn("Does not support unbound function or action");
                 }
             } catch (error) {
-                log.appendLine("Error occurred when adding action " + a.$.Name + ": " + error.toString())
+                log.Error("Error occurred when adding action " + a.$.Name + ": " + error.toString())
             }
         }
     }
 
     if (ecschema.Function) {
-        log.appendLine("Found " + ecschema.Function.length + " OData Functions");
+        log.Info("Found " + ecschema.Function.length + " OData Functions");
         for (let f of ecschema.Function) {
             try {
                 if (!f.$.IsBound)
                     continue;
-                log.appendLine("Adding bound Function " + f.$.Name);
+                log.Info("Adding bound Function " + f.$.Name);
 
                 // if parameter bindingparameter exists it is a bound action/function
                 let bindingParameter = f.Parameter.find(x => x.$.Name === "bindingParameter");
@@ -299,10 +301,10 @@ function getBoundActionsAndFunctions(ecschema: Schema): { [type: string]: Entity
                     entitySets[curset.Type] = curset;
                 } else {
                     // Method is not a bound action or function (NOT IMPLEMENTED SO FAR)
-                    log.appendLine("Does not support unbound function or action");
+                    log.Warn("Does not support unbound function or action");
                 }
             } catch (error) {
-                log.appendLine("Error occurred when adding function " + f.$.Name + ": " + error.toString());
+                log.Error("Error occurred when adding function " + f.$.Name + ": " + error.toString());
             }
         }
     }
@@ -329,6 +331,7 @@ function getSet(bindingParameter: Parameter, entitySets: { [type: string]: Entit
 
 async function getProxyString(uri: string, metadata: DataService, selectString: Modularity): Promise<string> {
     return new Promise<string>((resolve, reject) => {
+        log.Trace();
         // make the imports based on 
         let ret = "";
         if (selectString === "Modular") {

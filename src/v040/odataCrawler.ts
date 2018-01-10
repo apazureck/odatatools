@@ -1,6 +1,9 @@
 import { Client } from 'node-rest-client';
 import { window, TextEdit, Range, commands } from 'vscode';
-import { log, Global } from '../extension';
+import { Global } from '../extension';
+import { Log } from '../log';
+
+const log = new Log("odataCrawlerV040");
 
 export async function getInterfaces() {
     try {
@@ -24,7 +27,7 @@ export async function getInterfaces() {
 
         let interfacesstring = await receiveInterfaces(input, window.activeTextEditor.document.uri.fsPath.endsWith("d.ts"));
 
-        log.appendLine("Putting generated code to the current Editor window.");
+        log.Info("Putting generated code to the current Editor window.");
         if (!window.activeTextEditor)
             return window.showErrorMessage("No active window selected.");
 
@@ -35,8 +38,8 @@ export async function getInterfaces() {
         });
     } catch (error) {
         window.showErrorMessage("Could not create interfaces. See output window for detail.");
-        log.appendLine("Creating proxy returned following error:");
-        log.appendLine(JSON.stringify(error));
+        log.Error("Creating proxy returned following error:");
+        log.Error(JSON.stringify(error));
     }
 }
 
@@ -47,28 +50,28 @@ async function receiveInterfaces(input: string, ambient?: boolean): Promise<stri
         client.get(input, (data, response) => {
             try {
                 if (!data["edmx:Edmx"]) {
-                    log.appendLine("Received invalid data:\n");
-                    log.append(data.toString());
+                    log.Error("Received invalid data:\n");
+                    log.Error(data.toString());
                     return reject(window.showErrorMessage("Response is not valid oData metadata. See output for more information"));
                 }
                 let edmx: Edmx = data["edmx:Edmx"];
                 let version = edmx.$.Version;
-                log.appendLine("oData version: " + version);
+                log.Info("oData version: " + version);
                 if (version != "4.0")
                     window.showWarningMessage("WARNING! Current oDate Service Version is '" + version + "'. Trying to get interfaces, but service only supports Version 4.0! Outcome might be unexpected.");
 
-                log.appendLine("Creating Interfaces");
+                log.Info("Creating Interfaces");
                 let interfacesstring = getInterfacesString(edmx["edmx:DataServices"][0].Schema, ambient);
 
-                log.appendLine("Creating Edm Types");
+                log.Info("Creating Edm Types");
                 interfacesstring += edmTypes(ambient);
 
-                log.appendLine("Creating source line");
+                log.Info("Creating source line");
                 interfacesstring += "\n/// Do not modify this line to being able to update your interfaces again:"
                 interfacesstring += "\n/// #odata.source = '" + input + "'";
                 resolve(interfacesstring)
             } catch (error) {
-                log.appendLine("Unknown error:\n" + error.toString())
+                log.Error("Unknown error:\n" + error.toString())
                 window.showErrorMessage("Unknown error occurred, see console output for more information.");
                 reject(error);
             }
@@ -78,24 +81,24 @@ async function receiveInterfaces(input: string, ambient?: boolean): Promise<stri
 
 export async function updateInterfaces() {
     try {
-        log.appendLine("Looking for #odata.source hook");
+        log.Info("Looking for #odata.source hook");
         let m = window.activeTextEditor.document.getText().match("/// #odata.source = '(.*?)'");
         if (!m)
             return window.showErrorMessage("Did not find odata source in document: '" + window.activeTextEditor.document.fileName + "'");
 
         let interfacesstring = await receiveInterfaces(m[1], window.activeTextEditor.document.uri.fsPath.endsWith("d.ts"));
 
-        log.appendLine("Updating current file.");
+        log.Info("Updating current file.");
         window.activeTextEditor.edit((editbuilder) => {
             editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), interfacesstring)
         }).then((value) => {
-            log.appendLine("Successfully pasted data. Formatting Document.")
-            commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
+            log.Info("Successfully pasted data. Formatting Document.")
+            commands.executeCommand("editor.action.formatDocument").then(() => log.Info("Finished"));
         });
     } catch (error) {
         window.showErrorMessage("Could not update interfaces. See output window for detail.");
-        log.appendLine("Creating proxy returned following error:");
-        log.appendLine(JSON.stringify(error));
+        log.Error("Creating proxy returned following error:");
+        log.Error(JSON.stringify(error));
     }
 }
 

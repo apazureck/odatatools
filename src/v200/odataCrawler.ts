@@ -12,7 +12,8 @@ import {
 import * as request from 'request';
 import * as xml2js from 'xml2js';
 import { window, TextEdit, Range, commands, workspace } from 'vscode';
-import { log, Global } from '../extension';
+import { Global } from '../extension';
+import { Log } from '../log';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ncp } from 'ncp';
@@ -58,7 +59,7 @@ export function getEdmTypes(schema: Schema, generatorSettings: GeneratorSettings
                     p.Properties.push({
                         Name: prop.$.Name,
                         Type: getType(prop.$.Type),
-                        Nullable: prop.$.Nullable || true
+                        Nullable: prop.$.Nullable ? (prop.$.Nullable == "true" ? true : false) : true,
                     });
             metadata.ComplexTypes.push(p);
         }

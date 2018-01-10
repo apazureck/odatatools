@@ -1,12 +1,14 @@
 import { Client } from 'node-rest-client';
 import { window, TextEdit, Range, commands, ExtensionContext } from 'vscode';
-import { log, Global } from '../extension';
+import { Global } from '../extension';
+import { Log } from '../log';
 import * as enumerable from 'linq-es2015';
 import { Enumerable } from "linq-es2015";
 import * as fs from 'fs';
 import * as path from 'path';
 
-const methodhook = "//${unboundMethods}"
+const methodhook = "//${unboundMethods}";
+const log = new Log("proxyGeneratorV040");
 
 export async function createProxy() {
     try {
@@ -28,7 +30,7 @@ export async function createProxy() {
 
         Global.lastval = maddr;
 
-        log.appendLine("Getting Metadata from '" + maddr + "'");
+        log.Info("Getting Metadata from '" + maddr + "'");
         let metadata = await getMetadata(maddr);
 
         let ambientorImport = await window.showInputBox({
@@ -40,21 +42,21 @@ export async function createProxy() {
         proxystring = await addActionsAndFunctions(proxystring, metadata["edmx:DataServices"][0])
         proxystring = surroundWithNamespace(proxystring, metadata["edmx:DataServices"][0]);
 
-        log.appendLine("Updating current file.");
+        log.Info("Updating current file.");
         window.activeTextEditor.edit((editbuilder) => {
             editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), proxystring);
         }).then((value) => {
-            log.appendLine("Successfully pasted data. Formatting Document.")
-            commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
+            log.Info("Successfully pasted data. Formatting Document.")
+            commands.executeCommand("editor.action.formatDocument").then(() => log.Info("Finished"));
         });
 
-        log.appendLine("Copying Proxy Base module");
+        log.Info("Copying Proxy Base module");
         fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odatajs-4.0.0.js")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odatajs-4.0.0.js")));
         fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odataproxybase.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odataproxybase.ts")));
     } catch (error) {
         window.showErrorMessage("Could not create proxy. See output window for detail.");
-        log.appendLine("Creating proxy returned following error:");
-        log.appendLine(error.toString());
+        log.Error("Creating proxy returned following error:");
+        log.Error(error.toString());
     }
 }
 
@@ -119,7 +121,7 @@ class EntitySet {
 type GetOrPost = "GET" | "POST";
 
 async function addActionsAndFunctions(proxystring: string, metadata: DataService): Promise<string> {
-    log.appendLine("Looking for actions and functions")
+    log.Info("Looking for actions and functions")
     return new Promise<string>((resolve, reject) => {
         let ecschema = enumerable.asEnumerable(metadata.Schema).FirstOrDefault(x => x.EntityContainer != undefined);
         if (!ecschema)
@@ -145,7 +147,7 @@ async function addActionsAndFunctions(proxystring: string, metadata: DataService
 function getUnboundActionsAndFunctions(ecschema: Schema): Method[] {
     let all: Method[] = []
     if (ecschema.Action) {
-        log.appendLine("Found " + ecschema.Action.length + " OData Actions");
+        log.Info("Found " + ecschema.Action.length + " OData Actions");
         let acts = ecschema.Action.filter(x => !x.$.IsBound);
         for (let a of acts) {
             a.Type = "Function";
@@ -153,7 +155,7 @@ function getUnboundActionsAndFunctions(ecschema: Schema): Method[] {
         }
     }
     if (ecschema.Function) {
-        log.appendLine("Found " + ecschema.Function.length + " OData Functions");
+        log.Info("Found " + ecschema.Function.length + " OData Functions");
         let fcts = ecschema.Function.filter(x => !x.$.IsBound);
         for (let f of fcts) {
             f.Type = "Function";
@@ -168,12 +170,12 @@ function getBoundActionsAndFunctions(ecschema: Schema): { [type: string]: Entity
     let entitySets: { [type: string]: EntitySet } = {};
 
     if (ecschema.Action) {
-        log.appendLine("Found " + ecschema.Action.length + " OData Actions");
+        log.Info("Found " + ecschema.Action.length + " OData Actions");
         for (let a of ecschema.Action) {
             try {
                 if(!a.$.IsBound)
                     continue;
-                log.appendLine("Adding bound Action " + a.$.Name);
+                log.Info("Adding bound Action " + a.$.Name);
 
                 // if parameter bindingparameter exists it is a bound action/function
                 let bindingParameter = a.Parameter.find(x => x.$.Name === "bindingParameter");
@@ -188,21 +190,21 @@ function getBoundActionsAndFunctions(ecschema: Schema): { [type: string]: Entity
                     entitySets[curset.Type] = curset;
                 } else {
                     // Method is not a bound action or function (NOT IMPLEMENTED SO FAR)
-                    log.appendLine("Does not support unbound function or action");
+                    log.Warn("Does not support unbound function or action");
                 }
             } catch (error) {
-                log.appendLine("Error occurred when adding action " + a.$.Name + ": " + error.toString())
+                log.Error("Error occurred when adding action " + a.$.Name + ": " + error.toString())
             }
         }
     }
 
     if (ecschema.Function) {
-        log.appendLine("Found " + ecschema.Function.length + " OData Functions");
+        log.Info("Found " + ecschema.Function.length + " OData Functions");
         for (let f of ecschema.Function) {
             try {
                 if(!f.$.IsBound)
                     continue;
-                log.appendLine("Adding bound Function " + f.$.Name);
+                log.Info("Adding bound Function " + f.$.Name);
 
                 // if parameter bindingparameter exists it is a bound action/function
                 let bindingParameter = f.Parameter.find(x => x.$.Name === "bindingParameter");
@@ -218,10 +220,10 @@ function getBoundActionsAndFunctions(ecschema: Schema): { [type: string]: Entity
                     entitySets[curset.Type] = curset;
                 } else {
                     // Method is not a bound action or function (NOT IMPLEMENTED SO FAR)
-                    log.appendLine("Does not support unbound function or action");
+                    log.Warn("Does not support unbound function or action");
                 }
             } catch (error) {
-                log.appendLine("Error occurred when adding function " + f.$.Name + ": " + error.toString());
+                log.Info("Error occurred when adding function " + f.$.Name + ": " + error.toString());
             }
         }
     }
@@ -252,8 +254,8 @@ async function getMetadata(maddr: string): Promise<Edmx> {
         client.get(maddr, (data, response) => {
             try {
                 if (!data["edmx:Edmx"]) {
-                    log.appendLine("Received invalid data:\n");
-                    log.append(data.toString());
+                    log.Error("Received invalid data:\n");
+                    log.Error(data.toString());
                     return reject(window.showErrorMessage("Response is not valid oData metadata. See output for more information"));
                 }
                 if (data["edmx:Edmx"])

@@ -16,9 +16,11 @@ import {
     IODataEntities,
     IODataSchema,
     IParameter,
+    ISimpleType,
 } from './outtypes';
 import { window, TextEdit, Range, commands, ExtensionContext, workspace } from 'vscode';
-import { log, Global } from '../extension';
+import { Global } from '../extension';
+import { Log } from '../log';
 import * as enumerable from 'linq-es2015';
 import { Enumerable } from "linq-es2015";
 import * as fs from 'fs';
@@ -29,22 +31,24 @@ import { } from './outtypes';
 import {
     createHeader,
     GeneratorSettings,
-    getEntityTypeInterface,
     getGeneratorSettingsFromDocumentText,
     getHostAddressFromUser,
     getMetadata,
     getModifiedTemplates,
     GetOutputStyleFromUser,
-    getType,
     Modularity,
     NoHeaderError,
     TemplateGeneratorSettings,
+    getEntityTypeInterface,
+    getType,
 } from '../helper';
 
-const methodhook = "//${unboundMethods}"
+const methodhook = "//${unboundMethods}";
+const log = new Log("proxyGeneratorV200");
 
 hb.logger.log = (level, obj) => {
-    log.appendLine("# " + obj);
+    // TODO: Forward loglevel;
+    log.Info("# " + obj);
 }
 
 export async function createProxy() {
@@ -62,7 +66,7 @@ export async function createProxy() {
 
         const templates: { [key: string]: string } = getModifiedTemplates();
 
-        log.appendLine("Getting Metadata from '" + maddr + "'");
+        log.Info("Getting Metadata from '" + maddr + "'");
         const metadata = await getMetadata(maddr);
 
         await generateProxy(metadata, generatorSettings, templates);
@@ -70,19 +74,19 @@ export async function createProxy() {
         Global.AddToRecentlyUsedAddresses(maddr);
     } catch (error) {
         window.showErrorMessage("Could not create proxy. See output window for detail.");
-        log.appendLine("Creating proxy returned following error:");
+        log.Error("Creating proxy returned following error:");
         if (error.originalStack)
-            log.appendLine(error.originalStack);
+            log.Error(error.originalStack);
         else
-            log.appendLine(error.toString());
+            log.Error(error.toString());
 
-        log.appendLine("Updating current file.");
+        log.Info("Updating current file.");
         await window.activeTextEditor.edit((editbuilder) => {
             editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), createHeader(generatorSettings));
         });
 
-        log.appendLine("Successfully pasted data. Formatting Document.")
-        commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
+        log.Info("Successfully pasted data. Formatting Document.")
+        commands.executeCommand("editor.action.formatDocument").then(() => log.Info("Finished"));
     }
 }
 
@@ -95,13 +99,13 @@ export async function generateProxy(metadata: Edmx, options: TemplateGeneratorSe
     // proxystring = await addActionsAndFunctions(proxystring, metadata["edmx:DataServices"][0]);
     // let proxystring = surroundWithNamespace(metadata["edmx:DataServices"][0], options, proxystring);
 
-    log.appendLine("Updating current file.");
+    log.Info("Updating current file.");
     await window.activeTextEditor.edit((editbuilder) => {
         editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), proxystring);
     });
 
-    log.appendLine("Successfully pasted data. Formatting Document.")
-    commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
+    log.Info("Successfully pasted data. Formatting Document.")
+    commands.executeCommand("editor.action.formatDocument").then(() => log.Info("Finished"));
 
     // log.appendLine("Copying Proxy Base module");
     // if (options.modularity === "Ambient") {
@@ -119,7 +123,7 @@ export async function generateProxy(metadata: Edmx, options: TemplateGeneratorSe
 function getUnboundActionsAndFunctions(ecschema: Schema): Method[] {
     let all: Method[] = [];
     if (ecschema.Action) {
-        log.appendLine("Found " + ecschema.Action.length + " OData Actions");
+        log.Info("Found " + ecschema.Action.length + " OData Actions");
         let acts = ecschema.Action.filter(x => !x.$.IsBound);
         for (let a of acts) {
             a.Type = "Function";
@@ -127,7 +131,7 @@ function getUnboundActionsAndFunctions(ecschema: Schema): Method[] {
         }
     }
     if (ecschema.Function) {
-        log.appendLine("Found " + ecschema.Function.length + " OData Functions");
+        log.Info("Found " + ecschema.Function.length + " OData Functions");
         let fcts = ecschema.Function.filter(x => !x.$.IsBound);
         for (let f of fcts) {
             f.Type = "Function";
@@ -205,7 +209,7 @@ function getProxy(uri: string, metadata: DataService, options: TemplateGenerator
             continue;
         }
         // Get corresponding entity type to which the action is bound to
-        const et = allBaseTypes.entity.find(x => x.Fullname === action.Parameters[0].Type);
+        const et = allBaseTypes.entity.find(x => x.Fullname === action.Parameters[0].Type.Name);
         if (et) {
             et.Actions.push(action);
         }
@@ -216,7 +220,7 @@ function getProxy(uri: string, metadata: DataService, options: TemplateGenerator
             continue;
         }
         // Get corresponding entity type to which the action is bound to
-        const et = allBaseTypes.entity.find(x => x.Fullname === func.Parameters[0].Type);
+        const et = allBaseTypes.entity.find(x => x.Fullname === func.Parameters[0].Type.Name);
         if (et) {
             et.Functions.push(func);
         }
@@ -341,7 +345,7 @@ function getBoundActionsToCollections(set: IEntitySet, schema: ITypeStorage): IM
     const ret: IMethod[] = [];
     for (const action of schema.actions) {
         if (action.IsBoundToCollection) {
-            const boundTypeName = action.Parameters[0].Type.match(/^Collection\((.*)\)$/)[1];
+            const boundTypeName = action.Parameters[0].Type.Name;
             if (set.EntityType.Fullname === boundTypeName) {
                 ret.push(action);
             }
@@ -354,7 +358,7 @@ function getBoundFunctionsToCollections(set: IEntitySet, schema: ITypeStorage): 
     const ret: IMethod[] = [];
     for (const func of schema.functions) {
         if (func.IsBoundToCollection) {
-            const boundTypeName = func.Parameters[0].Type.match(/^Collection\((.*)\)$/)[1];
+            const boundTypeName = func.Parameters[0].Type.Name;
             if (set.EntityType.Fullname === boundTypeName) {
                 ret.push(func);
             }
@@ -375,7 +379,7 @@ function getUnboundMethod(method: Method): IMethod {
         FullName: method.Namespace,
         IsBound: method.$.IsBound,
         Name: method.$.Name,
-        ReturnType: method.ReturnType ? method.ReturnType[0].$.Type : "void",
+        ReturnType: _getReturnType(method.ReturnType),
         Parameters: getParameters(method.Parameter),
     }
 }
@@ -400,7 +404,7 @@ function getBoundMethod(method: Method, type: IEntityType): IMethod {
             IsBound: method.$.IsBound || false,
             Name: method.$.Name,
             FullName: type.Namespace + method.$.Name,
-            ReturnType: method.ReturnType ? getType(method.ReturnType[0].$.Type) : "void",
+            ReturnType: _getReturnType(method.ReturnType),
             Parameters: getParameters(params),
         }
         return outaction;
@@ -416,7 +420,7 @@ function getParameters(params: Parameter[]): IParameter[] {
             Name: param.$.Name,
             Nullable: param.$.Nullable,
             Unicode: param.$.Unicode,
-            Type: param.$.Type,
+            Type: getType(param.$.Type),
             MaxLength: param.$.MaxLength,
             Precision: param.$.Precision,
             Scale: param.$.Scale,
@@ -437,10 +441,14 @@ function _getParameters(parameters: Parameter[]): string {
     return ret.substr(0, ret.length - 2);
 }
 
-function _getReturnType(returntype: ReturnType[]): string {
+function _getReturnType(returntype: ReturnType[]): ISimpleType {
     if (!returntype)
-        return "void"
-    return returntype[0].$.Type;
+        return {
+            Name: "void",
+            IsCollection: false,
+            IsVoid: true,
+        }
+    return getType(returntype[0].$.Type);
 }
 
 function _getParameterJSON(parameters: Parameter[]): string {
@@ -482,11 +490,11 @@ function parseTemplate(generatorSettings: TemplateGeneratorSettings, schemas: IO
         Header: createHeader(generatorSettings),
     }
 
-    log.appendLine("Produced Data:");
+    log.Info("Produced Data:");
     try {
-        log.appendLine(JSON.stringify(proxy, null, 2));
-    } catch(error) {
-        
+        log.Info(JSON.stringify(proxy, null, 2));
+    } catch (error) {
+
     }
 
     const template = hb.compile(templates[generatorSettings.useTemplate], {
@@ -496,8 +504,8 @@ function parseTemplate(generatorSettings: TemplateGeneratorSettings, schemas: IO
     try {
         return template(proxy);
     } catch (error) {
-        log.append("Parsing your Template caused an error: ");
-        log.appendLine(error.message);
+        log.Error("Parsing your Template caused an error: ");
+        log.Error(error.message);
         throw error;
     }
 }
@@ -531,7 +539,7 @@ export function getEdmTypes(schema: Schema, generatorSettings: GeneratorSettings
                     p.Properties.push({
                         Name: prop.$.Name,
                         Type: getType(prop.$.Type),
-                        Nullable: prop.$.Nullable || true
+                        Nullable: prop.$.Nullable ? (prop.$.Nullable == "false" ? false : true) : true
                     });
             metadata.ComplexTypes.push(p);
         }
