@@ -31,6 +31,7 @@ export class NoHeaderError extends Error {
 }
 
 export function createHeader(options: GeneratorSettings): string {
+    log.TraceEnterFunction();
     // Create update information
     const headerobject = JSON.stringify(options, null, '\t');
     let header = `/**************************************************************************
@@ -45,6 +46,7 @@ Created by odatatools: https://marketplace.visualstudio.com/items?itemName=apazu
 }
 
 export function getGeneratorSettingsFromDocumentText(input: string): TemplateGeneratorSettings {
+    log.TraceEnterFunction();
     const header = input.match(/#ODATATOOLSOPTIONS([\s\S]*)#ODATATOOLSOPTIONSEND/m);
     if (!header)
         throw new NoHeaderError("No valid odata tools header found.");
@@ -52,6 +54,7 @@ export function getGeneratorSettingsFromDocumentText(input: string): TemplateGen
 }
 
 export async function getMetadata(maddr: string, options?: request.CoreOptions): Promise<Edmx> {
+    log.TraceEnterFunction();
     return new Promise<Edmx>((resolve, reject) => {
         let rData = '';
         request.get(maddr, options)
@@ -82,12 +85,14 @@ export async function getMetadata(maddr: string, options?: request.CoreOptions):
 }
 
 export async function GetOutputStyleFromUser(): Promise<Modularity> {
+    log.TraceEnterFunction();
     return await window.showQuickPick(["Modular", "Ambient"], {
         placeHolder: "Select to generate the service as a modular or ambient version."
     }) as Modularity;
 }
 
 export function getModifiedTemplates(): { [x: string]: string } {
+    log.TraceEnterFunction();
     let files: string[];
     const rootpath = workspace.rootPath;
     let ret: { [x: string]: string } = {};
@@ -114,6 +119,7 @@ export function getModifiedTemplates(): { [x: string]: string } {
 }
 
 export function getType(typestring: string): ISimpleType {
+    log.TraceEnterFunction();
     let m = typestring.match(/Collection\((.*)\)/);
     if (m) {
         return {
@@ -130,6 +136,7 @@ export function getType(typestring: string): ISimpleType {
 }
 
 export async function getHostAddressFromUser(): Promise<string> {
+    log.TraceEnterFunction();
     let pick: string = "New Entry...";
     if (Global.recentlyUsedAddresses && Global.recentlyUsedAddresses.length > 0)
         pick = await window.showQuickPick(["New Entry..."].concat(Global.recentlyUsedAddresses), {
@@ -154,13 +161,14 @@ export async function getHostAddressFromUser(): Promise<string> {
 }
 
 export function getEntityTypeInterface(type: EntityType, schema: Schema): IEntityType {
+    log.TraceEnterFunction();
     const p: Partial<IEntityType> = {
         // Key: type.Key ? type.Key[0].PropertyRef[0].$.Name : undefined,
         Name: type.$.Name,
         Fullname: schema.$.Namespace + "." + type.$.Name,
         Properties: [],
         NavigationProperties: [],
-        BaseType: type.$.BaseType || undefined,
+        BaseTypeFullName: type.$.BaseType || undefined,
         OpenType: type.$.OpenType || false,
         Actions: [],
         Functions: [],

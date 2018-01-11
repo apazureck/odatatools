@@ -444,12 +444,12 @@ console.log("Loaded odataproxybase");
 namespace {{this.Namespace}} {
 
     {{#each EntityTypes}}
-    export interface {{this.Name}} {
+    export interface {{this.Name}}{{#if this.BaseTypeFullName}} extends {{this.BaseTypeFullName}}{{/if}} {
         {{#each this.Properties}}
-        {{this.Name}}: {{this.Type}};
+        {{this.Name}}: {{this.Type.Name}};
         {{/each}}
         {{#each this.NavigationProperties}}
-        {{this.Name}}{{#if Nullable}}?{{/if}}: {{this.Type}};
+        {{this.Name}}{{#if Nullable}}?{{/if}}: {{this.Type.Name}};
         {{/each}}
         {{#if this.OpenType}}[x: string]: any;{{/if}}
     }
@@ -457,7 +457,7 @@ namespace {{this.Namespace}} {
     {{#each ComplexTypes}}
     export interface {{this.Name}} {
         {{#each this.Properties}}
-        {{this.Name}}: {{this.Type}};
+        {{this.Name}}: {{this.Type.Name}};
         {{/each}}
         {{#if this.OpenType}}[x: string]: any;{{/if}}
     }
@@ -472,7 +472,7 @@ namespace {{this.Namespace}} {
         constructor(address: string, name?: string, additionalHeaders?: odatajs.Header) {
             super(address, name, additionalHeaders);
             {{#each this.EntityContainer.EntitySets}}
-            this.{{this.Name}} = new {{this.Name}}EntitySet("{{this.Name}}", address, "{{this.EntityType.Key}}", additionalHeaders);
+            this.{{this.Name}} = new {{this.Name}}EntitySet("{{this.Name}}", address, "{{this.EntityType.Key.Name}}", additionalHeaders);
             {{/each}}
         }
         {{#each this.EntityContainer.EntitySets}}
@@ -482,8 +482,8 @@ namespace {{this.Namespace}} {
         // Unbound Functions
 
         {{#each this.EntityContainer.FunctionImports}}
-        {{this.Name}}({{#each this.Function.Parameters}}{{this.Name}}: {{this.Type}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.Function.ReturnType}}> {
-            return new Promise<{{this.Function.ReturnType}}>((resolve, reject) => {
+        {{this.Name}}({{#each this.Function.Parameters}}{{this.Name}}: {{this.Type.Name}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.Function.ReturnType.Name}}> {
+            return new Promise<{{this.Function.ReturnType.Name}}>((resolve, reject) => {
                 let request: odatajs.Request = {
                     headers: this.Headers,
                     method: "GET",
@@ -502,8 +502,8 @@ namespace {{this.Namespace}} {
         //Unbound Actions
 
         {{#each this.EntityContainer.ActionImports}}
-        {{this.Name}}({{#each this.Action.Parameters}}{{this.Name}}: {{this.Type}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.Action.ReturnType}}> {
-            return new Promise<{{this.Action.ReturnType}}>((resolve, reject) => {
+        {{this.Name}}({{#each this.Action.Parameters}}{{this.Name}}: {{this.Type.Name}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.Action.ReturnType.Name}}> {
+            return new Promise<{{this.Action.ReturnType.Name}}>((resolve, reject) => {
                 let request: odatajs.Request = {
                     headers: this.Headers,
                     method: "POST",
@@ -534,8 +534,8 @@ namespace {{this.Namespace}} {
 
         {{#if this.EntityType.Actions.length}}// Bound to entity Actions{{/if}}
         {{#each this.EntityType.Actions}}
-        {{this.Name}}({{#each this.Parameters}}{{#if @first}}key: {{eset.EntityType.Key.Type}}{{else}}{{this.Name}}: {{this.Type}}{{/if}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.ReturnType}}> {
-            return new Promise<{{this.ReturnType}}>((resolve, reject) => {
+        {{this.Name}}({{#each this.Parameters}}{{#if @first}}key: {{eset.EntityType.Key.Type.Name}}{{else}}{{this.Name}}: {{this.Type.Name}}{{/if}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.ReturnType.Name}}> {
+            return new Promise<{{this.ReturnType.Name}}>((resolve, reject) => {
                 let request: odatajs.Request = {
                     headers: this.Headers,
                     method: "POST",
@@ -557,8 +557,8 @@ namespace {{this.Namespace}} {
         {{/each}}
         {{#if this.EntityType.Functions.length}}// Bound to entity Functions{{/if}}
         {{#each this.EntityType.Functions}}
-        {{this.Name}}({{#each this.Parameters}}{{this.Name}}: {{this.Type}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.ReturnType}}> {
-            return new Promise<{{this.ReturnType}}>((resolve, reject) => {
+        {{this.Name}}({{#each this.Parameters}}{{this.Name}}: {{this.Type.Name}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.ReturnType.Name}}> {
+            return new Promise<{{this.ReturnType.Name}}>((resolve, reject) => {
                 let request: odatajs.Request = {
                     headers: this.Headers,
                     method: "GET",

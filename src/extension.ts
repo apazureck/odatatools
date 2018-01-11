@@ -11,9 +11,33 @@ import { Settings } from './settings';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as mkd from 'mkdirp';
-import { Log } from './log';
+import { Log, LogLevel } from './log';
 
-Log.activate();
+const logger = vscode.window.createOutputChannel("oData Tools");
+logger.show();
+
+Log.activate((message: string, logLevel: LogLevel) => {
+    logger.appendLine(message);
+    switch (logLevel) {
+        case LogLevel.Trace:
+        case LogLevel.Debug:
+            console.log(message);
+            break;
+        case LogLevel.Info:
+            console.info(message);
+            break;
+        case LogLevel.Warning:
+            console.warn(message);
+            break;
+        case LogLevel.Error:
+        case LogLevel.Fatal:
+            console.error(message);
+            break;
+        default:
+            break;
+    }
+});
+
 const log = new Log("extension");
 
 if (!('toJSON' in Error.prototype))
@@ -45,7 +69,7 @@ export class Global {
      * @memberof Global
      */
     static get recentlyUsedAddresses(): string[] {
-        log.Trace();
+        log.TraceEnterFunction();
         if (fs.existsSync(this.recentlyUsedJsonPath))
             return (JSON.parse(fs.readFileSync(this.recentlyUsedJsonPath, 'utf-8')) as string[]).reverse();
         else
@@ -53,6 +77,7 @@ export class Global {
     }
 
     static AddToRecentlyUsedAddresses(address: string) {
+        log.TraceEnterFunction();
         // Check if recently used json exists and create if not
         if(!fs.existsSync(this.recentlyUsedJsonPath)) {
             mkd.sync(path.dirname(this.recentlyUsedJsonPath));
@@ -76,7 +101,7 @@ export class Global {
         }
 
         fs.writeFile(path.join(Global.context.extensionPath, "recentlyused.json"), JSON.stringify(recentlyused), (error) => {
-            log.Error("An error occurred writing recently used file: " + error);
+            log.Error(() => ("An error occurred writing recently used file: " + JSON.stringify(error)));
         });
     }
 }
@@ -86,11 +111,11 @@ export var lastval: string = null;
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-    log.Trace();
+    log.TraceEnterFunction();
     Global.context = context;
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
-    console.log('Extension "odatatools" is now active!');
+    log.Info('Extension "odatatools" is now active!');
 
     vscode.workspace.onDidChangeConfiguration(onDidChangeConfiguration);
     onDidChangeConfiguration();
@@ -98,10 +123,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-    log.Trace();
+    log.TraceEnterFunction();
 }
 
 function onDidChangeConfiguration() {
+    log.TraceEnterFunction();
     log.Info("Using Extension Version: " + Settings.UsageVersion);
     log.Info("Insider mode active: " + (Settings.IsInInsiderMode ? "Yes" : "No"));
     switch (Settings.UsageVersion) {
@@ -142,7 +168,7 @@ function onDidChangeConfiguration() {
 }
 
 function registerV40Commands(): void {
-    log.Trace();
+    log.TraceEnterFunction();
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v040Crawler.getInterfaces));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v040Crawler.updateInterfaces));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v040ProxyGenerator.createProxy));
@@ -150,14 +176,14 @@ function registerV40Commands(): void {
 }
 
 function registerV100Commands(): void {
-    log.Trace();
+    log.TraceEnterFunction();
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', v100Crawler.getInterfaces));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', v100Crawler.updateInterfaces));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v100ProxyGenerator.createProxy));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateProxy', v100ProxyGenerator.updateProxy));
 }
 function registerV200Commands(): void {
-    log.Trace();
+    log.TraceEnterFunction();
     if (!Settings.IsInInsiderMode) {
         vscode.window.showErrorMessage("Version 2.0 using templates is still in a beta phase. Please activate the insider mode in your settings.\nUse it at own risk. Features may greatly change in the future and your template might not work anymore!");
         return;

@@ -24,7 +24,8 @@ export interface IComplexType {
     Fullname: string;
     Namespace: string;
     Properties: IProperty[];
-    BaseType: string;
+    BaseType?: IComplexType;
+    BaseTypeFullName: string;
     OpenType: boolean;
 }
 

@@ -51,7 +51,7 @@ export function getEdmTypes(schema: Schema, generatorSettings: GeneratorSettings
                 Fullname: schema.$.Namespace + "." + type.$.Name,
                 Name: type.$.Name,
                 Properties: [],
-                BaseType: type.$.BaseType || undefined,
+                BaseTypeFullName: type.$.BaseType || undefined,
                 OpenType: type.$.OpenType || false,
             }
             if (type.Property)

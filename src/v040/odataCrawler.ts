@@ -39,7 +39,7 @@ export async function getInterfaces() {
     } catch (error) {
         window.showErrorMessage("Could not create interfaces. See output window for detail.");
         log.Error("Creating proxy returned following error:");
-        log.Error(JSON.stringify(error));
+        log.Error(() => JSON.stringify(error));
     }
 }
 
@@ -98,7 +98,7 @@ export async function updateInterfaces() {
     } catch (error) {
         window.showErrorMessage("Could not update interfaces. See output window for detail.");
         log.Error("Creating proxy returned following error:");
-        log.Error(JSON.stringify(error));
+        log.Error(() => JSON.stringify(error));
     }
 }
 

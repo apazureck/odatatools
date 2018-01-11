@@ -8,6 +8,7 @@ import { Log } from '../log';
 const log = new Log("odataCrawlerV100");
 
 export async function getInterfaces() {
+    log.TraceEnterFunction();
     try {
         let input = await window.showInputBox({
             placeHolder: "http://my.odata.service/service.svc",
@@ -47,11 +48,12 @@ export async function getInterfaces() {
     } catch (error) {
         window.showErrorMessage("Could not create interfaces. See output window for detail.");
         log.Error("Creating proxy returned following error:");
-        log.Error(JSON.stringify(error));
+        log.Error(() => JSON.stringify(error));
     }
 }
 
 async function receiveInterfaces(options: GeneratorSettings): Promise<string> {
+    log.TraceEnterFunction();
     try {
         const edmx = await getMetadata(options.source);
         log.Info("Creating Interfaces");
@@ -71,6 +73,7 @@ async function receiveInterfaces(options: GeneratorSettings): Promise<string> {
 }
 
 export async function updateInterfaces() {
+    log.TraceEnterFunction();
     try {
         log.Info("Looking for header.");
         let generatorSettings = getGeneratorSettingsFromDocumentText(window.activeTextEditor.document.getText());
@@ -116,6 +119,7 @@ var typedefs = {
 }
 
 function edmTypes(ambient: boolean): string {
+    log.TraceEnterFunction();
     let input = "\n";
     input += "type JSDate = Date;\n\n"
     input += (ambient ? "declare " : "") + "namespace Edm {\n";
@@ -126,6 +130,7 @@ function edmTypes(ambient: boolean): string {
 }
 
 function getInterfacesString(schemas: Schema[], generatorSettings: GeneratorSettings): string {
+    log.TraceEnterFunction();
     let ret = "";
     for (let schema of schemas) {
         ret += (generatorSettings.modularity === "Ambient" ? "declare " : "") + "namespace " + schema.$.Namespace + " {\n";
@@ -163,6 +168,7 @@ function getInterfacesString(schemas: Schema[], generatorSettings: GeneratorSett
 }
 
 function getType(typestring: string): string {
+    log.TraceEnterFunction();
     let m = typestring.match(/Collection\((.*)\)/);
     if (m) {
         checkEdmType(m[1]);
@@ -173,6 +179,7 @@ function getType(typestring: string): string {
 }
 
 function checkEdmType(typestring: string) {
+    log.TraceEnterFunction();
     if (!typestring)
         return;
     if (!typestring.startsWith("Edm."))
@@ -183,6 +190,7 @@ function checkEdmType(typestring: string) {
 }
 
 function getProperty(inprop: Property | NavigationProperty, forceoptional?: boolean) {
+    log.TraceEnterFunction();
     let prop = inprop as Property;
     return prop.$.Name + (typeof prop.$.Nullable !== 'undefined' ? (forceoptional ? "?" : (prop.$.Nullable ? "" : "?")) : "?") + ": " + getType(prop.$.Type) + ";\n"
 }
