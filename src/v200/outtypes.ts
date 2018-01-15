@@ -9,7 +9,7 @@ export interface IMethod {
     Name: string;
     IsBoundToCollection: boolean;
     IsBound: boolean;
-    ReturnType: string
+    ReturnType: ISimpleType;
 }
 
 export interface IEntityType extends IComplexType {
@@ -24,7 +24,8 @@ export interface IComplexType {
     Fullname: string;
     Namespace: string;
     Properties: IProperty[];
-    BaseType: string;
+    BaseType?: IComplexType;
+    BaseTypeFullName: string;
     OpenType: boolean;
 }
 
@@ -35,7 +36,7 @@ export interface IEnumType {
 
 export interface IProperty {
     Name: string;
-    Type: string;
+    Type: ISimpleType;
     Nullable: boolean;
 }
 
@@ -60,15 +61,16 @@ export interface IODataSchema extends IODataEntities {
 
 export interface IAction extends IMethod { }
 export interface IFunction extends IMethod { }
+
 export interface IMethod {
     Parameters: IParameter[];
-    ReturnType: string | undefined;
+    ReturnType: ISimpleType;
     FullName: string;
 }
 
 export interface IParameter {
     Name: string;
-    Type: string;
+    Type: ISimpleType;
     Nullable?: boolean;
     Unicode?: boolean;
     Precision?: number;
@@ -131,4 +133,10 @@ export interface ISingleton {
 export interface INavigationPropertyBinding {
     Path: string;
     Target: string;
+}
+
+export interface ISimpleType {
+    Name: string;
+    IsCollection: boolean;
+    IsVoid: boolean;
 }

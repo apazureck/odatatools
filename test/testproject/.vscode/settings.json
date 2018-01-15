@@ -6,5 +6,6 @@
         "**/*.js.map": true,
         "**/*.js": { "when": "$(basename).ts" }
     },
-    "vsicons.presets.angular": false
+    "vsicons.presets.angular": false,
+    "odatatools.logLevel": "Trace"
 }

@@ -2,9 +2,13 @@ import { createHeader, getGeneratorSettingsFromDocumentText, getMetadata, Genera
 import * as request from 'request';
 import * as xml2js from 'xml2js';
 import { window, TextEdit, Range, commands } from 'vscode';
-import { log, Global } from '../extension';
+import { Global } from '../extension';
+import { Log } from '../log';
+
+const log = new Log("odataCrawlerV100");
 
 export async function getInterfaces() {
+    log.TraceEnterFunction();
     try {
         let input = await window.showInputBox({
             placeHolder: "http://my.odata.service/service.svc",
@@ -32,7 +36,7 @@ export async function getInterfaces() {
 
         let interfacesstring = await receiveInterfaces(generatorSettings);
 
-        log.appendLine("Putting generated code to the current Editor window.");
+        log.Info("Putting generated code to the current Editor window.");
         if (!window.activeTextEditor)
             return window.showErrorMessage("No active window selected.");
 
@@ -43,53 +47,55 @@ export async function getInterfaces() {
         });
     } catch (error) {
         window.showErrorMessage("Could not create interfaces. See output window for detail.");
-        log.appendLine("Creating proxy returned following error:");
-        log.appendLine(JSON.stringify(error));
+        log.Error("Creating proxy returned following error:");
+        log.Error(() => JSON.stringify(error));
     }
 }
 
 async function receiveInterfaces(options: GeneratorSettings): Promise<string> {
+    log.TraceEnterFunction();
     try {
         const edmx = await getMetadata(options.source);
-        log.appendLine("Creating Interfaces");
+        log.Info("Creating Interfaces");
         let interfacesstring = getInterfacesString(edmx["edmx:DataServices"][0].Schema, options);
 
-        log.appendLine("Creating Edm Types");
+        log.Info("Creating Edm Types");
         interfacesstring += edmTypes(options.modularity === "Ambient");
 
-        log.appendLine("Creating source line");
+        log.Info("Creating source line");
         interfacesstring += "\n/// Do not modify this line to being able to update your interfaces again:"
         return createHeader(options) + interfacesstring;
     } catch (error) {
-        log.appendLine("Unknown error:\n" + error.toString());
+        log.Error("Unknown error:\n" + error.toString());
         window.showErrorMessage("Error occurred, see console output for more information.");
         return createHeader(options);
     }
 }
 
 export async function updateInterfaces() {
+    log.TraceEnterFunction();
     try {
-        log.appendLine("Looking for header.");
+        log.Info("Looking for header.");
         let generatorSettings = getGeneratorSettingsFromDocumentText(window.activeTextEditor.document.getText());
         if (!generatorSettings)
             return window.showErrorMessage("Did not find odata source in document: '" + window.activeTextEditor.document.fileName + "'");
 
         let interfacesstring = await receiveInterfaces(generatorSettings);
 
-        log.appendLine("Updating current file.");
+        log.Info("Updating current file.");
         window.activeTextEditor.edit((editbuilder) => {
             editbuilder.replace(new Range(0, 0, window.activeTextEditor.document.lineCount - 1, window.activeTextEditor.document.lineAt(window.activeTextEditor.document.lineCount - 1).text.length), interfacesstring)
         }).then((value) => {
-            log.appendLine("Successfully pasted data. Formatting Document.")
-            commands.executeCommand("editor.action.formatDocument").then(() => log.appendLine("Finished"));
+            log.Info("Successfully pasted data. Formatting Document.")
+            commands.executeCommand("editor.action.formatDocument").then(() => log.Info("Finished"));
         });
     } catch (error) {
         window.showErrorMessage("Could not update interfaces. See output window for detail.");
-        log.appendLine("Creating proxy returned following error:");
+        log.Error("Creating proxy returned following error:");
         if (error.originalStack)
-            log.appendLine(error.originalStack);
+            log.Error(error.originalStack);
         else
-            log.appendLine(error.toString());
+            log.Error(error.toString());
     }
 }
 
@@ -113,6 +119,7 @@ var typedefs = {
 }
 
 function edmTypes(ambient: boolean): string {
+    log.TraceEnterFunction();
     let input = "\n";
     input += "type JSDate = Date;\n\n"
     input += (ambient ? "declare " : "") + "namespace Edm {\n";
@@ -123,6 +130,7 @@ function edmTypes(ambient: boolean): string {
 }
 
 function getInterfacesString(schemas: Schema[], generatorSettings: GeneratorSettings): string {
+    log.TraceEnterFunction();
     let ret = "";
     for (let schema of schemas) {
         ret += (generatorSettings.modularity === "Ambient" ? "declare " : "") + "namespace " + schema.$.Namespace + " {\n";
@@ -160,6 +168,7 @@ function getInterfacesString(schemas: Schema[], generatorSettings: GeneratorSett
 }
 
 function getType(typestring: string): string {
+    log.TraceEnterFunction();
     let m = typestring.match(/Collection\((.*)\)/);
     if (m) {
         checkEdmType(m[1]);
@@ -170,6 +179,7 @@ function getType(typestring: string): string {
 }
 
 function checkEdmType(typestring: string) {
+    log.TraceEnterFunction();
     if (!typestring)
         return;
     if (!typestring.startsWith("Edm."))
@@ -180,6 +190,7 @@ function checkEdmType(typestring: string) {
 }
 
 function getProperty(inprop: Property | NavigationProperty, forceoptional?: boolean) {
+    log.TraceEnterFunction();
     let prop = inprop as Property;
     return prop.$.Name + (typeof prop.$.Nullable !== 'undefined' ? (forceoptional ? "?" : (prop.$.Nullable ? "" : "?")) : "?") + ": " + getType(prop.$.Type) + ";\n"
 }

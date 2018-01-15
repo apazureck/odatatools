@@ -103,7 +103,7 @@ interface Property extends EdmxBase {
     $: {
         Name: string;
         Type: string;
-        Nullable?: boolean;
+        Nullable?: boolean | string;
     }
 }
 
