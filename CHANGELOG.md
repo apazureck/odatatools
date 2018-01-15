@@ -4,12 +4,20 @@ All notable changes to the "odatatools" will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [1.2.0] 2017-12-15
+## [2.0.0] 2017-12-15
 
 ### Added
 
 * Version 2.0: Recently Used menu
 * ISimpleType for simple types
+
+### Changed
+
+* Version 2.0 is now standard
+
+### Deprecated
+
+* Version 1.0 will not be supported anymore
 
 ### Fixed
 

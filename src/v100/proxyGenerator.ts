@@ -187,7 +187,7 @@ async function generateProxy(metadata: Edmx, options: GeneratorSettings) {
         )
       );
   }
-  Global.AddToRecentlyUsedAddresses(options.source);
+  // Global.AddToRecentlyUsedAddresses(options.source);
 }
 
 export async function updateProxy() {

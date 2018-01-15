@@ -53,7 +53,7 @@
         },
         "odatatools.version": {
           "type": "string",
-          "default": "1.0",
+          "default": "2.0",
           "description": "For legacy reasons. To use old behavior set to version '0.4'. See extension description for more details.",
           "enum": [
             "2.0",

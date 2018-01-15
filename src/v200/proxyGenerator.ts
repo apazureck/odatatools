@@ -58,57 +58,6 @@ hb.logger.log = (level, obj) => {
   log.Info("# " + obj);
 };
 
-export async function createProxy() {
-  let generatorSettings: TemplateGeneratorSettings = {
-    modularity: "Ambient",
-    requestOptions: {},
-    source: "unknown",
-    useTemplate: undefined
-  };
-  try {
-    let maddr = await getHostAddressFromUser();
-
-    Global.lastval = maddr;
-    generatorSettings.source = maddr;
-
-    const templates: { [key: string]: string } = getModifiedTemplates();
-
-    log.Info("Getting Metadata from '" + maddr + "'");
-    const metadata = await getMetadata(maddr);
-
-    await generateProxy(metadata, generatorSettings, templates);
-
-    Global.AddToRecentlyUsedAddresses(maddr);
-  } catch (error) {
-    window.showErrorMessage(
-      "Could not create proxy. See output window for detail."
-    );
-    log.Error("Creating proxy returned following error:");
-    if (error.originalStack) log.Error(error.originalStack);
-    else log.Error(error.toString());
-
-    log.Info("Updating current file.");
-    await window.activeTextEditor.edit(editbuilder => {
-      editbuilder.replace(
-        new Range(
-          0,
-          0,
-          window.activeTextEditor.document.lineCount - 1,
-          window.activeTextEditor.document.lineAt(
-            window.activeTextEditor.document.lineCount - 1
-          ).text.length
-        ),
-        createHeader(generatorSettings)
-      );
-    });
-
-    log.Info("Successfully pasted data. Formatting Document.");
-    commands
-      .executeCommand("editor.action.formatDocument")
-      .then(() => log.Info("Finished"));
-  }
-}
-
 export async function generateProxy(
   metadata: Edmx,
   options: TemplateGeneratorSettings,
@@ -116,11 +65,14 @@ export async function generateProxy(
 ) {
   // window.showInformationMessage("Select import type (ambient or modular) for generation.");
 
+  log.Debug("Getting proxy json from metadata");
   let schemas = getProxy(
     options.source.replace("$metadata", ""),
     metadata["edmx:DataServices"][0],
     options
   );
+
+  log.Debug("Parsing template");
   const proxystring = parseTemplate(options, schemas, templates);
 
   // proxystring = await addActionsAndFunctions(proxystring, metadata["edmx:DataServices"][0]);
@@ -156,7 +108,7 @@ export async function generateProxy(
   //     fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odataproxybaseAsyncModular.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odataproxybase.ts")));
   //     fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odatajs.d.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odatajs.d.ts")));
   // }
-  Global.AddToRecentlyUsedAddresses(options.source);
+  // Global.AddToRecentlyUsedA ddresses(options.source);
 }
 
 function getUnboundActionsAndFunctions(ecschema: Schema): Method[] {
@@ -194,9 +146,10 @@ function getProxy(
   metadata: DataService,
   options: TemplateGeneratorSettings
 ): IODataSchema[] {
+  log.TraceEnterFunction();
   // get the entity container
   let schemas: Schema[];
-  try {
+  try { 
     schemas = metadata.Schema;
   } catch (error) {
     throw new Error("Could not find any entity container on OData Service");
@@ -585,6 +538,7 @@ function parseTemplate(
   schemas: IODataSchema[],
   templates: { [key: string]: string }
 ): string {
+  log.TraceEnterFunction();
   if (!generatorSettings.useTemplate) {
     generatorSettings.useTemplate = Object.keys(templates)[0];
   }

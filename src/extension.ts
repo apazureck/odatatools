@@ -89,7 +89,7 @@ export class Global {
 
         // Check if already in list and push it to the top.
         const foundelement = recentlyused.indexOf(address);
-        if (foundelement > 0) {
+        if (foundelement >= 0) {
             recentlyused.splice(foundelement, 1);
             recentlyused.push(address);
             // Else check if max number is exceeded
@@ -100,7 +100,7 @@ export class Global {
             recentlyused.push(address);
         }
 
-        fs.writeFile(path.join(Global.context.extensionPath, "recentlyused.json"), JSON.stringify(recentlyused), (error) => {
+        fs.writeFile(path.join(this.recentlyUsedJsonPath), JSON.stringify(recentlyused), (error) => {
             log.Error(() => ("An error occurred writing recently used file: " + JSON.stringify(error)));
         });
     }
@@ -184,10 +184,6 @@ function registerV100Commands(): void {
 }
 function registerV200Commands(): void {
     log.TraceEnterFunction();
-    if (!Settings.IsInInsiderMode) {
-        vscode.window.showErrorMessage("Version 2.0 using templates is still in a beta phase. Please activate the insider mode in your settings.\nUse it at own risk. Features may greatly change in the future and your template might not work anymore!");
-        return;
-    }
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetInterfaces', () => vscode.window.showErrorMessage("Get Interfaces is deprecated. Use Get Proxy instead.")));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.UpdateInterfaces', () => vscode.window.showErrorMessage("Update Interfaces is deprecated. Use Update Proxy instead.")));
     Global.context.subscriptions.push(vscode.commands.registerCommand('odatatools.GetProxy', v200ProxyGenerator.createProxy));

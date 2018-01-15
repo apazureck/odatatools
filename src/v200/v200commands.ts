@@ -1,7 +1,7 @@
 import { generateProxy } from './proxyGenerator';
 import { Global } from '../extension';
 import { Log } from '../log';
-import { TemplateGeneratorSettings, getModifiedTemplates, getMetadata, createHeader, getGeneratorSettingsFromDocumentText, NoHeaderError } from '../helper';
+import { TemplateGeneratorSettings, getModifiedTemplates, getMetadata, createHeader, getGeneratorSettingsFromDocumentText, NoHeaderError, getHostAddressFromUser } from '../helper';
 import { window, Range, commands } from 'vscode';
 
 const log = new Log("v200commands");
@@ -15,12 +15,7 @@ export async function createProxy() {
     };
     try {
         // TODO: Change to quickpick to provide full file list
-        let maddr = await window.showInputBox({
-            placeHolder: "http://my.odata.service/service.svc",
-            value: Global.recentlyUsedAddresses.pop(),
-            prompt: "Please enter uri of your oData service.",
-            ignoreFocusOut: true,
-        });
+        let maddr = await getHostAddressFromUser();
 
         if (!maddr)
             return;
@@ -39,9 +34,9 @@ export async function createProxy() {
         log.Info("Getting Metadata from '" + maddr + "'");
         const metadata = await getMetadata(maddr);
 
-        // generatorSettings.modularity = await GetOutputStyleFromUser();
-
         await generateProxy(metadata, generatorSettings, templates);
+
+        Global.AddToRecentlyUsedAddresses(maddr);
 
     } catch (error) {
         window.showErrorMessage("Could not create proxy. See output window for detail.");

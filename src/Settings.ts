@@ -12,7 +12,7 @@ export class Settings {
     }
 
     static get UsageVersion(): UsageVersion {
-        return Settings.configuration.get("version", "1.0");
+        return Settings.configuration.get("version", "2.0");
     }
 
     static get recentlyUsedLength(): number {

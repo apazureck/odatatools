@@ -138,7 +138,8 @@ export function getType(typestring: string): ISimpleType {
 export async function getHostAddressFromUser(): Promise<string> {
     log.TraceEnterFunction();
     let pick: string = "New Entry...";
-    if (Global.recentlyUsedAddresses && Global.recentlyUsedAddresses.length > 0)
+    const rul = Global.recentlyUsedAddresses
+    if (rul && rul.length > 0)
         pick = await window.showQuickPick(["New Entry..."].concat(Global.recentlyUsedAddresses), {
             placeHolder: "Select from recently used addresses or add new entry"
         });

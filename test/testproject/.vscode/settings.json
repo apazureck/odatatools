@@ -7,7 +7,5 @@
         "**/*.js": { "when": "$(basename).ts" }
     },
     "vsicons.presets.angular": false,
-    "odatatools.logLevel": "Trace",
-    "odatatools.insiders": true,
-    "odatatools.version": "2.0"
+    "odatatools.logLevel": "Trace"
 }
