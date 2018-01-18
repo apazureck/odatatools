@@ -2,7 +2,7 @@
     "name": "odatatools",
     "displayName": "OData Client Generator",
     "description": "Tools for generating clients for OData Webservices",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "publisher": "apazureck",
     "engines": {
         "vscode": "^1.5.0"
