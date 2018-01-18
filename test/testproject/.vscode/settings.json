@@ -7,5 +7,6 @@
         "**/*.js": { "when": "$(basename).ts" }
     },
     "vsicons.presets.angular": false,
-    "odatatools.logLevel": "Trace"
+    "odatatools.logLevel": "Trace",
+    "handlebarsPreview.language": "typescript"
 }
