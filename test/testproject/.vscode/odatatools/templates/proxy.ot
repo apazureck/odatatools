@@ -443,30 +443,36 @@ console.log("Loaded odataproxybase");
 
 namespace {{this.Namespace}} {
 
+    // Entity types
     {{#each EntityTypes}}
     export interface {{this.Name}}{{#if this.BaseTypeFullName}} extends {{this.BaseTypeFullName}}{{/if}} {
         {{#each this.Properties}}
-        {{this.Name}}: {{this.Type.Name}};
+        {{this.Name}}: {{this.Type.Name}}{{#if this.Type.IsCollection}}[]{{/if}};
         {{/each}}
         {{#each this.NavigationProperties}}
-        {{this.Name}}{{#if Nullable}}?{{/if}}: {{this.Type.Name}};
+        {{this.Name}}{{#if Nullable}}?{{/if}}: {{this.Type.Name}}{{#if this.Type.IsCollection}}[]{{/if}};
         {{/each}}
         {{#if this.OpenType}}[x: string]: any;{{/if}}
     }
     {{/each}}
+
+    // Complex types
     {{#each ComplexTypes}}
     export interface {{this.Name}} {
         {{#each this.Properties}}
-        {{this.Name}}: {{this.Type.Name}};
+        {{this.Name}}: {{this.Type.Name}}{{#if this.Type.IsCollection}}[]{{/if}};
         {{/each}}
         {{#if this.OpenType}}[x: string]: any;{{/if}}
     }
     {{/each}}
+
+    // Enum Types
     {{#each EnumTypes}}
     // Enum Values: {{#each this.Members}}{{this.Key}} = {{this.Value}}{{#unless @last}}, {{/unless}}{{/each}}
     export type {{this.Name}} = {{#each this.Members}}"{{this.Key}}"{{#unless @last}} | {{/unless}}{{/each}};
     {{/each}}
 
+    // Entity container
     {{#if this.EntityContainer}}
     export class {{this.EntityContainer.Name}} extends odatatools.ProxyBase {
         constructor(address: string, name?: string, additionalHeaders?: odatajs.Header) {
@@ -482,7 +488,7 @@ namespace {{this.Namespace}} {
         // Unbound Functions
 
         {{#each this.EntityContainer.FunctionImports}}
-        {{this.Name}}({{#each this.Function.Parameters}}{{this.Name}}: {{this.Type.Name}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.Function.ReturnType.Name}}> {
+        {{this.Name}}({{#each this.Function.Parameters}}{{this.Name}}: {{this.Type.Name}}{{#if this.Type.IsCollection}}[]{{/if}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.Function.ReturnType.Name}}> {
             return new Promise<{{this.Function.ReturnType.Name}}>((resolve, reject) => {
                 let request: odatajs.Request = {
                     headers: this.Headers,
@@ -502,7 +508,7 @@ namespace {{this.Namespace}} {
         //Unbound Actions
 
         {{#each this.EntityContainer.ActionImports}}
-        {{this.Name}}({{#each this.Action.Parameters}}{{this.Name}}: {{this.Type.Name}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.Action.ReturnType.Name}}> {
+        {{this.Name}}({{#each this.Action.Parameters}}{{this.Name}}: {{this.Type.Name}}{{#if this.Type.IsCollection}}[]{{/if}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.Action.ReturnType.Name}}> {
             return new Promise<{{this.Action.ReturnType.Name}}>((resolve, reject) => {
                 let request: odatajs.Request = {
                     headers: this.Headers,
@@ -534,7 +540,7 @@ namespace {{this.Namespace}} {
 
         {{#if this.EntityType.Actions.length}}// Bound to entity Actions{{/if}}
         {{#each this.EntityType.Actions}}
-        {{this.Name}}({{#each this.Parameters}}{{#if @first}}key: {{eset.EntityType.Key.Type.Name}}{{else}}{{this.Name}}: {{this.Type.Name}}{{/if}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.ReturnType.Name}}> {
+        {{this.Name}}({{#each this.Parameters}}{{#if @first}}key: {{eset.EntityType.Key.Type.Name}}{{else}}{{this.Name}}: {{this.Type.Name}}{{#if this.Type.IsCollection}}[]{{/if}}{{/if}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.ReturnType.Name}}> {
             return new Promise<{{this.ReturnType.Name}}>((resolve, reject) => {
                 let request: odatajs.Request = {
                     headers: this.Headers,
@@ -557,7 +563,7 @@ namespace {{this.Namespace}} {
         {{/each}}
         {{#if this.EntityType.Functions.length}}// Bound to entity Functions{{/if}}
         {{#each this.EntityType.Functions}}
-        {{this.Name}}({{#each this.Parameters}}{{this.Name}}: {{this.Type.Name}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.ReturnType.Name}}> {
+        {{this.Name}}({{#each this.Parameters}}{{this.Name}}: {{this.Type.Name}}{{#if this.Type.IsCollection}}[]{{/if}}{{#unless @last}}, {{/unless}}{{/each}}): Promise<{{this.ReturnType.Name}}> {
             return new Promise<{{this.ReturnType.Name}}>((resolve, reject) => {
                 let request: odatajs.Request = {
                     headers: this.Headers,
