@@ -49,6 +49,8 @@ For instructions how to use this extensions have a look at the [ODataTools Wiki]
 
 - None
 
+The service is tested against the service in the repo. In future release I hope to create some kind of test framework to check custom templates again, [please report issues on the github page](https://github.com/apazureck/odatatools/issues)
+
 ## Contribution
 
 I created this extensions to fill my need using this with our oData services (ASP.NET oData V4.0). I tested it against the [northwind service](http://services.odata.org/V4/Northwind/Northwind.svc/) (mostly). I will extend this in the future, if I have any need to get things done. So please file an issue on github, I will have a look at it, how much work it will be to extend this. Or fork it and extend it on your own. Contribution is always welcome.

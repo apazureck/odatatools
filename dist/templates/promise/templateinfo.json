@@ -2,7 +2,7 @@
     "Author": "Andreas Pazureck",
     "Language": "Typescript",
     "Description": "A Promise based Template for an OData Service using ambient namespaces and odatajs",
-    "Version": "1.0.0",
+    "Version": "1.0.1",
     "files": [
         "proxy.ot",
         "odata.js"

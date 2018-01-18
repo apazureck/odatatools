@@ -4,6 +4,13 @@ All notable changes to the "odatatools" will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [2.0.1] 2017-01-18
+
+### Fixed
+
+* Wrong Template was distributed
+* Array types were not generated correctly in template
+
 ## [2.0.0] 2017-12-15
 
 ### Added
