@@ -452,7 +452,7 @@ namespace odatatools {
                 }
 
                 odatajs.oData.request(request, (data, response) => {
-                    resolve(data.value);
+                    resolve(data.value || datas);
                 }, (error) => {
                     console.error(error.name + " " + error.message + " | " + (error.response | error.response.statusText) + ":\n" + (error.response | error.response.body));
                     reject(error);
