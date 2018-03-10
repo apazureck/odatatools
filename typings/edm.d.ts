@@ -32,6 +32,7 @@ interface EntityContainer {
         Name: string;
     },
     EntitySet: EntitySet[],
+    Singleton: Singleton[],
     FunctionImport: FunctionImport[],
     ActionImport: ActionImport[],
 }
@@ -40,6 +41,15 @@ interface EntitySet {
     $: {
         Name: string,
         EntityType: string
+    }
+    NavigationPropertyBinding: NavigationPropertyBinding[];
+    FunctionImport: FunctionImport[]
+}
+
+interface Singleton {
+    $: {
+        Name: string,
+        Type: string
     }
     NavigationPropertyBinding: NavigationPropertyBinding[];
     FunctionImport: FunctionImport[]

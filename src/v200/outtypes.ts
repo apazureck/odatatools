@@ -1,4 +1,3 @@
-import { IODataSchema } from './outtypes';
 export interface IInterfaces {
     ComplexTypes: ComplexType[];
     EntityTypes: EntityType[];
@@ -87,7 +86,7 @@ export interface IODataEntities {
 }
 
 
-/// Proxy generator
+/// proxy generator
 
 export interface IEntityContainer extends ISchemaChild {
     Name: string;
@@ -124,9 +123,9 @@ export interface IMethodImport {
     EntitySet?: IEntitySet;
 }
 
-export interface ISingleton {
+export interface ISingleton extends ISchemaChild {
     Name: string;
-    Type: string;
+    Type: IEntityType;
     NavigationPropertyBindings: INavigationPropertyBinding[];
 }
 

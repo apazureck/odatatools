@@ -16,7 +16,8 @@ import {
   IODataEntities,
   IODataSchema,
   IParameter,
-  ISimpleType
+  ISimpleType,
+  ISingleton
 } from "./outtypes";
 import {
   window,
@@ -287,6 +288,28 @@ function getProxy(
         eset.Actions = getBoundActionsToCollections(eset, allBaseTypes);
         eset.Functions = getBoundFunctionsToCollections(eset, allBaseTypes);
         curSchema.EntityContainer.EntitySets.push(eset);
+      }
+
+      for (const singleton of ec.Singleton) {
+        const ston: ISingleton = {
+          Namespace: curSchema.Namespace,
+          FullName: curSchema.Namespace + "." + singleton.$.Name,
+          Type: allBaseTypes.entity.find(x => {
+            return x.Fullname === singleton.$.Type;
+          }),
+          Name: singleton.$.Name,
+          NavigationPropertyBindings: singleton.NavigationPropertyBinding
+            ? singleton.NavigationPropertyBinding.map<INavigationPropertyBinding>(
+              x => {
+                return {
+                  Path: x.$.Path,
+                  Target: x.$.Target
+                };
+              }
+            )
+            : [],
+        };
+        curSchema.EntityContainer.Singletons.push(ston);
       }
       // getBoundMethodsToEntities(curSchema, allBaseTypes);
       getUnboundMethods(curSchema, schema);
