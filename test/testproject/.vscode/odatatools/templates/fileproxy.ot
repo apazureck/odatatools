@@ -3,6 +3,7 @@
 // Base classes ##########################################################
 // Leave this in order to use the base classes
 
+namespace filewrapper {
 namespace odatatools {
     enum Method {
         GET, POST, PUT, PATCH, DELETE
@@ -629,3 +630,4 @@ namespace {{this.Namespace}} {
 }
 
 {{/each}}
+}

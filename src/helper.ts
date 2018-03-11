@@ -2,12 +2,28 @@ import { IEntityType, ISimpleType } from './v200/outtypes';
 import { Log } from './log';
 import * as xml2js from 'xml2js';
 import * as request from 'request';
-import { window, workspace } from "vscode";
+import { window, workspace, Uri } from "vscode";
 import * as path from 'path';
 import { Global } from './extension';
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
 import * as mkd from 'mkdirp';
+
+declare interface OpenDialogOptions {
+    defaultUri?: Uri;
+    openLabel?: string;
+    canSelectFiles?: boolean;
+    canSelectFolders?: boolean;
+    canSelectMany?: boolean;
+    filters: {
+        [name: string]: string[];
+    }
+}
+
+declare interface SaveDialogOptions {
+    defaultResource?: Uri;
+    saveLabel?: string;
+}
 
 export type Modularity = "Ambient" | "Modular";
 
@@ -55,6 +71,23 @@ export function getGeneratorSettingsFromDocumentText(input: string): TemplateGen
 
 export async function getMetadata(maddr: string, options?: request.CoreOptions): Promise<Edmx> {
     log.TraceEnterFunction();
+    if (maddr.startsWith("file:///")) {
+        return getMetadataFromFile(maddr.replace(/^file:\/\/\//, ""));
+    } else {
+        return getMetadataFromHttpAddress(maddr, options);
+    }
+}
+
+function getMetadataFromFile(filename: string): Promise<Edmx> {
+    return new Promise<Edmx>((resolve, reject) => {
+        const input: string = fs.readFileSync(filename, "utf-8");
+        xml2js.parseString(input, (err, data) => {
+            parseXmlMetadataString(data, resolve, reject);
+        })
+    });
+}
+
+function getMetadataFromHttpAddress(maddr: string, options?: request.CoreOptions): Promise<Edmx> {
     return new Promise<Edmx>((resolve, reject) => {
         let rData = '';
         request.get(maddr, options)
@@ -63,25 +96,29 @@ export async function getMetadata(maddr: string, options?: request.CoreOptions):
             })
             .on('complete', (resp) => {
                 xml2js.parseString(rData, (err, data) => {
-                    try {
-                        if (!data["edmx:Edmx"]) {
-                            log.Error("Received invalid data:\n");
-                            log.Error(data.toString());
-                            return reject(window.showErrorMessage("Response is not valid oData metadata. See output for more information"));
-                        }
-                        if (data["edmx:Edmx"])
-                            return resolve(data["edmx:Edmx"]);
-                        return reject("Not valid metadata")
-                    }
-                    catch (error) {
-                        reject(error);
-                    }
+                    parseXmlMetadataString(data, resolve, reject);
                 });
             })
             .on('error', (resp) => {
                 return 0;
             });
     });
+}
+
+function parseXmlMetadataString(data: {}, resolve: Function, reject: Function) {
+    try {
+        if (!data["edmx:Edmx"]) {
+            log.Error("Received invalid data:\n");
+            log.Error(data.toString());
+            return reject(window.showErrorMessage("Response is not valid oData metadata. See output for more information"));
+        }
+        if (data["edmx:Edmx"])
+            return resolve(data["edmx:Edmx"]);
+        return reject("Not valid metadata")
+    }
+    catch (error) {
+        return reject(error);
+    }
 }
 
 export async function GetOutputStyleFromUser(): Promise<Modularity> {
@@ -135,15 +172,24 @@ export function getType(typestring: string): ISimpleType {
     }
 }
 
-export async function getHostAddressFromUser(): Promise<string> {
+export async function getHostAddressFromUser(): Promise<string | Uri> {
     log.TraceEnterFunction();
-    let pick: string = "New Entry...";
+    let pick: string = "New Url...";
     const rul = Global.recentlyUsedAddresses
     if (rul && rul.length > 0)
-        pick = await window.showQuickPick(["New Entry..."].concat(Global.recentlyUsedAddresses), {
+        pick = await window.showQuickPick(["New Entry...", "New File..."].concat(Global.recentlyUsedAddresses), {
             placeHolder: "Select from recently used addresses or add new entry"
         });
-    if (pick === "New Entry...")
+    if (pick === "New File...") {
+        const options: OpenDialogOptions = {
+            canSelectMany: false,
+            filters: {
+                "XML": ["xml"]
+            },
+            openLabel: "Open Metadata"
+        }
+        return (await (window as any).showOpenDialog(options) as Thenable<Uri[]>)[0];
+    } else if (pick === "New Url...")
         pick = await window.showInputBox({
             placeHolder: "http://my.odata.service/service.svc",
             value: Global.recentlyUsedAddresses.pop(),
@@ -158,7 +204,7 @@ export async function getHostAddressFromUser(): Promise<string> {
     if (pick.endsWith("/"))
         pick = pick.substr(0, pick.length - 1);
 
-    return pick + "/$metadata";
+    return pick.startsWith("file:///") ? pick : pick + "/$metadata";
 }
 
 export function getEntityTypeInterface(type: EntityType, schema: Schema): IEntityType {

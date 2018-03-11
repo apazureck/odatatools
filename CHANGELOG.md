@@ -4,6 +4,22 @@ All notable changes to the "odatatools" will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## Unreleased
+
+* Post Production manipulation strategy (for example to change duplicate names, which cannot be caught during generation)
+* Custom Handlebars extensions
+
+## [2.1.0] 2017-03-15ish
+
+### Added
+
+* Singletons are now supported
+
+### Fixed
+
+* No generation of bound to entity set functions and actions
+* Invalid output if 
+
 ## [2.0.1] 2017-01-18
 
 ### Fixed

@@ -35,7 +35,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as request from "request";
 import * as xml2js from "xml2js";
-import {} from "./outtypes";
+import { } from "./outtypes";
 import {
   createHeader,
   GeneratorSettings,
@@ -67,17 +67,26 @@ export async function generateProxy(
   // window.showInformationMessage("Select import type (ambient or modular) for generation.");
 
   log.Debug("Getting proxy json from metadata");
-  let schemas = getProxy(
-    options.source.replace("$metadata", ""),
-    metadata["edmx:DataServices"][0],
-    options
-  );
+  let schemas: IODataSchema[];
+  try {
+    schemas = getProxy(
+      options.source.replace("$metadata", ""),
+      metadata["edmx:DataServices"][0],
+      options
+    );
+  } catch (error) {
+    log.Error("ERROR DURING PROXY DATA GENERATION - THIS IS PROBABLY A BUG. PLEASE REPORT ON https://github.com/apazureck/odatatools/issues");
+    throw error;
+  }
 
-  log.Debug("Parsing template");
-  const proxystring = parseTemplate(options, schemas, templates);
-
-  // proxystring = await addActionsAndFunctions(proxystring, metadata["edmx:DataServices"][0]);
-  // let proxystring = surroundWithNamespace(metadata["edmx:DataServices"][0], options, proxystring);
+  let proxystring: string;
+  try {
+    log.Debug("Parsing template");
+    proxystring = parseTemplate(options, schemas, templates);
+  } catch (error) {
+    log.Error("An Error occurred parsing the template. Check if your template is using correct handlebars syntax");
+    throw error;
+  }
 
   log.Info("Updating current file.");
   await window.activeTextEditor.edit(editbuilder => {
@@ -98,18 +107,6 @@ export async function generateProxy(
   commands
     .executeCommand("editor.action.formatDocument")
     .then(() => log.Info("Finished"));
-
-  // log.appendLine("Copying Proxy Base module");
-  // if (options.modularity === "Ambient") {
-  //     fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odatajs-4.0.0.js")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odatajs.js")));
-  //     fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odataproxybaseAsync.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odataproxybase.ts")));
-  // }
-
-  // else {
-  //     fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odataproxybaseAsyncModular.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odataproxybase.ts")));
-  //     fs.createReadStream(path.join(Global.context.extensionPath, "dist", "odatajs.d.ts")).pipe(fs.createWriteStream(path.join(path.dirname(window.activeTextEditor.document.fileName), "odatajs.d.ts")));
-  // }
-  // Global.AddToRecentlyUsedA ddresses(options.source);
 }
 
 function getUnboundActionsAndFunctions(ecschema: Schema): Method[] {
@@ -150,7 +147,7 @@ function getProxy(
   log.TraceEnterFunction();
   // get the entity container
   let schemas: Schema[];
-  try { 
+  try {
     schemas = metadata.Schema;
   } catch (error) {
     throw new Error("Could not find any entity container on OData Service");
@@ -169,11 +166,13 @@ function getProxy(
   const typesOfSchema: { [x: string]: IODataEntities } = {};
 
   for (const schema of schemas) {
+    log.Debug("Getting edm types of schema " + schema.$.Namespace);
     const types = getEdmTypes(schema, options);
     allBaseTypes.complex = allBaseTypes.complex.concat(types.ComplexTypes);
     allBaseTypes.entity = allBaseTypes.entity.concat(types.EntityTypes);
     allBaseTypes.enums = allBaseTypes.enums.concat(types.EnumTypes);
     if (schema.Action) {
+      log.Debug("Getting OData Actions of schema " + schema.$.Namespace);
       allBaseTypes.actions = allBaseTypes.actions.concat(
         schema.Action.map<IAction>(x => {
           return {
@@ -189,6 +188,7 @@ function getProxy(
       );
     }
     if (schema.Function) {
+      log.Debug("Getting OData Functions of schema " + schema.$.Namespace);
       allBaseTypes.functions = allBaseTypes.functions.concat(
         schema.Function.map<IFunction>(x => {
           return {
@@ -207,6 +207,8 @@ function getProxy(
   }
 
   const allcomplex = allBaseTypes.complex.concat(allBaseTypes.entity);
+
+  log.Debug("Resolving type inheritance");
   // Resolve Inheritances
   for (const ct of allcomplex) {
     if (ct.BaseTypeFullName)
@@ -253,6 +255,7 @@ function getProxy(
       Actions: []
     };
     if (schema.EntityContainer) {
+      log.Debug("Getting Entity Containers of schema " + schema.$.Namespace);
       const ec = schema.EntityContainer[0];
       curSchema.EntityContainer = {
         Namespace: schema.$.Namespace,
@@ -265,6 +268,7 @@ function getProxy(
       };
 
       for (const set of ec.EntitySet) {
+        log.Debug("Creating entity set " + set.$.Name);
         const eset: IEntitySet = {
           EntityType: allBaseTypes.entity.find(x => {
             return x.Fullname === set.$.EntityType;
@@ -274,13 +278,13 @@ function getProxy(
           Name: set.$.Name,
           NavigationPropertyBindings: set.NavigationPropertyBinding
             ? set.NavigationPropertyBinding.map<INavigationPropertyBinding>(
-                x => {
-                  return {
-                    Path: x.$.Path,
-                    Target: x.$.Target
-                  };
-                }
-              )
+              x => {
+                return {
+                  Path: x.$.Path,
+                  Target: x.$.Target
+                };
+              }
+            )
             : [],
           Actions: [],
           Functions: []
@@ -290,27 +294,33 @@ function getProxy(
         curSchema.EntityContainer.EntitySets.push(eset);
       }
 
-      for (const singleton of ec.Singleton) {
-        const ston: ISingleton = {
-          Namespace: curSchema.Namespace,
-          FullName: curSchema.Namespace + "." + singleton.$.Name,
-          Type: allBaseTypes.entity.find(x => {
-            return x.Fullname === singleton.$.Type;
-          }),
-          Name: singleton.$.Name,
-          NavigationPropertyBindings: singleton.NavigationPropertyBinding
-            ? singleton.NavigationPropertyBinding.map<INavigationPropertyBinding>(
-              x => {
-                return {
-                  Path: x.$.Path,
-                  Target: x.$.Target
-                };
-              }
-            )
-            : [],
-        };
-        curSchema.EntityContainer.Singletons.push(ston);
+      log.Debug("Creating singletons");
+
+      if (ec.Singleton) {
+        for (const singleton of ec.Singleton) {
+          log.Debug("Creating singleton " + singleton.$.Name);
+          const ston: ISingleton = {
+            Namespace: curSchema.Namespace,
+            FullName: curSchema.Namespace + "." + singleton.$.Name,
+            Type: allBaseTypes.entity.find(x => {
+              return x.Fullname === singleton.$.Type;
+            }),
+            Name: singleton.$.Name,
+            NavigationPropertyBindings: singleton.NavigationPropertyBinding
+              ? singleton.NavigationPropertyBinding.map<INavigationPropertyBinding>(
+                x => {
+                  return {
+                    Path: x.$.Path,
+                    Target: x.$.Target
+                  };
+                }
+              )
+              : [],
+          };
+          curSchema.EntityContainer.Singletons.push(ston);
+        }
       }
+
       // getBoundMethodsToEntities(curSchema, allBaseTypes);
       getUnboundMethods(curSchema, schema);
     }
@@ -574,7 +584,7 @@ function parseTemplate(
   log.Info("Produced Data:");
   try {
     log.Info(JSON.stringify(proxy, null, 2));
-  } catch (error) {}
+  } catch (error) { }
 
   const template = hb.compile(templates[generatorSettings.useTemplate], {
     noEscape: true
@@ -593,55 +603,66 @@ export function getEdmTypes(
   schema: Schema,
   generatorSettings: GeneratorSettings
 ): IODataEntities {
-  let metadata: IODataEntities = {
-    Header: "",
-    EntityTypes: [],
-    ComplexTypes: [],
-    EnumTypes: []
-  };
+  try {
+    let metadata: IODataEntities = {
+      Header: "",
+      EntityTypes: [],
+      ComplexTypes: [],
+      EnumTypes: []
+    };
 
-  if (schema.EntityType) {
-    for (let type of schema.EntityType) {
-      const p = getEntityTypeInterface(type, schema);
-      metadata.EntityTypes.push(p as IEntityType);
-    }
-  }
-  if (schema.ComplexType) {
-    for (let type of schema.ComplexType) {
-      const p: IComplexType = {
-        Namespace: schema.$.Namespace,
-        Fullname: schema.$.Namespace + "." + type.$.Name,
-        Name: type.$.Name,
-        Properties: [],
-        BaseTypeFullName: type.$.BaseType || undefined,
-        OpenType: type.$.OpenType || false
-      };
-      if (type.Property)
-        for (let prop of type.Property)
-          p.Properties.push({
-            Name: prop.$.Name,
-            Type: getType(prop.$.Type),
-            Nullable: prop.$.Nullable
-              ? prop.$.Nullable == "false" ? false : true
-              : true
-          });
-      metadata.ComplexTypes.push(p);
-    }
-  }
-  if (schema.EnumType) {
-    for (let enumtype of schema.EnumType) {
-      const p: IEnum = {
-        Name: enumtype.$.Name,
-        Members: []
-      };
-      for (const member of enumtype.Member) {
-        p.Members.push({
-          Key: member.$.Name,
-          Value: member.$.Value
-        });
+    if (schema.EntityType) {
+      for (let type of schema.EntityType) {
+        log.Debug("Getting interface of type " + type.$.Name);
+        const p = getEntityTypeInterface(type, schema);
+        metadata.EntityTypes.push(p as IEntityType);
       }
-      metadata.EnumTypes.push(p);
     }
+    if (schema.ComplexType) {
+      for (let type of schema.ComplexType) {
+        log.Debug("Creating complex type " + type.$.Name);
+        const p: IComplexType = {
+          Namespace: schema.$.Namespace,
+          Fullname: schema.$.Namespace + "." + type.$.Name,
+          Name: type.$.Name,
+          Properties: [],
+          BaseTypeFullName: type.$.BaseType || undefined,
+          OpenType: type.$.OpenType || false
+        };
+        if (type.Property)
+          for (let prop of type.Property) {
+            log.Debug("Creating property " + prop.$.Name + " on " + type.$.Name);
+            p.Properties.push({
+              Name: prop.$.Name,
+              Type: getType(prop.$.Type),
+              Nullable: prop.$.Nullable
+                ? prop.$.Nullable == "false" ? false : true
+                : true
+            });
+          }
+        metadata.ComplexTypes.push(p);
+      }
+    }
+    if (schema.EnumType) {
+      for (const enumtype of schema.EnumType) {
+        log.Debug("Creating enum type " + enumtype.$.Name);
+        const p: IEnum = {
+          Name: enumtype.$.Name,
+          Members: []
+        };
+        for (const member of enumtype.Member) {
+          log.Debug("Pushing enum member " + member.$.Name + " on " + enumtype.$.Name);
+          p.Members.push({
+            Key: member.$.Name,
+            Value: member.$.Value
+          });
+        }
+        metadata.EnumTypes.push(p);
+      }
+    }
+    return metadata;
+  } catch (error) {
+    log.Error("Caught error during type parsing");
+    throw error;
   }
-  return metadata;
 }
