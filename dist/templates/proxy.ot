@@ -474,7 +474,7 @@ namespace odatatools {
                 let request: odatajs.Request = {
                     headers: this.Headers,
                     method: Method[Method.PUT],
-                    requestUri: this.Address + "(" + value[this.Key] + ")",
+                    requestUri: this.Address,
                     data: value
                 }
                 odatajs.oData.request(request, (data, response) => {
